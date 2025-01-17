@@ -1,0 +1,41 @@
+<!-- cihi_qualifierlist.DTD
+
+  Description:
+
+  This DTD is to be used for the CIHI CIMS application project. 
+  It has fragments of CIHI XML extracted from their
+  database, surrounded by new top level elements to identify the
+  database location it came from so it can be put back after
+  editing.
+
+  The new outer elements are like this:
+
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE concept SYSTEM "cihi_qualifierlist.dtd">
+<concept>
+     ...
+</concept>
+-->
+
+<!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ELEMENT concept (qualifierlist | table)>
+
+
+<!ENTITY % common-tabular-elements SYSTEM "/dtd/common-tabular-elements.ent" >
+%common-tabular-elements;
+	
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+ 
+					
+

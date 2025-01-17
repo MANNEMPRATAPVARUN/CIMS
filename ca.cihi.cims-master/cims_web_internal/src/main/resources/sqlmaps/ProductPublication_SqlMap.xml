@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.PublicationMapper" >
+
+   <resultMap id="CodeDescriptionPublicationMap" type="ca.cihi.cims.model.prodpub.CodeDescriptionPublication" >
+     <result column="concept_code" property="code" jdbcType="VARCHAR" />
+     <result column="concept_short_title" property="shortTitle" />
+     <result column="concept_long_title" property="longTitle"  />
+   </resultMap>
+ 
+  <resultMap id="ComponentAndAttributeElementMap" type="ca.cihi.cims.model.ComponentAndAttributeElementModel" >
+     <result column="ELEMENTID" property="elementId"  />
+     <result column="CLASSID" property="classId" />
+     <result column="ELEMENTUUID" property="elementUUID"  />
+     <result column="NOTES" property="notes"  />
+     <result column="TEXT" property="code"  />
+     <result column="TYPE" property="type"  />
+     
+   </resultMap>
+ 
+ 
+  <resultMap id="PublicationSnapShotMap" type="ca.cihi.cims.model.prodpub.PublicationSnapShot" >
+     <id column="PUBLICATION_SNAPSHOT_ID" property="snapShotId" />
+     <result column="STRUCTUREID" property="structureId"  />
+     <result column="SNAPSHOT_SEQ_NUMBER" property="snapShotSeqNumber" />
+     <result column="SNAPSHOT_NOTE" property="snapShotNote"  />
+     <result column="SNAPSHOT_QA_NOTE" property="snapShotQANote"  />
+     <result column="CREATED_BY_USER_ID" property="createdByUserId"  />
+     <result column="CREATION_DATE" property="createdDate"  />
+     <result column="SNAPSHOT_STATUS_CODE" property="status" />
+     <result column="FAILED_REASON" property="failedReason"/>
+     <result column="SNAPSHOT_FILE_FORMAT_CODE" property="fileFormat" />
+     <association property="contextIdentifier"  javaType="ca.cihi.cims.dal.ContextIdentifier" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" columnPrefix="cx_"/>
+ 
+   </resultMap>
+  
+  
+   <resultMap id="PublicationReleaseMap" type="ca.cihi.cims.model.prodpub.PublicationRelease" >
+     <id column="PUBLICATION_RELEASE_ID" property="releaseId" />
+     <result column="FISCAL_YEAR" property="fiscalYear"  />
+     <result column="RELEASE_NOTE" property="releaseNote"  />
+     <result column="VERSION_CODE_NUMBER" property="versionCodeNumber"  />
+     <result column="CREATED_BY_USER_ID" property="createdByUserId"  />
+     <result column="CREATION_DATE" property="createdDate"  />
+     <result column="RELEASE_TYPE_ID" property="releaseType" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+     <result column="RELEASE_STATUS_CODE" property="status" />
+     <result column="FAILED_REASON" property="failedReason"/>
+     <result column="ASOT_STATUS_CODE" property="asotStatus" />
+     <result column="NOTIFICATION_SENT_IND_CODE" property="notificationSent" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler"/>
+     
+     <association property="releasedBy"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="usr_"/>
+ 
+     <collection property="publicationSnapShots"  ofType="ca.cihi.cims.model.prodpub.PublicationSnapShot" resultMap="PublicationSnapShotMap" columnPrefix="ss_"/>
+ 
+   </resultMap>
+   
+   <resultMap id="ValidationRuleSetMap" type="ca.cihi.cims.model.prodpub.ValidationRuleSet">
+     <id column="elementid" property="conceptId"/>
+   	 <result column="concept_code" property="code"/>
+   	 <result column="dhcode" property="dhcode" />
+     <result column="xmltext" property="xmlText" />
+     <result column="hasChild" property="hasChild"/>
+     <result column="extentref" property="extentRef"/>
+     <result column="statusref" property="statusRef"/>
+     <result column="locationref" property="locationRef"/>
+   </resultMap>
+   
+   <resultMap id="CCIReferenceAttributeMap" type="ca.cihi.cims.model.prodpub.CCIReferenceAttribute">
+   	 <id column="code" property="code"/>
+   	 <result column="mandatoryindicator" property="mandatoryIndicator" />
+   	 <result column="status" property="status"/>
+     <collection property="genericAttributes"  ofType="ca.cihi.cims.model.prodpub.CCIGenericAttribute" resultMap="CCIGenericAttributeMap" columnPrefix="ga_"/>
+   </resultMap>
+   
+   <resultMap type="ca.cihi.cims.model.prodpub.CCIGenericAttribute" id="CCIGenericAttributeMap">
+   		<result column="code" property="code"/>
+   		<result column="description" property="description"/>
+   </resultMap>
+   
+   <select id="findICDValidationRules" resultMap="ValidationRuleSetMap" parameterType="java.util.Map">
+   	 SELECT cv1.elementid, REGEXP_REPLACE(tpv.text,'[^a-zA-Z0-9]','') as concept_code, dhcode.text as dhcode, validationrule.xmltext , 
+   	 	 cims_util.hasActiveChildren(#{contextId}, cv1.elementid) as hasChild
+   	 from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5, structureelementversion sev6,xmlpropertyversion validationrule,
+           structureelementversion sev7,textpropertyversion tpv
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{contextId} and sev1.structureid=#{contextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid = #{catRubricClassId}
+        and sev2.structureid=#{contextId}
+        and sev3.structureid=#{contextId}
+        and sev4.structureid=#{contextId}
+        and sev5.structureid=#{contextId}
+        and sev6.structureid=#{contextId}
+        and sev7.structureid=#{contextId}
+        and tpv.textpropertyid=sev7.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv1.elementid
+        and validationrule.xmlpropertyid=sev6.elementversionid
+        and validationrule.domainelementid=cv.elementid
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+        and cv1.status='ACTIVE' and cv.status='ACTIVE'
+        order by dhcode, tpv.text
+   </select>
+   
+  <select id="findConceptIdForChapter22" resultType="java.lang.Long" >
+     select  tp.domainelementid
+     from TextPropertyversion tp,  structureelementversion sev , conceptversion cv, class c, structureelementversion sev1
+     where tp.textpropertyId = sev.elementversionid and sev.structureId= #{contextId}  
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode}) 
+      and cv.classid = c.classid and c.classid in (#{icdClassIdChapter})   -- Chapter
+      and cv.conceptid=sev1.elementversionid and sev1.structureId=#{contextId}
+      and  cv.status = 'ACTIVE' 
+      and tp.text='22'
+      order by cv.classid, tp.textpropertyId
+  </select> 
+
+   
+  <select id="findICDBlkDescWithoutChapter22" resultMap="CodeDescriptionPublicationMap" >
+   with elementproperties as
+     ( select tp.textpropertyId, tp.domainelementid,null as rangeelementid, null as grandrangeelementid, tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from cims.TextPropertyversion tp, cims. structureelementversion sev ,cims.structureelementversion sev1
+      , cims.conceptversion cv, cims.class c
+      where tp.textpropertyId = sev.elementversionid and sev.structureId= #{contextId}   and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode},#{icdClassIdShortTitle},#{icdClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid = #{icdClassIdChapter}   -- Chapter and block
+      and cv.elementid!=#{chapter22ConceptId}
+      and  cv.status = 'ACTIVE' 
+      union
+     select tp.textpropertyId, tp.domainelementid, cpv.rangeelementid, grandcpv.rangeelementid grandrangeelementid, tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from cims.TextPropertyversion tp, cims. structureelementversion sev ,cims.structureelementversion sev1,  cims.structureelementversion sev2 ,
+      cims.structureelementversion sev3, cims.conceptversion cv, cims.class c ,cims.conceptpropertyversion cpv, cims.conceptpropertyversion grandcpv
+      where tp.textpropertyId = sev.elementversionid and sev.structureId= #{contextId}   and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and cv.elementid =cpv.domainelementid(+)
+      and cpv.rangeelementid =grandcpv.domainelementid(+)
+      and cpv.conceptpropertyid=sev2.elementversionid and sev2.structureId= #{contextId}
+      and grandcpv.conceptpropertyid=sev3.elementversionid and sev3.structureId= #{contextId}
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode},#{icdClassIdShortTitle},#{icdClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid = #{icdClassIdBlock}   -- Chapter and block
+      and  cv.status = 'ACTIVE' 
+      )
+      select blk.concept_id, blk.classid, REGEXP_REPLACE(blk.concept_code,'\.|\^|\\','') as concept_code, blk.concept_short_title, blk.concept_long_title from
+        (select ep.domainelementid concept_id, ep.classid,
+          MAX(DECODE(textclassId, #{icdClassIdCode}, text, NULL)) as concept_code,
+          MAX(DECODE(textclassId, #{icdClassIdShortTitle}, text, NULL)) as concept_short_title, 
+          MAX(DECODE(textclassId, #{icdClassIdLongTitle}, text, NULL)) as concept_long_title
+        from   elementproperties ep
+        where ( ep.domainelementid != #{chapter22ConceptId} and ep.rangeelementid !=#{chapter22ConceptId} and (ep.grandrangeelementid is null or ep.grandrangeelementid != #{chapter22ConceptId}) ) or ep.rangeelementid is null
+        group by ep.domainelementid, ep.classid) blk
+      order by concept_code
+   
+  </select> 
+  
+   
+ 
+  
+ <select id="findCCIBlkDesc" resultMap="CodeDescriptionPublicationMap">
+   with elementproperties as
+     ( select tp.textpropertyId, tp.domainelementid,  tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev ,structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev. elementversionid and sev.structureId= #{contextId}  and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{cciClassIdCode},#{cciClassIdShortTitle},#{cciClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{cciClassIdSection},#{cciClassIdBlock},#{cciClassIdGroup})   -- section and block and group
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      )
+      select REGEXP_REPLACE(blk.concept_code,'\.|\^|\\','') as concept_code, blk.concept_short_title, blk.concept_long_title from
+        (select ep.domainelementid concept_id, ep.classid,
+          MAX(DECODE(textclassId,  #{cciClassIdCode}, text, NULL)) as concept_code,
+          MAX(DECODE(textclassId,  #{cciClassIdShortTitle}, text, NULL)) as concept_short_title, 
+          MAX(DECODE(textclassId,  #{cciClassIdLongTitle}, text, NULL)) as concept_long_title
+        from   elementproperties ep
+        group by ep.domainelementid, ep.classid) blk
+      order by concept_code
+   </select>
+
+
+   <select id="findICDCat1Desc" resultMap="CodeDescriptionPublicationMap" >
+    with elementproperties as
+     ( select tp.textpropertyId, tp.domainelementid, CIMS_UTIL.retrieveCodeNestingLevel('ICD-10-CA', #{contextId} , tp.domainelementid)as nestingLevel,cims_util.hasActiveChildren(#{contextId},tp.domainelementid) as hasChild,  tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev , structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev. elementversionid and sev.structureId= #{contextId}  and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode},#{icdClassIdShortTitle},#{icdClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{icdClassIdCategory})   -- Category
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      )
+     select cat1.concept_id, cat1.classid,REGEXP_REPLACE(cat1.concept_code,'\.|\^|\-|\\','') as concept_code,cat1.concept_short_title, cat1.concept_long_title  from 
+       (select ep.domainelementid concept_id, ep.classid,
+          MAX(DECODE(textclassId, #{icdClassIdCode}, text, NULL)) as concept_code,
+          MAX(DECODE(textclassId, #{icdClassIdShortTitle}, text, NULL)) as concept_short_title, 
+          MAX(DECODE(textclassId, #{icdClassIdLongTitle}, text, NULL)) as concept_long_title
+       from   elementproperties ep
+         where ep.nestingLevel=1 or (ep.nestingLevel=2 and hasChild='Y') or (ep.nestingLevel=3 and hasChild='Y')
+       group by ep.domainelementid, ep.classid) cat1
+       where concept_code>='A00'
+       order by concept_code
+   
+  </select> 
+
+  <select id="findICDChildCodes" resultMap="ValidationRuleSetMap" parameterType="java.util.Map">
+   	select cv.elementid, REGEXP_REPLACE(tpv.text,'[^a-zA-Z0-9]','') as concept_code,  cims_util.hasActiveChildren(#{contextId}, cv.elementid) as hasChild
+         from conceptpropertyversion cpv, conceptversion cv, textpropertyversion tpv
+         , structureelementversion sev,  structureelementversion sev3,
+         structureelementversion sev4
+         where cv.classid = #{catRubricClassId} and cv.conceptid=sev3.elementversionid and sev3.structureid=#{contextId} 
+         and cpv.classid = #{narrowerClassId} and tpv.domainelementid=cv.elementid and tpv.classid=#{codeClassId} and tpv.textpropertyid=sev4.elementversionid and sev4.structureid=#{contextId}
+         and cpv.rangeelementid=#{conceptId}
+         and cpv.domainelementid=cv.elementid
+         and cpv.conceptpropertyid = sev.elementversionid
+         and sev.structureid=#{contextId}
+         and cv.status='ACTIVE'
+         order by tpv.text
+   </select>
+
+<select id="findCCIRubricDesc" resultMap="CodeDescriptionPublicationMap">
+   with elementproperties as
+     ( select tp.textpropertyId, tp.domainelementid,  tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev , structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev. elementversionid and sev.structureId= #{contextId}  and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{cciClassIdCode},#{cciClassIdShortTitle},#{cciClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{cciClassIdRubric})   --cciRubric
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      )
+      select rubric.concept_id, rubric.classid,REGEXP_REPLACE(rubric.concept_code,'\.|\^|\-|\\','') as concept_code,rubric.concept_short_title, rubric.concept_long_title  from 
+       (select ep.domainelementid concept_id, ep.classid,
+          MAX(DECODE(textclassId,  #{cciClassIdCode}, text, NULL)) as concept_code,
+          MAX(DECODE(textclassId,  #{cciClassIdShortTitle}, text, NULL)) as concept_short_title, 
+          MAX(DECODE(textclassId,  #{cciClassIdLongTitle}, text, NULL)) as concept_long_title
+        from   elementproperties ep
+        group by ep.domainelementid, ep.classid ) rubric
+      order by concept_code
+   </select>
+
+
+
+   <select id="findICDCodeDesc" resultMap="CodeDescriptionPublicationMap" >
+    with elementproperties as
+     ( select tp.textpropertyId, tp.domainelementid, CIMS_UTIL.hasActiveChildren(#{contextId} , tp.domainelementid) as hasChildren, tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev ,structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev.elementversionid and sev.structureId= #{contextId}   and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode},#{icdClassIdShortTitle},#{icdClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{icdClassIdCategory})   -- Category
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      )
+      select code.concept_id, code.classid,REGEXP_REPLACE(code.concept_code,'\.|\^|\-|\\','') as concept_code,code.concept_short_title, code.concept_long_title  from 
+       (select ep.domainelementid concept_id, ep.classid,
+          MAX(DECODE(textclassId, #{icdClassIdCode}, text, NULL)) as concept_code,
+          MAX(DECODE(textclassId, #{icdClassIdShortTitle}, text, NULL)) as concept_short_title, 
+          MAX(DECODE(textclassId, #{icdClassIdLongTitle}, text, NULL)) as concept_long_title
+       from   elementproperties ep
+         where ep.hasChildren='N'
+       group by ep.domainelementid, ep.classid) code
+      order by concept_code
+   
+  </select> 
+  
+  
+   <select id="findICDCodeAndMorphologyDesc" resultMap="CodeDescriptionPublicationMap" >
+   
+     with morphologyelementproperties as
+     ( select tp.textpropertyId, tp.domainelementid, CIMS_UTIL.retrieveCodeNestingLevel('ICD-10-CA', #{contextId} , tp.domainelementid)as nestingLevel,  tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev , structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev. elementversionid and sev.structureId= #{contextId}  and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode},#{icdClassIdShortTitle},#{icdClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{icdClassIdCategory})   -- Category
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      ), codeelementproperties as
+     ( select tp.textpropertyId, tp.domainelementid, CIMS_UTIL.retrieveCodeNestingLevel('ICD-10-CA', #{contextId} , tp.domainelementid)as nestingLevel, tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev ,structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev.elementversionid and sev.structureId= #{contextId}   and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{icdClassIdCode},#{icdClassIdShortTitle},#{icdClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{icdClassIdCategory})   -- Category
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      )
+     select morphology.* from 
+          (select mep.domainelementid concept_id, mep.classid,
+             MAX(DECODE(textclassId, #{icdClassIdCode}, text, NULL)) as concept_code,
+             MAX(DECODE(textclassId, #{icdClassIdShortTitle}, text, NULL)) as concept_short_title, 
+             MAX(DECODE(textclassId, #{icdClassIdLongTitle}, text, NULL)) as concept_long_title
+             from   morphologyelementproperties mep
+             where mep.nestingLevel=1
+               group by mep.domainelementid, mep.classid
+               order by concept_code) morphology
+       where morphology.concept_code &lt;'A00'
+    UNION  ALL 
+     select code.* from
+        (select cep.domainelementid concept_id, cep.classid,
+                MAX(DECODE(textclassId, #{icdClassIdCode}, text, NULL)) as concept_code,
+                MAX(DECODE(textclassId, #{icdClassIdShortTitle}, text, NULL)) as concept_short_title, 
+                MAX(DECODE(textclassId, #{icdClassIdLongTitle}, text, NULL)) as concept_long_title
+               from   codeelementproperties cep
+         where (cep.nestingLevel=2 or  cep.nestingLevel=3)
+          group by cep.domainelementid, cep.classid
+          order by concept_code ) code    
+   
+   </select>
+   
+  
+  
+  
+  <select id="findCCICodeDesc" resultMap="CodeDescriptionPublicationMap">
+   with elementproperties as
+     ( select tp.textpropertyId, tp.domainelementid,  tp.text , cv.classid, c.classname, tp.classid as textclassId
+      from TextPropertyversion tp,  structureelementversion sev ,structureelementversion sev1, conceptversion cv, class c
+      where tp.textpropertyId = sev. elementversionid and sev.structureId= #{contextId}  and sev1.structureId= #{contextId}
+      and cv.conceptid = sev1.elementversionid
+      and tp.domainelementid = cv.elementid
+      and (tp.languagecode=#{languageCode} or tp.languagecode is null)
+      and tp.classid in (#{cciClassIdCode},#{cciClassIdShortTitle},#{cciClassIdLongTitle}) 
+      and cv.classid = c.classid and c.classid in (#{cciClassIdCCICode})   -- CCICode
+      and  cv.status = 'ACTIVE' 
+      order by cv.classid, tp.textpropertyId
+      )
+      select code.concept_id, code.classid,REGEXP_REPLACE(code.concept_code,'\.|\^|\-|\\','') as concept_code,code.concept_short_title, code.concept_long_title  from 
+        (select ep.domainelementid concept_id, ep.classid,
+          MAX(DECODE(textclassId,  #{cciClassIdCode}, text, NULL)) as concept_code,
+          MAX(DECODE(textclassId,  #{cciClassIdShortTitle}, text, NULL)) as concept_short_title, 
+          MAX(DECODE(textclassId,  #{cciClassIdLongTitle}, text, NULL)) as concept_long_title
+        from   elementproperties ep
+        group by ep.domainelementid, ep.classid) code
+      order by concept_code
+   </select>
+   
+   
+   <select id="findUnusedComponentElements" resultMap="ComponentAndAttributeElementMap" >
+      select e.*, 'Group' as type from element e, structureelementversion sev , elementversion ev, class c 
+      where    e.classid =c.classId and c.classname='GroupComp' and c.baseclassificationname='CCI'  --Group
+        and e.elementid = sev.elementid
+        and   ev.elementid = e.elementid  and ev.elementversionid=sev.elementversionid and ev.status !='REMOVED'
+        and  sev.structureid = #{openBaseContextId}    --5228843
+        and e.elementid not in (    
+          select e.elementid from element e, structureelementversion sev , class c
+          where e.classid=c.classId and c.classname='GroupComp' and c.baseclassificationname='CCI'  
+          and e.elementid = sev.elementid
+          and  sev.structureid = #{closedBaseContextId}    --4205295
+          )
+        and e.elementid not in (    
+          select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+           where sev.structureid =#{openBaseContextId}
+             and cpv.conceptpropertyid = sev.elementversionid
+             and cpv.classid =c.classId and c.classname='GroupCompCPV' and c.baseclassificationname='CCI'  
+          )
+        UNION  ALL 
+      select e.*,'Intervention' as type from element e, structureelementversion sev , elementversion ev, class c
+      where    e.classid =c.classId and c.classname='Intervention' and c.baseclassificationname='CCI'  --Intervention
+        and e.elementid = sev.elementid
+        and  ev.elementid = e.elementid  and ev.elementversionid=sev.elementversionid and ev.status !='REMOVED'
+        and  sev.structureid = #{openBaseContextId}    --5228843
+        and e.elementid not in (    
+          select e.elementid from element e, structureelementversion sev , class c
+          where e.classid=c.classId and c.classname='Intervention' and c.baseclassificationname='CCI'  
+          and e.elementid = sev.elementid
+          and  sev.structureid = #{closedBaseContextId}    --4205295
+          )
+        and e.elementid not in (    
+          select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+           where sev.structureid =#{openBaseContextId}
+             and cpv.conceptpropertyid = sev.elementversionid
+             and cpv.classid =c.classId and c.classname='InterventionCPV' and c.baseclassificationname='CCI'  
+          ) 
+         UNION  ALL 
+      select e.* , 'Qualifier 1' as type from element e, structureelementversion sev , elementversion ev, class c
+      where    e.classid =c.classId and c.classname='ApproachTechnique' and c.baseclassificationname='CCI'  --ApproachTechnique
+        and e.elementid = sev.elementid
+        and  ev.elementid = e.elementid  and ev.elementversionid=sev.elementversionid and ev.status !='REMOVED'
+        and  sev.structureid = #{openBaseContextId}    --5228843
+        and e.elementid not in (    
+          select e.elementid from element e, structureelementversion sev , class c
+          where e.classid=c.classId and c.classname='ApproachTechnique' and c.baseclassificationname='CCI'  
+          and e.elementid = sev.elementid
+          and  sev.structureid = #{closedBaseContextId}    --4205295
+          )
+        and e.elementid not in (    
+          select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+           where sev.structureid =#{openBaseContextId}
+             and cpv.conceptpropertyid = sev.elementversionid
+             and cpv.classid =c.classId and c.classname='InterventionCPV' and c.baseclassificationname='CCI'  
+          )    
+         UNION  ALL 
+      select e.*, 'Qualifier 2' as type from element e, structureelementversion sev , elementversion ev, class c
+      where    e.classid =c.classId and c.classname='DeviceAgent' and c.baseclassificationname='CCI'  --DeviceAgent
+        and e.elementid = sev.elementid
+        and  ev.elementid = e.elementid  and ev.elementversionid=sev.elementversionid and ev.status !='REMOVED'
+        and  sev.structureid = #{openBaseContextId}    --5228843
+        and e.elementid not in (    
+          select e.elementid from element e, structureelementversion sev , class c
+          where e.classid=c.classId and c.classname='DeviceAgent' and c.baseclassificationname='CCI'  
+          and e.elementid = sev.elementid
+          and  sev.structureid = #{closedBaseContextId}    --4205295
+          )
+        and e.elementid not in (    
+          select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+           where sev.structureid =#{openBaseContextId}
+             and cpv.conceptpropertyid = sev.elementversionid
+             and cpv.classid =c.classId and c.classname='DeviceAgentCPV' and c.baseclassificationname='CCI'  
+          )
+         UNION  ALL 
+      select e.*, 'Qualifier 3' as type from element e, structureelementversion sev , elementversion ev, class c
+      where    e.classid =c.classId and c.classname='Tissue' and c.baseclassificationname='CCI'  --Tissue
+        and e.elementid = sev.elementid
+        and  ev.elementid = e.elementid  and ev.elementversionid=sev.elementversionid and ev.status !='REMOVED'
+        and  sev.structureid = #{openBaseContextId}    --5228843
+        and e.elementid not in (    
+          select e.elementid from element e, structureelementversion sev , class c
+          where e.classid=c.classId and c.classname='Tissue' and c.baseclassificationname='CCI'  
+          and e.elementid = sev.elementid
+          and  sev.structureid = #{closedBaseContextId}    --4205295
+          )
+        and e.elementid not in (    
+          select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+           where sev.structureid =#{openBaseContextId}
+             and cpv.conceptpropertyid = sev.elementversionid
+             and cpv.classid =c.classId and c.classname='TissueCPV' and c.baseclassificationname='CCI'  
+          )                                  
+          
+   </select>
+   
+     <select id="findUnusedReferenceValues" resultMap="ComponentAndAttributeElementMap" >
+         --Attribute Type Status
+       with statuschanges as (
+           select cv.*, tpv.text , ec.classname ,'Status' as type
+            from structureelementversion sev , conceptversion cv, class ec , textpropertyversion tpv , class tpvc, structureelementversion sev1
+            where  cv.classid =ec.classId 
+               and ec.classname='ReferenceAttribute' 
+               and ec.baseclassificationname='CCI' 
+               and cv.elementid = sev.elementid
+               and cv.conceptid=sev.elementversionid and cv.status !='REMOVED'
+               and cv.elementid =tpv.domainelementid and tpv.classid = tpvc.classid and tpvc.classname ='AttributeCode'
+               and sev.structureid =#{openBaseContextId} 
+               and sev1.structureid =#{openBaseContextId} 
+               and tpv.elementid = sev1.elementid
+               and substr(tpv.text,0,1)='S'
+               and cv.elementid not in (    
+                    select e.elementid from element e, structureelementversion sev , class c
+                     where e.classid=c.classId and c.classname='ReferenceAttribute' and c.baseclassificationname='CCI'  
+                       and e.elementid = sev.elementid
+                       and sev.structureid = #{closedBaseContextId} 
+                 )
+       ), locationchanges as (
+           select cv.*, tpv.text , ec.classname ,'Location' as type
+            from structureelementversion sev , conceptversion cv, class ec , textpropertyversion tpv , class tpvc, structureelementversion sev1
+            where  cv.classid =ec.classId 
+               and ec.classname='ReferenceAttribute' 
+               and ec.baseclassificationname='CCI' 
+               and cv.elementid = sev.elementid
+               and cv.conceptid=sev.elementversionid and cv.status !='REMOVED'
+               and cv.elementid =tpv.domainelementid and tpv.classid = tpvc.classid and tpvc.classname ='AttributeCode'
+               and sev.structureid =#{openBaseContextId} 
+               and sev1.structureid =#{openBaseContextId} 
+               and tpv.elementid = sev1.elementid
+               and substr(tpv.text,0,1)='L'
+               and cv.elementid not in (    
+                    select e.elementid from element e, structureelementversion sev , class c
+                     where e.classid=c.classId and c.classname='ReferenceAttribute' and c.baseclassificationname='CCI'  
+                       and e.elementid = sev.elementid
+                       and sev.structureid = #{closedBaseContextId} 
+                 )
+       ), modechanges as (
+           select cv.*, tpv.text , ec.classname ,'Mode of Delivery' as type
+            from structureelementversion sev , conceptversion cv, class ec , textpropertyversion tpv , class tpvc, structureelementversion sev1
+            where  cv.classid =ec.classId 
+               and ec.classname='ReferenceAttribute' 
+               and ec.baseclassificationname='CCI' 
+               and cv.elementid = sev.elementid
+               and cv.conceptid=sev.elementversionid and cv.status !='REMOVED'
+               and cv.elementid =tpv.domainelementid and tpv.classid = tpvc.classid and tpvc.classname ='AttributeCode'
+               and sev.structureid =#{openBaseContextId} 
+               and sev1.structureid =#{openBaseContextId} 
+               and tpv.elementid = sev1.elementid
+               and substr(tpv.text,0,1)='M'
+               and cv.elementid not in (    
+                    select e.elementid from element e, structureelementversion sev , class c
+                     where e.classid=c.classId and c.classname='ReferenceAttribute' and c.baseclassificationname='CCI'  
+                       and e.elementid = sev.elementid
+                       and sev.structureid = #{closedBaseContextId} 
+                 )
+       ),extentchanges as (
+           select cv.*, tpv.text , ec.classname ,'Extent' as type
+            from structureelementversion sev , conceptversion cv, class ec , textpropertyversion tpv , class tpvc, structureelementversion sev1
+            where  cv.classid =ec.classId 
+               and ec.classname='ReferenceAttribute' 
+               and ec.baseclassificationname='CCI' 
+               and cv.elementid = sev.elementid
+               and cv.conceptid=sev.elementversionid and cv.status !='REMOVED'
+               and cv.elementid =tpv.domainelementid and tpv.classid = tpvc.classid and tpvc.classname ='AttributeCode'
+               and sev.structureid =#{openBaseContextId} 
+               and sev1.structureid =#{openBaseContextId} 
+               and tpv.elementid = sev1.elementid
+               and substr(tpv.text,0,1)='E'
+               and cv.elementid not in (    
+                    select e.elementid from element e, structureelementversion sev , class c
+                     where e.classid=c.classId and c.classname='ReferenceAttribute' and c.baseclassificationname='CCI'  
+                       and e.elementid = sev.elementid
+                       and sev.structureid = #{closedBaseContextId} 
+                 )
+       )
+       
+       select * from statuschanges where           
+         not exists (
+                 select xpv.elementid 
+                 from xmlpropertyversion xpv , structureelementversion sev, class ec, conceptversion cv,   structureelementversion sev1
+                 where   xpv.classid =ec.classId and ec.classname='ValidationDefinition' and ec.baseclassificationname='CCI'  --Group
+                    and  xpv.xmlpropertyid = sev.elementversionid
+                    and  xpv.xmltext like '%&lt;STATUS_REF&gt;'||text ||'&lt;/STATUS_REF&gt;%' 
+                    and  sev.structureid =#{openBaseContextId} 
+                    and  sev1.structureid =#{openBaseContextId} 
+                    and cv.conceptid = sev1.elementversionid
+                    and cv.status != 'REMOVED'
+                    and cv.elementid = xpv.domainelementid
+          )
+        UNION ALL
+       
+       select * from locationchanges where           
+         not exists (
+                 select xpv.elementid 
+                 from xmlpropertyversion xpv , structureelementversion sev, class ec, conceptversion cv,   structureelementversion sev1
+                 where   xpv.classid =ec.classId and ec.classname='ValidationDefinition' and ec.baseclassificationname='CCI'  --Group
+                    and  xpv.xmlpropertyid = sev.elementversionid
+                    and  xpv.xmltext like '%&lt;LOCATION_REF&gt;'||text ||'&lt;/LOCATION_REF&gt;%' 
+                    and  sev.structureid =#{openBaseContextId} 
+                    and  sev1.structureid =#{openBaseContextId} 
+                    and cv.conceptid = sev1.elementversionid
+                    and cv.status != 'REMOVED'
+                    and cv.elementid = xpv.domainelementid
+          )          
+        UNION ALL
+       
+       select * from modechanges where           
+        not exists (
+                 select xpv.elementid 
+                 from xmlpropertyversion xpv , structureelementversion sev, class ec, conceptversion cv,   structureelementversion sev1
+                 where   xpv.classid =ec.classId and ec.classname='ValidationDefinition' and ec.baseclassificationname='CCI'  --Group
+                    and  xpv.xmlpropertyid = sev.elementversionid
+                    and  xpv.xmltext like '%&lt;LOCATION_REF&gt;'||text ||'&lt;/LOCATION_REF&gt;%' 
+                    and  sev.structureid =#{openBaseContextId} 
+                    and  sev1.structureid =#{openBaseContextId} 
+                    and cv.conceptid = sev1.elementversionid
+                    and cv.status != 'REMOVED'
+                    and cv.elementid = xpv.domainelementid
+          )          
+          
+        UNION ALL
+      
+       select * from extentchanges where           
+          not exists (
+                 select xpv.elementid 
+                 from xmlpropertyversion xpv , structureelementversion sev, class ec, conceptversion cv,   structureelementversion sev1
+                 where   xpv.classid =ec.classId and ec.classname='ValidationDefinition' and ec.baseclassificationname='CCI'  --Group
+                    and  xpv.xmlpropertyid = sev.elementversionid
+                    and  xpv.xmltext like '%&lt;EXTENT_REF&gt;'||text ||'&lt;/EXTENT_REF&gt;%' 
+                    and  sev.structureid =#{openBaseContextId} 
+                    and  sev1.structureid =#{openBaseContextId} 
+                    and cv.conceptid = sev1.elementversionid
+                    and cv.status != 'REMOVED'
+                    and cv.elementid = xpv.domainelementid
+          )          
+          
+          
+     </select>
+   
+     <select id="findUnusedGenericAttributes" resultMap="ComponentAndAttributeElementMap" >
+       select e.*, tpv.text 
+            from structureelementversion sev , conceptversion cv,element e, class cvc , textpropertyversion tpv , class tpvc, structureelementversion sev1
+            where  cv.classid =cvc.classId 
+               and cvc.classname='GenericAttribute' 
+               and cvc.baseclassificationname='CCI' 
+               and e.elementid= cv.elementid
+               and cv.elementid = sev.elementid
+               and cv.conceptid=sev.elementversionid and cv.status !='REMOVED'
+               and cv.elementid =tpv.domainelementid and tpv.classid = tpvc.classid and tpvc.classname ='AttributeCode'
+               and sev.structureid =#{openBaseContextId} 
+               and sev1.structureid =#{openBaseContextId} 
+               and tpv.elementid = sev1.elementid
+               and cv.elementid not in (    
+                    select e.elementid from element e, structureelementversion sev , class c
+                     where e.classid=c.classId and c.classname='GenericAttribute' and c.baseclassificationname='CCI'  
+                       and e.elementid = sev.elementid
+                       and sev.structureid = #{closedBaseContextId} 
+                 )     
+               and cv.elementid  not in (
+                   select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+                   where sev.structureid =#{openBaseContextId} 
+                   and cpv.conceptpropertyid = sev.elementversionid
+                   and cpv.classid =c.classId and c.classname='GenericAttributeCPV' and c.baseclassificationname='CCI'  
+                   and cpv.rangeelementid is not null
+               )
+               and cv.elementid  not in (
+                   select distinct cpv.rangeelementid from conceptpropertyversion cpv, structureelementversion sev ,  class c   
+                   where sev.structureid =#{openBaseContextId} 
+                   and cpv.conceptpropertyid = sev.elementversionid
+                   and cpv.classid =c.classId and c.classname='ReferenceAttributeCPV' and c.baseclassificationname='CCI'  
+                   and cpv.rangeelementid is not null
+               )  
+     </select>
+   
+   
+   
+   <select id="findCCIValidationRules" resultMap="ValidationRuleSetMap" parameterType="java.util.Map">
+   	  select cv.elementid, REGEXP_REPLACE(tpv.text,'[^a-zA-Z0-9]','') as concept_code, cims_util.getValidationRuleDHCode(#{contextId}, vr.elementid) dhcode, cims_util.hasActiveChildren(#{contextId}, cv.elementid) as hasChild
+         , substr(to_Char(REGEXP_substr (vrdef.xmltext, #{statusRefRegex})), 13, 3) statusref
+         , substr(to_Char(REGEXP_substr (vrdef.xmltext, #{extentRefRegex})), 13, 3) extentref
+         , substr(to_Char(REGEXP_substr (vrdef.xmltext, #{locationRefRegex})), 15, 3) locationref, vrdef.xmltext
+         from conceptpropertyversion cpv, conceptversion vr, xmlpropertyversion vrdef, conceptversion cv, textpropertyversion tpv
+         , structureelementversion sev, structureelementversion sev1, structureelementversion sev2, structureelementversion sev3,
+         structureelementversion sev4
+         where cv.classid in (#{catRubricClassId}, #{cciCodeClassId}) and cv.conceptid=sev3.elementversionid and sev3.structureid=#{contextId} 
+         and cpv.classid = #{validationCPVClassId} and tpv.domainelementid=cv.elementid and tpv.classid=#{codeClassId} and tpv.textpropertyid=sev4.elementversionid and sev4.structureid=#{contextId}
+         and cpv.rangeelementid=cv.elementid
+         and vr.elementid = cpv.domainelementid
+         and vrdef.classid = #{validationDefinitionClassId}
+         and vrdef.domainelementid = vr.elementid
+         and cpv.conceptpropertyid = sev.elementversionid
+         and vr.conceptid = sev1.elementversionid
+         and vrdef.xmlpropertyid = sev2.elementversionid
+         and vr.status='ACTIVE' and cv.status='ACTIVE'
+         and sev.structureid=#{contextId}
+         and sev1.structureid=#{contextId}
+         and sev2.structureid=#{contextId} 
+         order by dhcode, tpv.text
+   </select>
+   
+   <select id="findCCIChildCodes" resultMap="ValidationRuleSetMap" parameterType="java.util.Map">
+   	select cv.elementid, REGEXP_REPLACE(tpv.text,'[^a-zA-Z0-9]','') as concept_code,  cims_util.hasActiveChildren(#{contextId}, cv.elementid) as hasChild,
+   		 NULL as dhcode,
+         NULL as xmltext,
+         NULL as extentRef,
+         NULL as statusRef,
+         NULL as locationRef
+         from conceptpropertyversion cpv, conceptversion cv, textpropertyversion tpv
+         , structureelementversion sev,  structureelementversion sev3,
+         structureelementversion sev4
+         where cv.classid = #{cciCodeClassId} and cv.conceptid=sev3.elementversionid and sev3.structureid=#{contextId} 
+         and cpv.classid = #{narrowerClassId} and tpv.domainelementid=cv.elementid and tpv.classid=#{codeClassId} and tpv.textpropertyid=sev4.elementversionid and sev4.structureid=#{contextId}
+         and cpv.rangeelementid=#{conceptId}
+         and cpv.domainelementid=cv.elementid
+         and cpv.conceptpropertyid = sev.elementversionid
+         and sev.structureid=#{contextId}
+         and cv.status='ACTIVE'
+         order by tpv.text
+   </select>
+   
+   <select id="getCCIReferenceAttributes" resultMap="CCIReferenceAttributeMap" parameterType="java.util.Map">
+   		
+   		with refCPV as
+		(
+		     select cpv.* from conceptpropertyversion cpv, structureelementversion sev where cpv.classid=#{referenceAttributeCPVClassId} and cpv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId}
+		),
+		geneCPV as
+		(
+		      select cpv.* from conceptpropertyversion cpv, structureelementversion sev where cpv.classid=#{genericAttributeCPVClassId} and cpv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId}  
+		),
+		geneCodePro as
+		(
+		      select tpv.* from textpropertyversion tpv, structureelementversion sev where tpv.classid=#{attributeCodeClassId} and tpv.textpropertyid=sev.elementversionid and sev.structureid= #{contextId}  
+		),
+		geneDesc as (
+		         select tpv.* from textpropertyversion tpv, structureelementversion sev where tpv.classid=#{attributeDescriptionClassId} and tpv.languagecode = #{languageCode} and tpv.textpropertyid=sev.elementversionid and sev.structureid= #{contextId}  
+		)
+   		select tpv.text as code, tpv1.text as ga_code, tpv2.text as ga_description, bpv.booleanvalue as mandatoryindicator, cv.status
+		from textpropertyversion tpv, structureelementversion sev,
+		geneCodePro tpv1, geneDesc tpv2, refCPV cpv1, geneCPV cpv2,
+		conceptversion cv, structureelementversion sev5,
+		conceptpropertyversion atcpv, textpropertyversion atcode, booleanpropertyversion bpv,
+		structureelementversion sev7, structureelementversion sev8, structureelementversion sev6
+		where tpv.textpropertyid=sev.elementversionid and sev.structureid=#{contextId}
+		and tpv.domainelementid = cpv1.rangeelementid(+)
+		and cpv1.domainelementid = cpv2.domainelementid(+)
+		and cpv2.rangeelementid = tpv1.domainelementid(+)
+		and cpv2.domainelementid = tpv2.domainelementid(+)
+		and cv.elementid=tpv.domainelementid and cv.classid=104 and cv.conceptid=sev5.elementversionid and sev5.structureid=#{contextId} and cv.status='ACTIVE'
+		and tpv.classid=#{attributeCodeClassId} and atcode.text=#{attributeType}
+		and sev6.structureid=#{contextId} and sev7.structureid=#{contextId}  and sev8.structureid=#{contextId}
+		and sev6.elementversionid=bpv.booleanpropertyid and bpv.classid=#{attributeMandatoryIndicatorClassId} and bpv.domainelementid=cv.elementid
+		and sev7.elementversionid=atcpv.conceptpropertyid  and sev8.elementversionid=atcode.textpropertyid
+		and atcpv.domainelementid=cv.elementid and atcpv.rangeelementid= atcode.domainelementid
+		and atcpv.classid=#{attributeTypeIndicatorClassId} and atcode.classid=#{domainValueCodeClassId}
+		order by tpv.text, tpv1.text
+
+   </select>
+   
+   <select id="getCCIReferenceAttribute" resultMap="CCIReferenceAttributeMap" parameterType="java.util.Map">
+   		
+		with refCPV as
+		(
+		     select cpv.* from conceptpropertyversion cpv, structureelementversion sev where cpv.classid=#{referenceAttributeCPVClassId} and cpv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId}
+		),
+		geneCPV as
+		(
+		      select cpv.* from conceptpropertyversion cpv, structureelementversion sev where cpv.classid=#{genericAttributeCPVClassId} and cpv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId}  
+		),
+		geneCodePro as
+		(
+		      select tpv.* from textpropertyversion tpv, structureelementversion sev where tpv.classid=#{attributeCodeClassId} and tpv.textpropertyid=sev.elementversionid and sev.structureid= #{contextId}  
+		),
+		geneDesc as (
+		         select tpv.* from textpropertyversion tpv, structureelementversion sev where tpv.classid=#{attributeDescriptionClassId} and tpv.languagecode = #{languageCode} and tpv.textpropertyid=sev.elementversionid and sev.structureid= #{contextId}  
+		)
+		select tpv.text as code, tpv1.text as ga_code, tpv2.text as ga_description, bpv.booleanvalue as mandatoryindicator, cv.status
+				from textpropertyversion tpv, structureelementversion sev,
+				geneCPV cpv2, refCPV cpv1, geneCodePro tpv1, geneDesc tpv2,
+				conceptversion cv, structureelementversion sev5, booleanpropertyversion bpv, structureelementversion sev6
+				where tpv.textpropertyid=sev.elementversionid and sev.structureid=#{contextId}
+		    and cv.elementid = cpv1.rangeelementid(+)
+		    and cpv1.domainelementid = cpv2.domainelementid(+) 
+		    and cpv2.rangeelementid = tpv1.domainelementid(+)
+		    and cpv2.domainelementid = tpv2.domainelementid(+) 
+		    and cv.elementid=tpv.domainelementid and cv.classid=#{referenceAttributeClassId} and cv.conceptid=sev5.elementversionid and sev5.structureid=#{contextId}
+		    and tpv.classid=#{attributeCodeClassId} and tpv.text=#{referenceCode}
+		and sev6.structureid=#{contextId} 
+		and sev6.elementversionid=bpv.booleanpropertyid and bpv.classid=#{attributeMandatoryIndicatorClassId} and bpv.domainelementid=cv.elementid
+		order by tpv.text, tpv1.text
+
+   </select>   
+  
+   <select id="findSnapShotSeqNumber" resultType="java.lang.Integer">
+       select max(SNAPSHOT_SEQ_NUMBER) 
+       from PUBLICATION_SNAPSHOT
+       where STRUCTUREID =#{contextId}
+   </select>
+   
+   <select id="findVersionCodeNumber" resultType="java.lang.Integer">
+       select max(VERSION_CODE_NUMBER) 
+       from PUBLICATION_RELEASE
+       where FISCAL_YEAR =#{fiscalYear} and
+             RELEASE_TYPE_ID =#{releaseType.releaseTypeId}
+   </select>
+   
+  
+  
+   <select id="findAllLatestSnapShots" resultMap="PublicationSnapShotMap">
+       select ps1.PUBLICATION_SNAPSHOT_ID,ps1.STRUCTUREID,ps1.SNAPSHOT_SEQ_NUMBER,ps1.SNAPSHOT_NOTE,ps1.SNAPSHOT_QA_NOTE,ps1.CREATED_BY_USER_ID,ps1.CREATION_DATE,
+              ps1.SNAPSHOT_STATUS_CODE, ps1.FAILED_REASON, ps1.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps1 ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps1.STRUCTUREID =sv.STRUCTUREID  and
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps1.SNAPSHOT_SEQ_NUMBER = (SELECT MAX(ps2.SNAPSHOT_SEQ_NUMBER )
+                               FROM PUBLICATION_SNAPSHOT ps2
+                              WHERE ps1.STRUCTUREID = ps2.STRUCTUREID)
+               
+   </select>
+   
+   
+     <select id="findAllSuccessLatestSnapShots" resultMap="PublicationSnapShotMap">
+       select ps1.PUBLICATION_SNAPSHOT_ID,ps1.STRUCTUREID,ps1.SNAPSHOT_SEQ_NUMBER,ps1.SNAPSHOT_NOTE,ps1.SNAPSHOT_QA_NOTE,ps1.CREATED_BY_USER_ID,ps1.CREATION_DATE,
+              ps1.SNAPSHOT_STATUS_CODE, ps1.FAILED_REASON, ps1.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps1 ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps1.STRUCTUREID =sv.STRUCTUREID  and
+               ps1.SNAPSHOT_STATUS_CODE='E' and 
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps1.SNAPSHOT_SEQ_NUMBER = (SELECT MAX(ps2.SNAPSHOT_SEQ_NUMBER )
+                               FROM PUBLICATION_SNAPSHOT ps2
+                              WHERE ps1.STRUCTUREID = ps2.STRUCTUREID)
+              order by ev.VERSIONCODE desc              
+               
+   </select>
+   
+   
+   
+    <select id="findAllSnapShotsByContextId" resultMap="PublicationSnapShotMap">
+       select ps.PUBLICATION_SNAPSHOT_ID,ps.STRUCTUREID,ps.SNAPSHOT_SEQ_NUMBER,ps.SNAPSHOT_NOTE,ps.SNAPSHOT_QA_NOTE,ps.CREATED_BY_USER_ID,ps.CREATION_DATE,
+              ps.SNAPSHOT_STATUS_CODE, ps.FAILED_REASON,ps.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps.STRUCTUREID =sv.STRUCTUREID  and
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps.STRUCTUREID =#{contextId}
+       order by ps.SNAPSHOT_SEQ_NUMBER desc                
+   </select>
+   
+      <select id="findLatestSnapShotByContextId" resultMap="PublicationSnapShotMap">
+       select ps.PUBLICATION_SNAPSHOT_ID,ps.STRUCTUREID,ps.SNAPSHOT_SEQ_NUMBER,ps.SNAPSHOT_NOTE,ps.SNAPSHOT_QA_NOTE,ps.CREATED_BY_USER_ID,ps.CREATION_DATE,
+              ps.SNAPSHOT_STATUS_CODE, ps.FAILED_REASON,ps.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps.STRUCTUREID =sv.STRUCTUREID  and
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps.STRUCTUREID =#{contextId} and
+               ps.SNAPSHOT_SEQ_NUMBER = (SELECT MAX(ps2.SNAPSHOT_SEQ_NUMBER )
+                                         FROM PUBLICATION_SNAPSHOT ps2
+                                         WHERE ps.STRUCTUREID = ps2.STRUCTUREID)
+       order by ps.SNAPSHOT_SEQ_NUMBER desc                
+   </select>
+   
+    <select id="findLatestSuccessTabSnapShotByContextId" resultMap="PublicationSnapShotMap">
+       select ps.PUBLICATION_SNAPSHOT_ID,ps.STRUCTUREID,ps.SNAPSHOT_SEQ_NUMBER,ps.SNAPSHOT_NOTE,ps.SNAPSHOT_QA_NOTE,ps.CREATED_BY_USER_ID,ps.CREATION_DATE,
+              ps.SNAPSHOT_STATUS_CODE, ps.FAILED_REASON,ps.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps.STRUCTUREID =sv.STRUCTUREID  and
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps.STRUCTUREID =#{contextId} and
+               ps.SNAPSHOT_FILE_FORMAT_CODE='TAB' and
+               ps.SNAPSHOT_STATUS_CODE='E' and
+               ps.SNAPSHOT_SEQ_NUMBER = (SELECT MAX(ps2.SNAPSHOT_SEQ_NUMBER )
+                                         FROM PUBLICATION_SNAPSHOT ps2
+                                         WHERE ps.STRUCTUREID = ps2.STRUCTUREID
+                                               and ps2.SNAPSHOT_FILE_FORMAT_CODE='TAB'
+                                               and ps2.SNAPSHOT_STATUS_CODE='E' )
+       order by ps.SNAPSHOT_SEQ_NUMBER desc                
+   </select>
+   
+    <select id="findLatestSuccessFixedWidthSnapShotByContextId" resultMap="PublicationSnapShotMap">
+       select ps.PUBLICATION_SNAPSHOT_ID,ps.STRUCTUREID,ps.SNAPSHOT_SEQ_NUMBER,ps.SNAPSHOT_NOTE,ps.SNAPSHOT_QA_NOTE,ps.CREATED_BY_USER_ID,ps.CREATION_DATE,
+              ps.SNAPSHOT_STATUS_CODE, ps.FAILED_REASON,ps.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps.STRUCTUREID =sv.STRUCTUREID  and
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps.STRUCTUREID =#{contextId} and
+               ps.SNAPSHOT_FILE_FORMAT_CODE='FIX' and
+               ps.SNAPSHOT_STATUS_CODE='E' and
+               ps.SNAPSHOT_SEQ_NUMBER = (SELECT MAX(ps2.SNAPSHOT_SEQ_NUMBER )
+                                         FROM PUBLICATION_SNAPSHOT ps2
+                                         WHERE ps.STRUCTUREID = ps2.STRUCTUREID
+                                               and ps2.SNAPSHOT_FILE_FORMAT_CODE='FIX'
+                                               and ps2.SNAPSHOT_STATUS_CODE='E' )
+       order by ps.SNAPSHOT_SEQ_NUMBER desc                
+   </select>
+   
+   
+     <select id="findSnapShotById" resultMap="PublicationSnapShotMap">
+       select ps.PUBLICATION_SNAPSHOT_ID,ps.STRUCTUREID,ps.SNAPSHOT_SEQ_NUMBER,ps.SNAPSHOT_NOTE,ps.SNAPSHOT_QA_NOTE,ps.CREATED_BY_USER_ID,ps.CREATION_DATE,
+              ps.SNAPSHOT_STATUS_CODE, ps.FAILED_REASON, ps.SNAPSHOT_FILE_FORMAT_CODE,
+              sv.STRUCTUREID as cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as cx_CLASSNAME, 
+              ev.VERSIONCODE as cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as cx_CHANGE_REQUEST_ID
+       from PUBLICATION_SNAPSHOT ps ,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where   ps.STRUCTUREID =sv.STRUCTUREID  and
+               sv.CLASSID = c.CLASSID  and 
+               sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+               ps.PUBLICATION_SNAPSHOT_ID =#{snapShotId}
+   </select>
+   
+    <select id="findPublicationReleaseById" resultMap="PublicationReleaseMap">
+       select pr.PUBLICATION_RELEASE_ID,
+              pr.FISCAL_YEAR,
+              pr.RELEASE_NOTE,
+              pr.VERSION_CODE_NUMBER,
+              pr.CREATED_BY_USER_ID,
+              pr.CREATION_DATE,
+              pr.RELEASE_TYPE_ID,
+              pr.RELEASE_STATUS_CODE,
+              pr.FAILED_REASON,
+              releasedBy.USER_PROFILE_ID as usr_USER_PROFILE_ID,
+              releasedBy.USER_NAME as usr_USER_NAME
+        from PUBLICATION_RELEASE pr 
+             left join USER_PROFILE releasedBy on pr.CREATED_BY_USER_ID = releasedBy.USER_PROFILE_ID
+        where pr.PUBLICATION_RELEASE_ID = #{releaseId}  
+   </select>
+   
+     <select id="findLatestSuccessPublicationReleaseByFiscalYear" resultMap="PublicationReleaseMap">
+       select pr.PUBLICATION_RELEASE_ID,
+              pr.FISCAL_YEAR,
+              pr.RELEASE_NOTE,
+              pr.VERSION_CODE_NUMBER,
+              pr.CREATED_BY_USER_ID,
+              pr.CREATION_DATE,
+              pr.RELEASE_TYPE_ID,
+              pr.RELEASE_STATUS_CODE,
+              pr.FAILED_REASON
+        from PUBLICATION_RELEASE pr 
+        where pr.FISCAL_YEAR = #{fiscalYear}  and
+               pr.RELEASE_STATUS_CODE='E' and
+               pr.CREATION_DATE = (SELECT MAX(pr2.CREATION_DATE )
+                                         FROM PUBLICATION_RELEASE pr2
+                                         WHERE pr.FISCAL_YEAR = pr2.FISCAL_YEAR)
+   </select>
+   
+     <select id="findLatestPublicationReleaseByFiscalYear" resultMap="PublicationReleaseMap">
+       select pr.PUBLICATION_RELEASE_ID,
+              pr.FISCAL_YEAR,
+              pr.RELEASE_NOTE,
+              pr.VERSION_CODE_NUMBER,
+              pr.CREATED_BY_USER_ID,
+              pr.CREATION_DATE,
+              pr.RELEASE_TYPE_ID,
+              pr.RELEASE_STATUS_CODE,
+              pr.FAILED_REASON
+        from PUBLICATION_RELEASE pr 
+        where pr.FISCAL_YEAR = #{fiscalYear}  and
+              pr.CREATION_DATE = (SELECT MAX(pr2.CREATION_DATE )
+                                         FROM PUBLICATION_RELEASE pr2
+                                         WHERE pr.FISCAL_YEAR = pr2.FISCAL_YEAR)
+   </select>
+   
+       <select id="findAllSuccessDescentOrderPublicationReleasesByFiscalYear" resultMap="PublicationReleaseMap">
+       select pr.PUBLICATION_RELEASE_ID,
+              pr.FISCAL_YEAR,
+              pr.RELEASE_NOTE,
+              pr.VERSION_CODE_NUMBER,
+              pr.CREATED_BY_USER_ID,
+              pr.CREATION_DATE,
+              pr.RELEASE_TYPE_ID,
+              pr.RELEASE_STATUS_CODE,
+              pr.FAILED_REASON
+        from PUBLICATION_RELEASE pr 
+        where pr.FISCAL_YEAR = #{fiscalYear} 
+          and pr.RELEASE_STATUS_CODE='E'
+          order by pr.PUBLICATION_RELEASE_ID desc
+           
+   </select>
+   
+   
+   
+   <select id="findAllReleases" resultMap="PublicationReleaseMap">
+       select pr.PUBLICATION_RELEASE_ID,
+              pr.FISCAL_YEAR,
+              pr.RELEASE_NOTE,
+              pr.VERSION_CODE_NUMBER,
+              pr.CREATED_BY_USER_ID,
+              pr.CREATION_DATE,
+              pr.RELEASE_TYPE_ID,
+              pr.RELEASE_STATUS_CODE,
+              pr.FAILED_REASON,
+              pr.NOTIFICATION_SENT_IND_CODE,
+              pr.ASOT_STATUS_CODE,
+              ps.PUBLICATION_SNAPSHOT_ID as ss_PUBLICATION_SNAPSHOT_ID ,
+              ps.STRUCTUREID as ss_STRUCTUREID,
+              ps.SNAPSHOT_SEQ_NUMBER as ss_SNAPSHOT_SEQ_NUMBER,
+              ps.SNAPSHOT_NOTE as ss_SNAPSHOT_NOTE,
+              ps.SNAPSHOT_QA_NOTE as ss_SNAPSHOT_QA_NOTE,
+              ps.CREATED_BY_USER_ID as ss_CREATED_BY_USER_ID,
+              ps.CREATION_DATE as ss_CREATION_DATE,
+              sv.STRUCTUREID as ss_cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as ss_cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as ss_cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as ss_cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as ss_cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as ss_cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as ss_cx_CLASSNAME, 
+              ev.VERSIONCODE as ss_cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as ss_cx_CHANGE_REQUEST_ID
+       from PUBLICATION_RELEASE pr ,
+            PUBLICATION_RELEASE_SNAPSHOT prs,
+            PUBLICATION_SNAPSHOT ps,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where pr.PUBLICATION_RELEASE_ID = prs.PUBLICATION_RELEASE_ID  and
+             prs.PUBLICATION_SNAPSHOT_ID=ps.PUBLICATION_SNAPSHOT_ID and
+             ps.STRUCTUREID =sv.STRUCTUREID  and
+             sv.CLASSID = c.CLASSID  and 
+             sv.STRUCTUREID = ev.ELEMENTVERSIONID
+       order by  pr.FISCAL_YEAR desc , pr.PUBLICATION_RELEASE_ID desc        
+            
+   </select>
+   
+   <select id="findLatestPublicationReleaseByFiscalYearAndReleaseType" resultMap="PublicationReleaseMap">
+       select pr.PUBLICATION_RELEASE_ID,
+              pr.FISCAL_YEAR,
+              pr.RELEASE_NOTE,
+              pr.VERSION_CODE_NUMBER,
+              pr.CREATED_BY_USER_ID,
+              pr.CREATION_DATE,
+              pr.RELEASE_TYPE_ID,
+              pr.RELEASE_STATUS_CODE,
+              pr.FAILED_REASON,
+              pr.NOTIFICATION_SENT_IND_CODE,
+              pr.ASOT_STATUS_CODE,
+              ps.PUBLICATION_SNAPSHOT_ID as ss_PUBLICATION_SNAPSHOT_ID ,
+              ps.STRUCTUREID as ss_STRUCTUREID,
+              ps.SNAPSHOT_SEQ_NUMBER as ss_SNAPSHOT_SEQ_NUMBER,
+              ps.SNAPSHOT_NOTE as ss_SNAPSHOT_NOTE,
+              ps.SNAPSHOT_QA_NOTE as ss_SNAPSHOT_QA_NOTE,
+              ps.CREATED_BY_USER_ID as ss_CREATED_BY_USER_ID,
+              ps.CREATION_DATE as ss_CREATION_DATE,
+              sv.STRUCTUREID as ss_cx_STRUCTUREID,
+              sv.BASESTRUCTUREID as ss_cx_BASESTRUCTUREID, 
+              sv.CONTEXTSTATUS as ss_cx_CONTEXTSTATUS, 
+              sv.CONTEXTSTATUSDATE as ss_cx_CONTEXTSTATUSDATE, 
+              sv.ISVERSIONYEAR as ss_cx_ISVERSIONYEAR,
+              sv.FREEZING_STATUS_ID as ss_cx_FREEZING_STATUS_ID,
+              c.CLASSNAME as ss_cx_CLASSNAME, 
+              ev.VERSIONCODE as ss_cx_VERSIONCODE,
+              sv.CHANGE_REQUEST_ID as ss_cx_CHANGE_REQUEST_ID
+       from PUBLICATION_RELEASE pr ,
+            PUBLICATION_RELEASE_SNAPSHOT prs,
+            PUBLICATION_SNAPSHOT ps,
+            STRUCTUREVERSION sv, 
+            CLASS c,
+            ELEMENTVERSION ev
+       where pr.PUBLICATION_RELEASE_ID = prs.PUBLICATION_RELEASE_ID  and
+             prs.PUBLICATION_SNAPSHOT_ID=ps.PUBLICATION_SNAPSHOT_ID and
+             ps.STRUCTUREID =sv.STRUCTUREID  and
+             sv.CLASSID = c.CLASSID  and 
+             sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+             pr.RELEASE_STATUS_CODE='E' and
+             pr.FISCAL_YEAR =#{fiscalYear} and
+             pr.RELEASE_TYPE_ID= #{releaseType.releaseTypeId} and
+             pr.CREATION_DATE = (SELECT MAX(pr2.CREATION_DATE )
+                                         FROM PUBLICATION_RELEASE pr2
+                                         WHERE pr.FISCAL_YEAR = pr2.FISCAL_YEAR and
+                                               pr.RELEASE_TYPE_ID =pr2.RELEASE_TYPE_ID)
+   </select>
+   
+   
+   
+    <select id="synchronizeRelease" resultType="java.lang.Long">
+        select RELEASE_LOCK_SEQ.nextval from dual for update
+   </select>    
+   
+   <select id="synchronizeCloseYear" resultType="java.lang.Long">
+        select CLOSE_YEAR_LOCK_SEQ.nextval from dual for update
+   </select>    
+   
+  
+    <insert id="insertPublicationSnapShot"  parameterType="ca.cihi.cims.model.prodpub.PublicationSnapShot">
+        <selectKey resultType="java.lang.Long" keyProperty="snapShotId" order="BEFORE">  
+		        select PUBLICATION_SNAPSHOT_ID_SEQ.nextval from dual 
+	    </selectKey>  
+      insert into PUBLICATION_SNAPSHOT 
+                  (PUBLICATION_SNAPSHOT_ID,STRUCTUREID,SNAPSHOT_SEQ_NUMBER,SNAPSHOT_NOTE,SNAPSHOT_QA_NOTE,CREATED_BY_USER_ID,CREATION_DATE,SNAPSHOT_STATUS_CODE,FAILED_REASON,SNAPSHOT_FILE_FORMAT_CODE)
+      values (#{snapShotId},#{structureId},#{snapShotSeqNumber},#{snapShotNote},
+              #{snapShotQANote},#{createdByUserId}, CURRENT_DATE,
+              #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+              #{failedReason},
+              #{fileFormat,typeHandler=org.apache.ibatis.type.EnumTypeHandler})
+    </insert>
+  
+    <insert id="insertPublicationRelease"  parameterType="ca.cihi.cims.model.prodpub.PublicationRelease">
+        <selectKey resultType="java.lang.Long" keyProperty="releaseId" order="BEFORE">  
+		        select PUBLICATION_RELEASE_ID_SEQ.nextval from dual 
+	    </selectKey>  
+      insert into PUBLICATION_RELEASE 
+                  (PUBLICATION_RELEASE_ID,FISCAL_YEAR,RELEASE_NOTE,VERSION_CODE_NUMBER,CREATED_BY_USER_ID,CREATION_DATE,RELEASE_TYPE_ID,RELEASE_STATUS_CODE,FAILED_REASON)
+      values (#{releaseId},#{fiscalYear},#{releaseNote},#{versionCodeNumber},
+              #{createdByUserId}, CURRENT_DATE, #{releaseType.releaseTypeId},
+              #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+              #{failedReason})
+    </insert>
+    
+    <insert id="insertPublicationReleaseSnapShot"  parameterType="ca.cihi.cims.model.prodpub.PublicationRelease">
+      insert into PUBLICATION_RELEASE_SNAPSHOT 
+                  (PUBLICATION_RELEASE_ID,PUBLICATION_SNAPSHOT_ID) (
+                  select RSS.* from(
+		            <foreach collection="publicationSnapShots" item="snapShot" index="index" separator="union all">
+			          select #{releaseId},
+			                 #{snapShot.snapShotId}
+			              from dual
+		            </foreach>
+		          )RSS           
+              )
+     </insert>
+  
+  
+  
+    <update id="updatePublicationSnapShotQANote"  parameterType="ca.cihi.cims.model.prodpub.PublicationSnapShot">
+       update PUBLICATION_SNAPSHOT set
+              SNAPSHOT_QA_NOTE  = #{snapShotQANote}
+       where PUBLICATION_SNAPSHOT_ID  = #{snapShotId}    
+    </update>
+    
+    <update id="updatePublicationSnapShot"  parameterType="ca.cihi.cims.model.prodpub.PublicationSnapShot">
+       update PUBLICATION_SNAPSHOT set
+             SNAPSHOT_STATUS_CODE =#{status,typeHandler=org.apache.ibatis.type.EnumTypeHandler}, 
+             FAILED_REASON = #{failedReason}
+       where PUBLICATION_SNAPSHOT_ID  = #{snapShotId}    
+    </update>
+    
+    
+  
+     <update id="updatePublicationReleaseNote"  parameterType="ca.cihi.cims.model.prodpub.PublicationRelease">
+       update PUBLICATION_RELEASE set
+              RELEASE_NOTE  = #{releaseNote}
+       where PUBLICATION_RELEASE_ID  = #{releaseId}    
+    </update>
+  
+     <update id="updatePublicationRelease"  parameterType="ca.cihi.cims.model.prodpub.PublicationRelease">
+       update PUBLICATION_RELEASE set
+              RELEASE_STATUS_CODE =#{status,typeHandler=org.apache.ibatis.type.EnumTypeHandler}, 
+              RELEASE_NOTE  = #{releaseNote},
+              FAILED_REASON = #{failedReason},
+              NOTIFICATION_SENT_IND_CODE = #{notificationSent,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler}
+       where PUBLICATION_RELEASE_ID  = #{releaseId}    
+    </update>
+  
+  
+  
+
+</mapper>

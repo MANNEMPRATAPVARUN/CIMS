@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.refset.mapper.RefsetControlMapper">
+
+    <resultMap id="refsetDTOMap" type="ca.cihi.cims.refset.dto.RefsetDTO">
+		<result property="elementUUID" column="elementuuid" />
+		<result property="changedFromVersionId" column="changedfromversionid" />
+		<result property="originatingContextId" column="originatingcontextid" />
+		<result property="versionCode" column="versioncode" />
+		<result property="versionTimestamp" column="versiontimestamp" />
+		<result property="categoryName"  column="categoryName" />
+		<result property="assigneeName" column="assigneeName" />
+	    <result property="versionCode" column="versionCode" />
+	    <result property="refsetCode" column="refsetCode" />
+	    <result property="refsetName" column="refsetName" />
+	    <result property="effectiveYearFrom" column="effectiveYearFrom" />
+	    <result property="effectiveYearTo" column="effectiveYearTo" />
+		<result property="assigneeId" column="refset_assignee_id" />
+		<result property="refsetStatus" column="refsetStatus"  />
+		<association property="classs"  javaType="ca.cihi.cims.framework.dto.ClasssDTO" resultMap="ca.cihi.cims.framework.mapper.ClasssMapper.classsDTOMap" columnPrefix="cls_"/>
+		<association property="elementIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="el_"/>
+		<association property="contextIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="ctel_"/>
+	</resultMap>
+	<resultMap id="valueDTOMap" type="ca.cihi.cims.refset.dto.ValueDTO">
+		<result property="idValue" column="idValue"/>
+		<result property="textValue" column="textValue"/>
+		<result property="languageCode" column="languageCode"/>
+	</resultMap>
+	
+	<resultMap id="classificationCodeSearchReponse" type="ca.cihi.cims.refset.dto.ClassificationCodeSearchReponse">
+	    <result property="conceptId" column="conceptId" />
+	    <result property="conceptCode" column="conceptCode" />
+	    <result property="descriptionEnglish" column="descriptionEnglish" />
+	    <result property="descriptionFrench" column="descriptionFrench" />
+	    <result property="contentId" column="chapterOrSectionId" />
+	    <result property="contentNumber" column="contentNumber" />
+	    <result property="contentDescEnglish" column="contentDescEnglish" />
+	    <result property="contentDescFrench" column="contentDescFrench" />
+	</resultMap>
+		
+	<select id="getRefsetDTO" resultMap="refsetDTOMap">
+		with allrefs as (
+		    select concept_el.elementuuid elementuuid,concept_el.classid classid, rfs.status refsetStatus,concept_ev.originatingcontextid originatingcontextid,  concept_ev.changedfromversionid changedfromversionid, 
+		    strev.versiontimestamp,concept_ev.elementid conceptElementId, concept_ev.elementversionid conceptVersionId, strev.versioncode versionCode
+		    , sv.structureid contextVersionId, sv.elementid contextElementId, up.user_name assigneeName, rfs.refset_assignee_id,
+		    cims_util.getNumericProperty(classnme => 'Category', elemId => concept_ev.elementid, strid => sv.structureid) categoryId
+		    , cims_util.getTextProperty(classnme => 'Name', elemId => concept_ev.elementid, language => 'ENG', strid => sv.structureid) refsetName,
+              cims_util.getTextProperty(classnme => 'Code', elemId => concept_ev.elementid, language => null, strid => sv.structureid) refsetCode,
+              cims_util.getNumericProperty(classnme => 'EffectiveYearFrom', elemId => concept_ev.elementid, strid => sv.structureid) effectiveYearFrom,
+              cims_util.getNumericProperty(classnme => 'EffectiveYearTo', elemId => concept_ev.elementid, strid => sv.structureid) effectiveYearTo       
+		    from refset_control rfs, element concept_el, elementversion concept_ev, structureelementversion sev, structureversion sv, user_profile up, elementversion strev
+		    where rfs.refset_control_id = concept_el.elementid
+		    and concept_el.elementid = concept_ev.elementid
+		    and concept_ev.elementversionid = sev.elementversionid
+		    and sv.structureid = sev.structureid
+        	and sv.structureid=strev.elementversionid
+		    and up.user_profile_id = rfs.refset_assignee_id   
+		)
+		select ar.elementuuid elementuuid, ar.changedFromVersionId changedFromVersionId, ar.originatingContextId originatingContextId,ar.versionCode versionCode,ar.versionTimestamp versionTimestamp,
+	    ar.assigneeName assigneeName, ar.refset_assignee_id, ar.refsetStatus refsetStatus, x.aux_table_value_label_desc categoryName,
+	    ar.conceptElementId el_elementid, ar.conceptVersionId el_elementVersionid,
+	    c.classid cls_classid, c.tablename cls_tablename, c.baseclassificationname cls_baseclassificationname, c.classname cls_classname, c.friendlyname cls_friendlyname,c.notes cls_friendlyname ,
+	    ar.contextVersionId ctel_elementversionid, ar.contextElementId ctel_elementid,
+	    ar.refsetName refsetName, ar.refsetCode refsetCode, ar.effectiveYearFrom effectiveYearFrom, ar.effectiveYearTo effectiveYearTo
+		from allrefs ar, aux_table_value x, class c
+		where x.aux_table_value_id = ar.categoryId and ar.contextVersionId=#{contextId}
+	    and c.classid=ar.classid
+	</select>
+	
+	<select id="listRefsetVersions" resultMap="refsetDTOMap">
+		with allrefs as (
+		    select concept_el.elementuuid elementuuid,concept_el.classid classid, rfs.status refsetStatus,concept_ev.originatingcontextid originatingcontextid,  concept_ev.changedfromversionid changedfromversionid, 
+		    strev.versiontimestamp,concept_ev.elementid conceptElementId, concept_ev.elementversionid conceptVersionId, strev.versioncode versionCode
+		    , sv.structureid contextVersionId, sv.elementid contextElementId , up.user_name assigneeName, rfs.refset_assignee_id,
+		    cims_util.getNumericProperty(classnme => 'Category', elemId => concept_ev.elementid, strid => sv.structureid) categoryId
+		    , cims_util.getTextProperty(classnme => 'Name', elemId => concept_ev.elementid, language => 'ENG', strid => sv.structureid) refsetName,
+	        cims_util.getTextProperty(classnme => 'Code', elemId => concept_ev.elementid, language => null, strid => sv.structureid) refsetCode,
+            cims_util.getNumericProperty(classnme => 'EffectiveYearFrom', elemId => concept_ev.elementid, strid => sv.structureid) effectiveYearFrom,
+            cims_util.getNumericProperty(classnme => 'EffectiveYearTo', elemId => concept_ev.elementid, strid => sv.structureid) effectiveYearTo  
+		    from refset_control rfs, element concept_el, elementversion concept_ev, structureelementversion sev, structureversion sv, user_profile up, elementversion strev
+		    where rfs.refset_control_id = concept_el.elementid
+		    and concept_el.elementid = concept_ev.elementid
+		    and concept_ev.elementversionid = sev.elementversionid
+		    and sv.structureid = sev.structureid
+		    and sv.structureid = strev.elementversionid
+		    and up.user_profile_id = rfs.refset_assignee_id   
+		    <if test="status != null">
+				and rfs.status =  #{status}
+		    </if>	
+		    <if test="versionStatus != null">
+				and sv.contextstatus =  #{versionStatus}
+		    </if>	
+		    and sv.contextstatus &lt;&gt; 'DELETED'
+		)
+		select ar.elementuuid elementuuid, ar.changedFromVersionId changedFromVersionId, ar.originatingContextId originatingContextId,ar.versionCode versionCode,ar.versionTimestamp versionTimestamp,
+	    ar.assigneeName assigneeName, ar.refset_assignee_id, ar.refsetStatus refsetStatus, x.aux_table_value_label_desc categoryName,
+	    ar.conceptElementId el_elementid, ar.conceptVersionId el_elementVersionid,
+	    c.classid cls_classid, c.tablename cls_tablename, c.baseclassificationname cls_baseclassificationname, c.classname cls_classname, c.friendlyname cls_friendlyname,c.notes cls_friendlyname     ,
+	    ar.contextVersionId ctel_elementversionid, ar.contextElementId ctel_elementid,
+	    ar.refsetName refsetName, ar.refsetCode refsetCode, ar.effectiveYearFrom effectiveYearFrom, ar.effectiveYearTo effectiveYearTo	      
+		from allrefs ar, aux_table_value x, class c
+		where x.aux_table_value_id = ar.categoryId
+	    and c.classid=ar.classid
+		<if test="categoryId != null">
+			and x.aux_table_value_id = #{categoryId} 
+		</if>	
+ 	</select>
+ 	
+ 	<select id="listRefsets" resultMap="refsetDTOMap">
+		with currentRefsetVersions as (
+			select distinct  first_value(sv.structureid) over(partition by rfs.refset_control_id order by sv.structureid) structureid
+	        from refset_control rfs, elementversion concept_ev, structureelementversion sev, structureversion sv
+	        where rfs.refset_control_id =  concept_ev.elementid
+	        and concept_ev.elementversionid = sev.elementversionid
+	        and sv.structureid = sev.structureid and sv.contextstatus&lt;&gt;'DELETED'
+		), allrefs as (
+		    select concept_el.elementuuid elementuuid,concept_el.classid classid, rfs.status refsetStatus,concept_ev.originatingcontextid originatingcontextid,  concept_ev.changedfromversionid changedfromversionid, 
+		    strev.versiontimestamp,concept_ev.elementid conceptElementId, concept_ev.elementversionid conceptVersionId, strev.versioncode versionCode
+		    , sv.structureid contextVersionId, strev.elementid contextElementId , up.user_name assigneeName, rfs.refset_assignee_id,
+		    cims_util.getNumericProperty(classnme => 'Category', elemId => concept_ev.elementid, strid => sv.structureid) categoryId
+		    , cims_util.getTextProperty(classnme => 'Name', elemId => concept_ev.elementid, language => 'ENG', strid => sv.structureid) refsetName,
+	        cims_util.getTextProperty(classnme => 'Code', elemId => concept_ev.elementid, language => null, strid => sv.structureid) refsetCode,
+            cims_util.getNumericProperty(classnme => 'EffectiveYearFrom', elemId => concept_ev.elementid, strid => sv.structureid) effectiveYearFrom,
+            cims_util.getNumericProperty(classnme => 'EffectiveYearTo', elemId => concept_ev.elementid, strid => sv.structureid) effectiveYearTo  
+		    from refset_control rfs, element concept_el, elementversion concept_ev, structureelementversion sev, currentRefsetVersions sv, user_profile up, elementversion strev
+		    where rfs.refset_control_id = concept_el.elementid
+		    and concept_el.elementid = concept_ev.elementid
+		    and concept_ev.elementversionid = sev.elementversionid
+		    and sv.structureid = sev.structureid
+		    and sv.structureid=strev.elementversionid
+		    and up.user_profile_id = rfs.refset_assignee_id   
+		    <if test="status != null and status!=''">
+				and rfs.status =  #{status}
+		    </if>
+		)
+		select ar.elementuuid elementuuid, ar.changedFromVersionId changedFromVersionId, ar.originatingContextId originatingContextId,ar.versionCode versionCode,ar.versionTimestamp versionTimestamp,
+	    ar.assigneeName assigneeName, ar.refset_assignee_id, ar.refsetStatus refsetStatus, x.aux_table_value_label_desc categoryName,
+	    ar.conceptElementId el_elementid, ar.conceptVersionId el_elementVersionid,
+	    c.classid cls_classid, c.tablename cls_tablename, c.baseclassificationname cls_baseclassificationname, c.classname cls_classname, c.friendlyname cls_friendlyname,c.notes cls_friendlyname     ,
+	    ar.contextVersionId ctel_elementversionid, ar.contextElementId ctel_elementid,
+	    ar.refsetName refsetName, ar.refsetCode refsetCode, ar.effectiveYearFrom effectiveYearFrom, ar.effectiveYearTo effectiveYearTo	      
+		from allrefs ar, aux_table_value x, class c
+		where x.aux_table_value_id = ar.categoryId
+	    and c.classid=ar.classid
+ 	</select>
+ 	
+ 	<update id="updateAssignee" parameterType="java.util.Map" statementType="CALLABLE" flushCache="true">
+		<![CDATA[ 
+          	call cims_refset.updateAssignee
+          	(
+				#{assigneeId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{refsetId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+ 	</update>
+ 	
+ 	<update id="updateRefsetStatus" parameterType="java.util.Map">
+ 		update refset_control t
+        set t.status = #{status}
+        where t.refset_control_id = #{refsetId}
+ 	</update>
+ 	
+ 	<insert id="insert" parameterType="java.util.Map">
+ 		insert into refset_control(refset_control_id,refset_assignee_id,status)
+        values(#{refsetId},#{assigneeId},#{status})
+ 	</insert>
+ 	
+ 	<select id="getAssigneeId" parameterType="java.util.Map" resultType="java.lang.Long">
+ 		select t.user_profile_id from user_profile t
+		where t.user_name = lower(#{userName})
+ 	</select>
+ 	
+ 	<select id="getCategoryName" parameterType="java.util.Map" resultType="java.lang.String">
+ 	    select t.aux_table_value_label_desc from AUX_TABLE_VALUE t
+		where t.aux_table_value_id = #{categoryId} 
+ 	</select> 
+ 	
+ 	<select id="getActiveClassificationByCode" resultMap="classificationCodeSearchReponse">
+ 	    with strelementversion as(
+             select elementversionid, elementid from structureelementversion where structureid = #{contextId}), 
+                    strelementversion1 as(select elementversionid, elementid from structureelementversion where structureid = #{contextId}) 
+        select conceptId, conceptCode, descriptionEnglish, descriptionFrench, chapterOrSectionId,cims_util.getTextProperty(chapterOrSectionId,'Code', #{contextId}, null) contentNumber,
+               cims_util.getTextProperty(chapterOrSectionId,'LongTitle', #{contextId}, 'ENG') contentDescEnglish,
+               cims_util.getTextProperty(chapterOrSectionId,'LongTitle', #{contextId}, 'FRA') contentDescFrench
+        from (
+	    select domainelementid conceptId, 
+               text conceptCode, 
+               cims_util.getTextProperty(domainelementid,'LongTitle', #{contextId}, 'ENG') descriptionEnglish,
+               cims_util.getTextProperty(domainelementid,'LongTitle', #{contextId}, 'FRA') descriptionFrench,
+               cims_util.getchapterorsectionid(#{classificationCode}, #{contextId}, text) chapterOrSectionId
+	      from (select domainelementid, tp.text 
+                  from textpropertyversion tp, 
+                       strelementversion stp, 
+                       conceptversion cv, 
+                       strelementversion1 ctv
+                 where tp.classid = #{classificationId}
+	               and cv.status = 'ACTIVE'
+	               and upper(tp.text) like upper(#{searchConceptCode})
+	               and tp.textpropertyid = stp.elementversionid
+	               and tp.domainelementid = cv.elementid
+	               and cv.classid in (5,64,65)
+	               and cv.conceptid = ctv.elementversionid
+                 order by replace(text, '^^', '') asc)
+        )
+	    where rownum &lt;= #{maxResults}
+ 	</select>
+ 	
+ 	<select id="searchCommonTerm" resultType="java.lang.String"> 	
+ 		with elementversions as
+	    (
+	      select /*+ INLINE */ ev.* from elementversion ev, class c
+	      where ev.classid = c.classid
+	      and c.classname = 'TextValue'
+	    ), columnIds as 
+	    (
+	       select cv.elementid from conceptversion cv, class c, textpropertyversion tpv
+	       where cv.status='ACTIVE' and tpv.domainelementid = cv.elementid and tpv.text=#{columnType} and tpv.classid=c.classid
+	       and c.classname='ColumnType'
+	    ), concepts as
+	    (
+	      select cv.*
+	      from conceptversion cv, class cclass
+	      where cv.status='ACTIVE'
+	        and cv.classid = cclass.classid and cclass.classname = 'Value'
+	        and exists (
+	          select 1 from conceptpropertyversion pv, class pclass 
+	            where pv.domainelementid = cv.elementid and pv.classid=pclass.classid
+	            and pclass.classname='DescribedBy'
+	                 and pv.rangeelementid in (select elementid from columnIds)
+	          )
+	       and exists (
+	          select 1 from numericpropertyversion pv, class pclass
+	          where pv.domainelementid = cv.elementid and pv.classid=pclass.classid
+	          and pclass.classname='IDValue'
+	          and pv.numericvalue=#{conceptId}
+	       )
+	    )
+	    select distinct(p_value) as value from
+	    (
+	    select  pv.text p_value
+	      from textpropertyversion pv, elementversions p, concepts c
+	      where p.elementversionid = pv.textpropertyid and pv.domainelementid=c.elementid
+	       and upper(pv.text) like '%'||upper(#{searchText})||'%'
+	      order by upper(pv.text)
+	     )
+	      where rownum &lt;= #{maxResults}
+	</select>
+	
+	<select id="findChangedCIMSValues" parameterType="java.util.Map" resultMap="valueDTOMap">
+ 		 WITH CANDIDATEPROPERTIES AS
+        (
+        SELECT /*+ RESULT_CACHE*/ SEV.ELEMENTVERSIONID, NPV.NUMERICVALUE
+          FROM STRUCTUREELEMENTVERSION SEV, NUMERICPROPERTYVERSION NPV
+          WHERE SEV.STRUCTUREID=#{refsetContextId} -- refsetcontextId
+          and npv.classid = #{idValueClasssId} -- IDValue class id
+          AND NPV.NUMERICPROPERTYID = SEV.ELEMENTVERSIONID
+        ), propClasses AS (
+          select * from class c where c.baseclassificationName = (
+          select c.baseclassificationName from class c , structureversion sv
+          where sv.classid = c.classid
+          and sv.structureid = #{toContextId}  -- 2018 newContextId
+          )
+          and c.classname in ('LongTitle')
+        ), OLDCONTEXT AS(
+          SELECT  /*+ RESULT_CACHE*/ SEV.ELEMENTVERSIONID, TPV.DOMAINELEMENTID, TPV.ELEMENTID, TPV.TEXT T, TPV.LANGUAGECODE
+          FROM STRUCTUREELEMENTVERSION SEV, TEXTPROPERTYVERSION TPV, propClasses pcls
+          WHERE SEV.STRUCTUREID=#{fromContextId} --2015 oldContextId
+          AND TPV.CLASSID = pcls.classid
+          AND TPV.TEXTPROPERTYID = SEV.ELEMENTVERSIONID
+          AND exists (select 1 from CANDIDATEPROPERTIES c where TPV.domainELEMENTID = C.NUMERICVALUE)
+        ), NEWCONTEXT AS
+        (
+          SELECT /*+ RESULT_CACHE*/ SEV.ELEMENTVERSIONID, TPV.DOMAINELEMENTID, TPV.ELEMENTID, TPV.TEXT T, TPV.LANGUAGECODE
+          FROM STRUCTUREELEMENTVERSION SEV, TEXTPROPERTYVERSION TPV, propClasses pcls
+          WHERE SEV.STRUCTUREID=#{toContextId} --newContextId
+          AND TPV.CLASSID = pcls.classid
+          AND TPV.TEXTPROPERTYID = SEV.ELEMENTVERSIONID
+          AND exists (select 1 from CANDIDATEPROPERTIES c where TPV.domainELEMENTID = C.NUMERICVALUE)
+        )
+        SELECT NEWCONTEXT.DOMAINELEMENTID idValue, NEWCONTEXT.T textValue, NEWCONTEXT.LANGUAGECODE languageCode
+        FROM NEWCONTEXT, OLDCONTEXT
+        WHERE NEWCONTEXT.ELEMENTID = OLDCONTEXT.ELEMENTID and NEWCONTEXT.LANGUAGECODE=OLDCONTEXT.LANGUAGECODE
+        AND NEWCONTEXT.ELEMENTVERSIONID != OLDCONTEXT.ELEMENTVERSIONID
+        AND NVL(NEWCONTEXT.T,' ') != NVL(OLDCONTEXT.T, ' ')
+ 	</select>
+ 	
+ 	<select id="removeEmptyRecords" statementType="CALLABLE" flushCache="true">
+		<![CDATA[ 
+          	call cims_refset.removeEmptyRecords
+          	(
+				#{contextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{recordClasssId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{valueClasssId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN},
+				#{partOfClasssId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+ 	</select>
+ 	
+ 	<select id="copyConfiguration" statementType="CALLABLE" flushCache="true">
+		<![CDATA[ 
+          	call cims_refset.copyConfiguration
+          	(
+				#{fromContextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{toContextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+ 	</select>
+ 	
+ 	<insert id="addPicklistOutputConfig" parameterType="ca.cihi.cims.refset.dto.PicklistOutputDTO" timeout="10" useGeneratedKeys="true"> 
+        <selectKey keyProperty="picklistOutputId" resultType="int" order="BEFORE">
+            SELECT picklist_output_seq.nextVal FROM dual            
+        </selectKey>
+ 
+        INSERT INTO picklist_output(picklist_output_id, refset_context_id, picklist_id, name, languagecode, picklist_output_code)
+            VALUES(#{picklistOutputId}, #{refsetContextId}, #{picklistId}, #{name}, #{languageCode}, #{outputCode}) 
+    </insert>
+    
+    <insert id="addPicklistColumnOutput" parameterType="ca.cihi.cims.refset.dto.PicklistColumnOutputDTO" timeout="10" useGeneratedKeys="true"> 
+        <selectKey keyProperty="pickListColumnOutputId" resultType="int" order="BEFORE">
+            SELECT picklist_column_output_seq.nextVal FROM dual            
+        </selectKey>
+ 
+        INSERT INTO picklist_column_output(picklist_column_output_id, refset_context_id, picklist_output_id, column_id, order_number, display_mode_code, parent_pl_column_output_id)
+            VALUES(#{pickListColumnOutputId}, #{refsetContextId}, #{picklistOutputId}, #{columnId}, #{orderNumber}, #{displayModeCode}, #{parentPickListColumnOutputId}) 
+    </insert>
+    
+    <resultMap id="picklistOutputConfigMap" type="ca.cihi.cims.refset.dto.PicklistOutputDTO">
+        <id column="picklist_output_id" jdbcType="NUMERIC" property="picklistOutputId" />
+        <result column="refset_context_id" jdbcType="NUMERIC" property="refsetContextId" />
+        <result column="picklist_id" jdbcType="NUMERIC" property="picklistId" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="languagecode" jdbcType="VARCHAR" property="languageCode" />
+        <result column="tab_name" jdbcType="VARCHAR" property="tabName" />
+        <result column="table_name" jdbcType="VARCHAR" property="tableName" />  
+        <result column="picklist_output_code" jdbcType="VARCHAR" property="outputCode" />
+        <result column="asot_release_ind_code" jdbcType="VARCHAR" property="asotReleaseIndCode" />
+    </resultMap>
+    
+    <select id="getPicklistOutputConfig" resultMap="picklistOutputConfigMap">
+        SELECT picklist_output_id, refset_context_id, picklist_id, name, languagecode, tab_name, table_name, picklist_output_code, asot_release_ind_code
+          FROM picklist_output
+         WHERE refset_context_id = #{refsetContextId} 
+           AND picklist_id = #{picklistElementId}
+    </select>  
+    
+    <select id="getPicklistOutputConfigByRefsetContextId" resultMap="picklistOutputConfigMap">
+        SELECT picklist_output_id, refset_context_id, picklist_id, name, languagecode, tab_name, table_name, picklist_output_code, asot_release_ind_code
+          FROM picklist_output
+         WHERE refset_context_id = #{refsetContextId}            
+    </select>  
+    
+    <resultMap id="picklistColumnOutputConfigMap" type="ca.cihi.cims.refset.dto.PicklistColumnOutputDTO"> 	
+		<result property="pickListColumnOutputId" column="picklist_column_output_id" />
+		<result property="refsetContextId" column="refset_context_id" />
+ 		<result property="picklistOutputId" column="picklist_output_id" />
+ 	    <result property="columnId" column="column_id" />
+ 		<result property="orderNumber" column="order_number" />
+ 		<result property="displayModeCode"  column="display_mode_code" />
+ 		<result property="parentPickListColumnOutputId" column="parent_pl_column_output_id" />
+ 	</resultMap>
+ 	
+ 	<select id="getPicklistColumnOutputConfig" resultMap="picklistColumnOutputConfigMap">
+ 	    SELECT a.picklist_column_output_id, 
+ 	           a.refset_context_id, 
+ 	           a.picklist_output_id,
+ 	           a.column_id,order_number,
+ 	           a.display_mode_code,
+ 	           a.parent_pl_column_output_id  
+ 	      FROM picklist_column_output a, picklist_output b
+ 	     WHERE a.refset_context_id = #{refsetContextId} 
+ 	       AND b.picklist_id = #{picklistElementId}
+ 	       AND a.picklist_output_id = b.picklist_output_id 	
+    </select>   
+    
+    <delete id="deletePicklistOutputConfig">
+        DELETE FROM picklist_output WHERE picklist_output_id = #{picklistOutputId}
+    </delete> 
+    
+    <update id="updatePicklistOutputConfig">
+        UPDATE picklist_output
+           SET name = #{name},
+               languagecode = #{languageCode}
+         WHERE picklist_output_id = #{picklistOutputId}
+    </update>    
+    
+    <select id="getPicklistOutputConfigByName" resultMap="picklistOutputConfigMap">
+        SELECT picklist_output_id, refset_context_id, picklist_id, name, languagecode, tab_name, table_name, picklist_output_code, asot_release_ind_code
+          FROM picklist_output
+         WHERE picklist_id = #{picklistElementId}
+           AND UPPER(name) = UPPER(#{name})
+    </select>
+    
+    <select id="getPicklistOutputConfigByOutputCode" resultMap="picklistOutputConfigMap">
+        SELECT picklist_output_id, refset_context_id, picklist_id, name, languagecode, tab_name, table_name, picklist_output_code, asot_release_ind_code
+          FROM picklist_output
+         WHERE refset_context_id = #{refsetContextId}
+           AND UPPER(picklist_output_code) = UPPER(#{outputCode})
+    </select>
+    
+    <select id="getPicklistOutputConfigByOutputId" resultMap="picklistOutputConfigMap">
+        SELECT picklist_output_id, refset_context_id, picklist_id, name, languagecode, tab_name, table_name, picklist_output_code, asot_release_ind_code
+          FROM picklist_output
+         WHERE picklist_output_id = #{picklistOutputId}
+    </select>
+    
+    <update id="updatePicklistOutputAccessbilityConfig">
+        UPDATE picklist_output
+           SET asot_release_ind_code = #{asotReleaseIndCode},
+           	   tab_name = #{outputTabName}, 
+               table_name = #{dataTableDescription}
+         WHERE picklist_output_id = #{picklistOutputId}
+    </update>   
+    
+    <delete id="deletePicklistColumnOutputConfig">      
+        DELETE FROM picklist_column_output WHERE picklist_column_output_id = #{picklistColumnOutputId}
+    </delete>
+    
+    <delete id="deletePicklistColumnOutputConfigByParentOutputId">      
+        DELETE FROM picklist_column_output WHERE parent_pl_column_output_id = #{parentOutputId}
+    </delete>   
+    
+    <select id="deleteColumnOutputConfigByColumnIdAndContextId" statementType="CALLABLE" flushCache="true">      
+        <![CDATA[ 
+          	call cims_refset.removePicklistOutputColumn
+          	(
+				#{contextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{columnId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+    </select> 
+    
+    <update id="updatePicklistColumnOutputConfig">
+        UPDATE picklist_column_output
+           SET order_number = #{orderNumber},
+               display_mode_code = #{displayModeCode}
+         WHERE picklist_column_output_id = #{picklistColumnOutputId}
+    </update>  
+    
+    <select id="getPicklistColumnOutputConfigById" resultMap="picklistColumnOutputConfigMap">
+ 	    SELECT picklist_column_output_id, 
+ 	           refset_context_id, 
+ 	           picklist_output_id,
+ 	           column_id,
+ 	           order_number,
+ 	           display_mode_code,
+ 	           parent_pl_column_output_id  
+ 	      FROM picklist_column_output 
+ 	     WHERE picklist_output_id = #{picklistOutputId} 
+ 	  ORDER BY order_number, column_id
+    </select>
+    
+    <insert id="addRefsetOutputConfig" parameterType="ca.cihi.cims.refset.dto.RefsetOutputDTO" timeout="10" useGeneratedKeys="true"> 
+        <selectKey keyProperty="refsetOutputId" resultType="int" order="BEFORE">
+            SELECT refset_output_seq.nextVal FROM dual            
+        </selectKey>
+ 
+        INSERT INTO refset_output(refset_output_id, refset_context_id, refset_id, name, languagecode, file_name)
+            VALUES(#{refsetOutputId}, #{refsetContextId}, #{refsetId}, #{name}, #{languageCode}, #{filename}) 
+    </insert>
+    
+    <resultMap id="refsetOutputConfigMap" type="ca.cihi.cims.refset.dto.RefsetOutputDTO">
+        <id column="refset_output_id" jdbcType="NUMERIC" property="refsetOutputId" />
+        <result column="refset_context_id" jdbcType="NUMERIC" property="refsetContextId" />
+        <result column="refset_id" jdbcType="NUMERIC" property="refsetId" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="languagecode" jdbcType="VARCHAR" property="languageCode" />        
+        <result column="file_name" jdbcType="VARCHAR" property="filename" />   
+    </resultMap>
+    
+    <select id="getRefsetOutputConfigById" resultMap="refsetOutputConfigMap">
+        SELECT refset_output_id, refset_context_id, refset_id, name, languagecode, file_name
+          FROM refset_output
+         WHERE refset_context_id = #{refsetContextId} 
+           AND refset_id = #{refsetElementId}
+    </select>   
+    
+    <select id="checkPicklistRemovable" parameterType="java.util.Map" statementType="CALLABLE" flushCache="true">
+		<![CDATA[ 
+          	call cims_refset.checkPicklistRemovable
+          	(
+				#{contextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{picklistElementId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN},
+				#{count, mode=OUT, jdbcType=BIGINT, javaType=java.lang.Integer}
+			) 
+        ]]>
+ 	</select>
+    
+    <update id="updateRefsetOutputConfig" parameterType="ca.cihi.cims.refset.dto.RefsetOutputDTO">
+        UPDATE refset_output
+           SET name = #{name},
+               languagecode = #{languageCode},
+               file_name = #{filename}
+         WHERE refset_output_id = #{refsetOutputId}
+    </update> 
+    
+    <delete id="deleteRefsetOutputConfig">
+        DELETE refset_output WHERE refset_output_id = #{refsetOutputId}
+    </delete>
+    
+    <select id="getRefsetOutputConfigByRefsetOutputId" resultMap="refsetOutputConfigMap">
+        SELECT refset_output_id, refset_context_id, refset_id, name, languagecode, file_name
+          FROM refset_output
+         WHERE refset_output_id = #{refsetOutputId}
+    </select>
+    
+    <insert id="addRefsetOutputTitle" parameterType="ca.cihi.cims.refset.dto.RefsetOutputTitleDTO">
+        INSERT INTO refset_output_title_page(refset_output_id, title, supplement_id)
+            VALUES(#{refsetOutputId}, #{title}, #{supplementId}) 
+    </insert>  
+    
+    <update id="updateRefsetOutputTitle" parameterType="ca.cihi.cims.refset.dto.RefsetOutputTitleDTO">
+        UPDATE refset_output_title_page
+           SET title = #{title},
+               supplement_id = #{supplementId}
+         WHERE refset_output_id = #{refsetOutputId}       
+    </update> 
+    
+    <resultMap id="refsetOutputTitleMap" type="ca.cihi.cims.refset.dto.RefsetOutputTitleDTO">
+        <id column="refset_output_id" jdbcType="NUMERIC" property="refsetOutputId" />              
+        <result column="title" jdbcType="VARCHAR" property="title" />
+        <result column="supplement_id" jdbcType="NUMERIC" property="supplementId" />          
+    </resultMap>
+    
+    <select id="getRefsetOutputTitleByRefsetOutputId" resultMap="refsetOutputTitleMap">
+        SELECT refset_output_id, title, supplement_id
+          FROM refset_output_title_page
+         WHERE refset_output_id = #{refsetOutputId}
+    </select>
+    
+    <resultMap id="refsetPicklistOutputMap" type="ca.cihi.cims.refset.dto.RefsetPicklistOutputDTO">
+        <result column="refset_output_id" jdbcType="NUMERIC" property="refsetOutputId" />              
+        <result column="picklist_output_id" jdbcType="NUMERIC" property="picklistOutputId" />
+        <result column="order_number" jdbcType="NUMERIC" property="orderNumber" />      
+    </resultMap>
+    
+    <select id="getRefsetPicklistOutputById" resultMap="refsetPicklistOutputMap">
+        SELECT refset_output_id, picklist_output_id, order_number
+          FROM refset_output_picklist
+         WHERE refset_output_id = #{refsetOutputId}
+           AND picklist_output_id = #{picklistOutputId}
+    </select>
+    
+    <insert id="addRefsetPicklistOutput" parameterType="ca.cihi.cims.refset.dto.RefsetPicklistOutputDTO">
+        INSERT INTO refset_output_picklist(refset_output_id, picklist_output_id, order_number)
+            VALUES(#{refsetOutputId}, #{picklistOutputId}, #{orderNumber}) 
+    </insert>
+    
+    <select id="getRefsetPicklistOutputByRefsetOutputId" resultMap="refsetPicklistOutputMap">
+        SELECT refset_output_id, picklist_output_id, order_number
+          FROM refset_output_picklist
+         WHERE refset_output_id = #{refsetOutputId}           
+    </select>
+    
+    <select id="getRefsetPicklistOutputByPicklistOutputId" resultMap="refsetPicklistOutputMap">
+        SELECT refset_output_id, picklist_output_id, order_number
+          FROM refset_output_picklist
+         WHERE picklist_output_id = #{picklistOutputId}           
+    </select>
+    
+    <resultMap id="refsetSupplementOutputMap" type="ca.cihi.cims.refset.dto.RefsetSupplementOutputDTO">
+        <id column="refset_supplement_output_id" jdbcType="NUMERIC" property="refsetSupplementOutputId" />
+        <result column="refset_context_id" jdbcType="NUMERIC" property="refsetContextId" /> 
+        <result column="refset_output_id" jdbcType="NUMERIC" property="refsetOutputId" />              
+        <result column="supplement_id" jdbcType="NUMERIC" property="supplementId" />
+        <result column="order_number" jdbcType="NUMERIC" property="orderNumber" />      
+    </resultMap>
+    
+    <select id="getRefsetSupplementOutputById" resultMap="refsetSupplementOutputMap">
+        SELECT refset_supplement_output_id, refset_context_id, refset_output_id, supplement_id, order_number
+          FROM refset_supplement_output
+         WHERE refset_output_id = #{refsetOutputId}
+           AND supplement_id = #{supplementId}
+    </select>  
+    
+    <insert id="addRefsetSupplementOutput" parameterType="ca.cihi.cims.refset.dto.RefsetSupplementOutputDTO">
+        <selectKey keyProperty="refsetSupplementOutputId" resultType="int" order="BEFORE">
+            SELECT refset_supplement_output_seq.nextVal FROM dual            
+        </selectKey>
+        
+        INSERT INTO refset_supplement_output(refset_supplement_output_id, refset_context_id, refset_output_id, supplement_id, order_number)
+            VALUES(#{refsetSupplementOutputId}, #{refsetContextId}, #{refsetOutputId}, #{supplementId}, #{orderNumber}) 
+    </insert> 
+    
+    <select id="getRefsetSupplementOutputByRefsetOutputId" resultMap="refsetSupplementOutputMap">
+        SELECT refset_supplement_output_id, refset_context_id, refset_output_id, supplement_id, order_number
+          FROM refset_supplement_output
+         WHERE refset_output_id = #{refsetOutputId}           
+    </select> 
+    
+    <delete id="deleteRefsetPicklistOutputConfig">
+        DELETE refset_output_picklist 
+         WHERE refset_output_id = #{refsetOutputId}
+           AND picklist_output_id = #{picklistOutputId}
+    </delete>
+    
+    <delete id="deleteRefsetSupplementOutputConfig">
+        DELETE refset_supplement_output 
+         WHERE refset_output_id = #{refsetOutputId}
+           AND supplement_id = #{supplementId}
+    </delete>  
+    
+    <delete id="deleteRefsetOutputTitlePage">
+        DELETE refset_output_title_page 
+         WHERE refset_output_id = #{refsetOutputId}           
+    </delete> 
+    
+    <resultMap id="picklistColumnEvolutionMap" type="ca.cihi.cims.refset.dto.PicklistColumnEvolutionResultDTO"> 	
+		<result property="conceptCode" column="conceptCode" />
+		<result property="columnName" column="columnName" />
+	    <result property="columnType" column="columnType" />
+ 		<result property="newValue" column="newValue" />
+ 	    <result property="oldValue" column="oldValue" />
+ 		<result property="recordType" column="recordType" />
+ 		<result property="newValueId"  column="newValueId" />
+ 		<result property="oldValueId" column="oldValueId" />
+ 		<result property="newStatus" column="newStatus" />
+ 		<result property="oldStatus"  column="oldStatus" />
+ 		<result property="recordId" column="recordId" />
+ 	</resultMap>    
+ 	
+ 	<select id="getPicklistColumnEvolutionList" parameterType="ca.cihi.cims.refset.dto.PicklistColumnEvolutionRequestDTO" resultMap="picklistColumnEvolutionMap">
+ 	 <![CDATA[
+ 		with newColumnConfig as (
+		  select po1.parent_picklist_output_id,pco1.column_id from PICKLIST_COLUMN_OUTPUT pco1, PICKLIST_OUTPUT po1
+		  where pco1.refset_context_id=#{refsetContextId}
+		  and pco1.picklist_output_id = po1.picklist_output_id
+		  and po1.picklist_id=#{picklistElementId}
+		  and po1.picklist_output_id = #{picklistOutputId}
+		),
+		oldColumnConfig as (
+		  select pco2.column_id from PICKLIST_COLUMN_OUTPUT pco2, PICKLIST_OUTPUT po2 
+		  where pco2.refset_context_id=#{baseRefsetContextId}
+		  and pco2.picklist_output_id = po2.picklist_output_id
+		  and po2.picklist_id=#{picklistElementId}
+		  and po2.picklist_output_id in (select ncg.parent_picklist_output_id from newColumnConfig ncg)
+		),
+		commonColumns as (
+		  select ncg.column_id commonColumnId  from newColumnConfig ncg, oldColumnConfig ocg
+		  where ncg.column_id = ocg.column_id
+		),
+		currValueIds as (
+		  select cv.elementid as valueId, cpv.rangeelementid columnId, tpv.textpropertyid, tpv.text,cv.status
+		  from textpropertyversion tpv,class c3, structureelementversion sev3,
+		       conceptpropertyversion cpv, class c, 
+		       structureelementversion sev, conceptversion cv, class c2, structureelementversion sev2
+		  where cpv.rangeelementid in (select plcIds.commonColumnId from commonColumns plcIds)
+		  and cpv.classid = c.classid
+		  and c.classname='DescribedBy'
+		  and cpv.conceptpropertyid=sev.elementversionid
+		  and sev.structureid=#{refsetContextId}
+		  and cpv.domainelementid=cv.elementid and cv.classid=c2.classid and c2.classname='Value'
+		  and cv.conceptid=sev2.elementversionid and sev2.structureid=#{refsetContextId}
+		  and tpv.domainelementid = cv.elementid
+		  and tpv.classid = c3.classid
+		  and c3.classname = 'TextValue'
+		  and tpv.textpropertyid = sev3.elementversionid
+		  and sev3.structureid =#{refsetContextId}
+		), 
+		baseValueIds as (
+		  select cv.elementid as valueId, cpv.rangeelementid columnId, tpv.textpropertyid, tpv.text,cv.status
+		  from textpropertyversion tpv,class c3, structureelementversion sev3,
+		       conceptpropertyversion cpv, class c, 
+		       structureelementversion sev, conceptversion cv, class c2, structureelementversion sev2
+		  where cpv.rangeelementid in (select plcIds.commonColumnId from commonColumns plcIds)
+		  and cpv.classid = c.classid
+		  and c.classname='DescribedBy'
+		  and cpv.conceptpropertyid=sev.elementversionid
+		  and sev.structureid=#{baseRefsetContextId}
+		  and cpv.domainelementid=cv.elementid and cv.classid=c2.classid and c2.classname='Value'
+		  and cv.conceptid=sev2.elementversionid and sev2.structureid=#{baseRefsetContextId}
+		  and tpv.domainelementid = cv.elementid
+		  and tpv.classid = c3.classid
+		  and c3.classname = 'TextValue'
+		  and tpv.textpropertyid = sev3.elementversionid
+		  and sev3.structureid =#{baseRefsetContextId}
+		),
+		allValues as (
+		select cvids.valueid newValueId,cvids.columnid newColumnId,cvids.textpropertyid newTextPropertyId,cvids.text newText,cvids.status newStatus,
+		       bvids.valueid oldValueId,cvids.columnid oldColumnId,bvids.textpropertyid oldTextPropertyId,bvids.text oldText,bvids.status oldStatus
+		from currValueIds cvids, baseValueIds bvids
+		where cvids.valueid = bvids.valueid
+		and cvids.columnid = bvids.columnid
+		and (cvids.textpropertyid<>bvids.textpropertyid or cvids.status<>bvids.status)
+		union
+		select cvids.valueid newValueId,cvids.columnid newColumnId,cvids.textpropertyid newTextPropertyId,cvids.text newText,cvids.status newStatus,
+		       0 oldValueId,0 oldColumnId,0 oldTextPropertyId,'' oldText,'' oldStatus
+		from currValueIds cvids
+		where (cvids.valueid,cvids.columnid) not in (select valueid,columnid from baseValueIds)
+		)	
+		select distinct substr(e.elementuuid,instr(e.elementuuid,'---')+3) conceptCode, tpv.text columnName, v.newValueId newValueId, v.newText newValue,v.newStatus newStatus,
+		       v.oldvalueid oldvalueid, v.oldtext oldValue,v.oldStatus oldStatus,
+		       case when cpv.rangeelementid=#{picklistElementId} then 'MAIN' else 'SUB' end as recordType, cpv3.rangeelementid recordId, tpv4.text columnType
+		from textpropertyversion tpv, allValues v, class c, structureelementversion sev, conceptpropertyversion cpv, class c2, structureelementversion sev2,
+		     conceptpropertyversion cpv3, class c3, structureelementversion sev3, conceptversion cv, element e,
+		     textpropertyversion tpv4, class c4, conceptpropertyversion cpv4, structureelementversion sev4
+		where tpv.domainelementid=v.newColumnId
+		and tpv.textpropertyid = sev.elementversionid
+		and sev.structureid =#{refsetContextId}
+		and c.classname = 'ColumnName'
+		and c.classid = tpv.classid
+		and cpv.domainelementid = v.newColumnId
+		and tpv4.domainelementid=v.newColumnId 
+		and tpv4.textpropertyid = sev4.elementversionid 
+		and sev4.structureid =#{refsetContextId}
+        and c4.classname = 'ColumnType' 
+        and c4.classid = tpv4.classid 
+        and cpv4.domainelementid = v.newColumnId
+		and cpv.classid = c2.classid
+		and c2.classname = 'ColumnOf'
+		and cpv.conceptpropertyid = sev2.elementversionid
+		and sev2.structureid =#{refsetContextId}
+		and cpv3.domainelementid = v.newValueId
+		and cpv3.conceptpropertyid = sev3.elementversionid
+		and sev3.structureid=#{refsetContextId}
+		and cpv3.classid=c3.classid
+		and c3.classname='PartOf'
+		and cpv3.rangeelementid = cv.elementid
+		and cv.elementid = e.elementid
+		order by conceptCode,recordId
+		]]>
+ 	</select>
+ 	
+ 	<select id="getConceptStatus" resultType="java.lang.String"> 
+ 		 select cv.status 
+          from structureelementversion sev, CONCEPTVERSION cv, textpropertyversion tpv
+          where sev.structureid in (#{icd10caContextId}, #{cciContextId}) 
+          and cv.classid in (5,64,65) 
+          and tpv.text=#{conceptCode}
+          and tpv.domainelementid = cv.elementid
+          and cv.conceptid = sev.elementversionid 
+ 	</select>
+ 	
+ 	<resultMap id="picklistColumnConfigEvolutionMap" type="ca.cihi.cims.refset.dto.PicklistColumnConfigEvolutionDTO"> 	
+		<result property="columnId" column="columnId" />
+		<result property="columnName" column="columnName" />
+ 		<result property="status" column="status" />
+ 	</resultMap>
+ 	    
+ 	<select id="getPicklistColumnConfigEvolutionList" parameterType="ca.cihi.cims.refset.dto.PicklistColumnEvolutionRequestDTO" resultMap="picklistColumnConfigEvolutionMap">
+		with newColumnConfig as (
+		  select po1.parent_picklist_output_id,pco1.column_id from PICKLIST_COLUMN_OUTPUT pco1, PICKLIST_OUTPUT po1
+		  where pco1.refset_context_id=#{refsetContextId}
+		  and pco1.picklist_output_id = po1.picklist_output_id
+		  and po1.picklist_id=#{picklistElementId}
+		  and po1.picklist_output_id = #{picklistOutputId}
+		),
+		oldColumnConfig as (
+		  select pco2.column_id from PICKLIST_COLUMN_OUTPUT pco2, PICKLIST_OUTPUT po2 
+		  where pco2.refset_context_id=#{baseRefsetContextId}
+		  and pco2.picklist_output_id = po2.picklist_output_id
+		  and po2.picklist_id=#{picklistElementId}
+		  and po2.picklist_output_id in (select ncg.parent_picklist_output_id from newColumnConfig ncg)
+		),
+		newColumns as (
+		  select ncg.column_id newColumnId  from newColumnConfig ncg 
+		  where not EXISTS 
+		        (select 1 from oldColumnConfig ocg where ocg.column_id=ncg.column_id)
+		),
+		deletedColumns as (
+		  select ocg.column_id newColumnId  from oldColumnConfig ocg 
+		  where not EXISTS 
+		        (select 1 from newColumnConfig ncg where ncg.column_id=ocg.column_id)
+		),
+		allColumns as (
+		  select nc.newColumnId columnId, tpv.text columnName, 'New' status, sev.elementid 
+		  from newColumns nc, textpropertyversion tpv, structureelementversion sev
+		  where nc.newColumnId = tpv.domainelementid
+		  and sev.structureid = #{refsetContextId}
+		  and tpv.textpropertyid = sev.elementversionid
+		  union 
+		  select dc.newColumnId columnId, tpv.text columnName, 'Deleted' status, sev.elementid 
+		  from deletedColumns dc, textpropertyversion tpv, structureelementversion sev
+		  where dc.newColumnId = tpv.domainelementid
+		  and sev.structureid = #{baseRefsetContextId}
+		  and tpv.textpropertyid = sev.elementversionid
+		)
+		
+		select distinct a.columnId, a.columnName, a.status 
+		from allColumns a, element e, class c 
+		where e.elementid=a.elementid 
+        and e.classid=c.classid 
+        and c.classname='ColumnName' 
+        order by a.columnName
+		
+ 	</select>
+ 	
+ 	<select id="getPicklistColumnOutputConfigByColumnId" resultMap="picklistColumnOutputConfigMap">
+ 	    SELECT picklist_column_output_id, 
+ 	           refset_context_id, 
+ 	           picklist_output_id,
+ 	           column_id,
+ 	           order_number,
+ 	           display_mode_code,
+ 	           parent_pl_column_output_id  
+ 	      FROM picklist_column_output 
+ 	     WHERE refset_context_id = #{refsetContextId}
+ 	       AND column_id = #{columnId}  	  
+    </select>
+
+    <select id="getRefsetSupplementOutputBySupplementId" resultMap="refsetSupplementOutputMap">
+        SELECT refset_supplement_output_id, refset_context_id, refset_output_id, supplement_id, order_number
+          FROM refset_supplement_output
+         WHERE refset_context_id = #{refsetContextId}
+           AND supplement_id = #{supplementId}
+    </select>  	
+</mapper>

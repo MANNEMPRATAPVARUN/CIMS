@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cims_report.xsd">
+	<worksheet name="CIMS Report">
+		<header>
+			<parameter>
+				<paraName>classification</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>fromDate</paraName>
+				<column_number>6</column_number>
+				<!-- F -->
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>totalCount</paraName>
+				<column_number>12</column_number>
+				<!-- L -->
+				<row_number>4</row_number>
+				<paraType>Number</paraType>
+			</parameter>
+			<parameter>
+				<paraName>year</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>toDate</paraName>
+				<column_number>6</column_number>
+				<!-- F -->
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>language</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>6</row_number>
+			</parameter>
+		</header>
+		<detail startRowNumber="11" name="detail1">
+			<parameter>
+				<paraName>valid</paraName>
+				<column_number>5</column_number>
+				<paraType>Number</paraType>
+				<!-- E -->
+			</parameter>
+			<parameter>
+				<paraName>accepted</paraName>
+				<column_number>6</column_number>
+				<paraType>Number</paraType>
+				<!-- F -->
+			</parameter>
+			<parameter>
+				<paraName>translationDone</paraName>
+				<column_number>7</column_number>
+				<paraType>Number</paraType>
+				<!-- G -->
+			</parameter>
+			<parameter>
+				<paraName>validationDone</paraName>
+				<column_number>8</column_number>
+				<paraType>Number</paraType>
+				<!-- G -->
+			</parameter>
+			<parameter>
+				<paraName>realized</paraName>
+				<column_number>9</column_number>
+				<paraType>Number</paraType>
+				<!-- H -->
+			</parameter>
+			<parameter>
+				<paraName>qaDone</paraName>
+				<column_number>10</column_number>
+				<paraType>Number</paraType>
+				<!-- I -->
+			</parameter>
+			<parameter>
+				<paraName>total</paraName>
+				<column_number>12</column_number>
+				<paraType>Number</paraType>
+				<!-- K -->
+			</parameter>
+		</detail>
+		<detail startRowNumber="16" name="detail2">
+			<parameter>
+				<paraName>valid</paraName>
+				<column_number>5</column_number>
+				<paraType>Number</paraType>
+				<!-- E -->
+			</parameter>
+			<parameter>
+				<paraName>accepted</paraName>
+				<column_number>6</column_number>
+				<paraType>Number</paraType>
+				<!-- F -->
+			</parameter>
+			<parameter>
+				<paraName>translationDone</paraName>
+				<column_number>7</column_number>
+				<paraType>Number</paraType>
+				<!-- G -->
+			</parameter>
+			<parameter>
+				<paraName>validationDone</paraName>
+				<column_number>8</column_number>
+				<paraType>Number</paraType>
+				<!-- G -->
+			</parameter>
+			<parameter>
+				<paraName>realized</paraName>
+				<column_number>9</column_number>
+				<paraType>Number</paraType>
+				<!-- H -->
+			</parameter>
+			<parameter>
+				<paraName>qaDone</paraName>
+				<column_number>10</column_number>
+				<paraType>Number</paraType>
+				<!-- I -->
+			</parameter>
+			<parameter>
+				<paraName>total</paraName>
+				<column_number>12</column_number>
+				<paraType>Number</paraType>
+				<!-- K -->
+			</parameter>
+		</detail>
+	</worksheet>
+</workbook>

@@ -1,0 +1,2678 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.service.search.QueryBuilder">
+	<resultMap id="searchResultMap" type="map"></resultMap>
+	<sql id="basePartialCRQuery"> 
+		<trim prefix="select" prefixOverrides=",">
+			  <choose>
+			  	<when test="$COLUMNS == null || $COLUMNS.isEmpty()">
+			  		cr.change_request_id 
+			  	</when>
+			  	<otherwise>
+				  <foreach item="column" index="key" collection="$COLUMNS">
+				        <if test='column.type.modelName == "change_request_name"'>
+				        	, cr.change_request_name  
+				        </if>
+				        <if test='column.type.modelName == "change_request_id"'>
+				        	, cr.change_request_id 
+				        </if>
+				        <if test='column.type.modelName == "change_request_category_desc"'>
+				        	, crc.change_request_category_desc  
+				        </if>
+				        <if test='column.type.modelName == "change_request_status_desc"'>
+				        	, crs.change_request_substatus_desc as change_request_status_desc 
+				        </if>
+				        <if test='column.type.modelName == "change_req_lang_description"'>
+				        	, crl.change_req_lang_description 
+				        </if>
+				        <if test='column.type.modelName == "nature_of_change"'>
+				        	, nature_of_change.aux_table_value_label_desc as nature_of_change 
+				        </if>
+				        <if test='column.type.modelName == "requestor"'>
+				        	, requestor.aux_table_value_label_desc as requestor 
+				        </if>
+				        <if test='column.type.modelName == "type_of_change"'>
+				        	, type_of_change.aux_table_value_label_desc as type_of_change 
+				        </if>
+				        <if test='column.type.modelName == "evolution_required_ind_code"'>
+				        	, cr.evolution_required_ind_code  
+				        </if>
+				        <if test='column.type.modelName == "index_required_ind_code"'>
+				        	, cr.index_required_ind_code 
+				        </if>
+				        <if test='column.type.modelName == "pattern_change_ind_code"'>
+				        	, cr.pattern_change_ind_code 
+				        </if>
+				        <if test='column.type.modelName == "pattern_topic"'>
+				        	, cr.pattern_topic 
+				        </if>
+				        <if test='column.type.modelName == "user_name"'>
+				        	, owner.user_name 
+				        </if>
+				        <if test='column.type.modelName == "assignee"'>
+				        	, assignee_user.user_name || assignee_dl.distribution_list_name as assignee  
+				        </if>
+				        <if test='column.type.modelName == "creation_date"'>
+				        	, cr.creation_date 
+				        </if>
+				        <if test='column.type.modelName == "last_update_date"'>
+				        	, cast(cr.last_update_date as date) as last_update_date 
+				        </if>
+				        <if test='column.type.modelName == "change_rationale_text"'>
+				        	, dbms_lob.substr(cr.change_rationale_text,4000) as change_rationale_text 
+				        </if>
+				        <if test='column.type.modelName == "versioncode"'>
+				        	, ev.versioncode  
+				        </if>
+				        <if test='column.type.modelName == "classname"'>
+				        	, c.classname  
+				        </if>
+
+
+				        <if test='column.type.modelName == "evolution_codes"'>
+				        	, dbms_lob.substr(cre.evolution_codes ,4000) as evolution_codes  
+				        	
+				        </if>
+				        
+				        <if test='column.type.modelName == "evolution_text_eng"'>
+				        	, dbms_lob.substr(cre.evolution_text_eng  ,4000) as evolution_text_eng  
+				        </if>
+				        
+				        <if test='column.type.modelName == "evolution_text_fra"'>
+				        	, dbms_lob.substr(cre.evolution_text_fra  ,4000) as  evolution_text_fra  
+				        </if>				        				        
+				  </foreach>
+				</otherwise>
+			  </choose>                                                                                                                                                                                                                                     
+		</trim>                                         
+	  	from 
+	        change_request cr  	
+	      , change_req_evolution cre  
+	      , change_request_category crc 
+	      , change_request_status crs 
+	      , change_request_language crl 
+	      , aux_table_value nature_of_change 
+	      , aux_table_value requestor 
+	      , aux_table_value type_of_change 
+	      , user_profile owner 
+	      , user_profile assignee_user 
+	      , distribution_list assignee_dl 
+	      , elementversion ev 
+	      , class c 
+		<where>
+	      cr.base_context_id in (select structureid from structureversion sv where sv.basestructureid is null)   
+	      AND   cr.change_request_category_code = crc.change_request_category_code 
+	      AND   cr.change_request_id = cre.change_request_id (+) 
+	      AND   cr.change_request_status_id = crs.change_request_status_id 
+	      AND   cr.change_request_language_code = crl.change_request_language_code 
+	      AND   cr.change_nature_id = nature_of_change.aux_table_value_id 
+	      AND   cr.requestor_id = requestor.aux_table_value_id 
+	      AND   cr.change_type_id = type_of_change.aux_table_value_id 
+	      AND   cr.owner_id = owner.user_profile_id(+) 
+	      AND   cr.assignee_user_profile_id = assignee_user.user_profile_id(+) 
+	      AND   cr.assignee_dl_id = assignee_dl.distribution_list_id(+) 
+	      AND   cr.base_context_id = ev.elementversionid 
+	      AND   ev.classid = c.classid 
+		    <if test='CHANGE_REQUEST_LANGUAGE_CODE != null'>
+	        	AND cr.change_request_language_code = #{CHANGE_REQUEST_LANGUAGE_CODE} 
+	        </if>
+	        <if test='CONTEXT_ID != null'>
+	        	<choose>
+	        		<when test="CONTEXT_ID instanceof java.util.Collection">
+	        			AND cr.base_context_id in 
+	        			<foreach item="classificationContext" index="index" collection="CONTEXT_ID" open="(" separator="," close=")">
+			        	 	#{classificationContext} 
+			        	</foreach>
+	        		</when>
+	        		<otherwise>
+	        			AND cr.base_context_id = #{CONTEXT_ID} 
+	        		</otherwise>
+	        	</choose>
+	        </if>
+	        <if test='CHANGE_REQUEST_CATEGORY_CODE != null'>
+	        	AND crc.change_request_category_code = #{CHANGE_REQUEST_CATEGORY_CODE} 
+	        </if>
+	        <choose>
+		        <when test='CHANGE_REQUEST_STATUS_ID != null'>
+		        	<choose>
+		        		<when test="CHANGE_REQUEST_STATUS_ID instanceof java.util.Collection">
+				        	AND cr.change_request_status_id in 
+				        	<foreach item="statusId" index="index" collection="CHANGE_REQUEST_STATUS_ID" open="(" separator="," close=")">
+						        #{statusId} 
+						    </foreach>
+					    </when>
+				    	<otherwise>
+				    		AND cr.change_request_status_id = #{CHANGE_REQUEST_STATUS_ID} 
+				    	</otherwise>
+				    </choose>
+		        </when>
+		        <otherwise>
+		        	AND cr.change_request_status_id not in (select change_request_status_id from change_request_status where change_request_status_code = 'DELETED') 
+		        </otherwise>
+	        </choose>
+	        <if test='CHANGE_TYPE_ID != null'>
+	        	AND cr.change_type_id = #{CHANGE_TYPE_ID} 
+	        </if>
+	        <if test='REQUESTOR_ID != null'>
+	        	AND cr.requestor_id = #{REQUESTOR_ID} 
+	        </if>
+	        <if test='EVOLUTION_REQUIRED_IND_CODE != null'>
+	        	AND cr.evolution_required_ind_code = #{EVOLUTION_REQUIRED_IND_CODE,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler} 
+	        </if>
+	        <if test='INDEX_REQUIRED_IND_CODE != null'>
+	        	AND cr.index_required_ind_code = #{INDEX_REQUIRED_IND_CODE,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler} 
+	        </if>
+	        <if test='CHANGE_NATURE_ID != null'>
+	        	AND cr.change_nature_id = #{CHANGE_NATURE_ID} 
+	        </if>
+	        <if test='PATTERN_CHANGE_IND_CODE != null'>
+	        	AND cr.pattern_change_ind_code = #{PATTERN_CHANGE_IND_CODE,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler} 
+	        </if>
+	        <if test='PATTERN_TOPIC != null'>
+	        	AND cr.pattern_topic = #{PATTERN_TOPIC} 
+	        </if>
+	        <if test='SEARCH_IN_REQ_NAME != null'>
+	        	<bind name="pattern" value="'%' + SEARCH_IN_REQ_NAME + '%'" />
+	        	AND lower(cr.change_request_name) like lower(#{pattern}) 
+	        </if>
+	        <if test='SEARCH_IN_RATIONALE != null'>
+	        	AND dbms_lob.instr(cims_util.html_to_xhtml(lower(cr.change_rationale_text)),cims_util.to_xhtml(lower(#{SEARCH_IN_RATIONALE}))) > 0 
+	        </if>
+	        <if test='OWNER_ID != null'>
+	        	AND cr.owner_id = #{OWNER_ID} 
+	        </if>
+	        <if test='ASSIGNEE_USER_PROFILE_ID != null'>
+	        	AND cr.assignee_user_profile_id = #{ASSIGNEE_USER_PROFILE_ID} 
+	        </if>
+	        <if test='ASSIGNEE_DL_ID != null'>
+	        	AND cr.assignee_dl_id = #{ASSIGNEE_DL_ID} 
+	        </if>
+	        <if test="CREATION_DATE != null">
+		        <choose>
+			        <when test='CREATION_DATE instanceof java.util.Collection'>
+			        	AND trunc(cr.creation_date) between 
+			        	 <foreach item="dateValue" index="index" collection="CREATION_DATE" separator=" AND " >
+			        	 	#{dateValue,javaType=java.util.Date,jdbcType=DATE} 
+			        	 </foreach>
+			        </when>
+			        <otherwise>
+			        	AND cr.creation_date >= #{CREATION_DATE,javaType=java.util.Date,jdbcType=DATE} 
+			        </otherwise>
+		        </choose>
+	        </if>
+	        <if test="LAST_UPDATE_DATE != null">
+		       	<choose>
+			        <when test='LAST_UPDATE_DATE instanceof java.util.Collection'>
+			        	AND trunc(cr.last_update_date) between 
+			        	 <foreach item="dateValue" index="index" collection="LAST_UPDATE_DATE"  separator=" AND " >
+			        	 	#{dateValue,javaType=java.util.Date,jdbcType=DATE} 
+			        	 </foreach>
+			        </when>
+			        <otherwise>
+			        	AND cr.last_update_date >= #{LAST_UPDATE_DATE,javaType=java.util.Date,jdbcType=DATE} 
+			        </otherwise>
+		        </choose>
+	        </if>
+	    </where>
+	</sql>
+	<select id="BasicCRQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(1) as count
+				from (<include refid="basePartialCRQuery"/>)
+			</when>
+			<otherwise>
+				<include refid="basePartialCRQuery"/>                                                
+			    <if test="$ORDER != null">
+			    	<trim prefix="order by" prefixOverrides=",">
+				    	<foreach item="column" index="key" collection="$ORDER">
+					        <if test='column.type.modelName == "change_request_name"'>
+					        	, cr.change_request_name
+					        </if>
+					        <if test='column.type.modelName == "change_request_id"'>
+					        	, cr.change_request_id
+					        </if>
+					        <if test='column.type.modelName == "change_request_category_desc"'>
+					        	, crc.change_request_category_desc
+					        </if>
+					        <if test='column.type.modelName == "change_request_status_desc"'>
+					        	, crs.change_request_substatus_desc
+					        </if>
+					        <if test='column.type.modelName == "change_req_lang_description"'>
+					        	, crl.change_req_lang_description
+					        </if>
+					        <if test='column.type.modelName == "nature_of_change"'>
+					        	, nature_of_change
+					        </if>
+					        <if test='column.type.modelName == "requestor"'>
+					        	, requestor
+					        </if>
+					        <if test='column.type.modelName == "type_of_change"'>
+					        	, type_of_change asc
+					        </if>
+					        <if test='column.type.modelName == "evolution_required_ind_code"'>
+					        	, cr.evolution_required_ind_code
+					        </if>
+					        <if test='column.type.modelName == "evolution_required_ind_code"'>
+					        	, cr.index_required_ind_code
+					        </if>
+					        <if test='column.type.modelName == "pattern_change_ind_code"'>
+					        	, cr.pattern_change_ind_code
+					        </if>
+					        <if test='column.type.modelName == "pattern_topic"'>
+					        	, cr.pattern_topic
+					        </if>
+					        <if test='column.type.modelName == "user_name"'>
+					        	, owner.user_name
+					        </if>
+					        <if test='column.type.modelName == "assignee"'>
+					        	, assignee 
+					        </if>
+					        <if test='column.type.modelName == "creation_date"'>
+					        	, cr.creation_date
+					        </if>
+					        <if test='column.type.modelName == "last_update_date"'>
+					        	, cr.last_update_date
+					        </if>
+					        <if test='column.type.modelName == "change_rationale_text"'>
+					        	, change_rationale_text
+					        </if>
+					        <if test='column.type.modelName == "versioncode"'>
+					        	, ev.versioncode 
+					        </if>
+					        <if test='column.type.modelName == "classname"'>
+					        	, c.classname 
+					        </if>
+					  	</foreach>
+				  	</trim>
+			    </if> 
+			</otherwise>
+		</choose>
+	</select>
+	<select id="ICDTabularCRQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with class_ids as (
+			select /*+ RESULT_CACHE*/
+			cims_util.getClassIDForClassName('ICD-10-CA','Category') categoryId,
+			cims_util.getClassIDForClassName('ICD-10-CA','ValidationDefinition') validationDefinitionId,
+			cims_util.getClassIDForClassName('ICD-10-CA','ValidationICD') validationId,
+			cims_util.getClassIDForClassName('ICD-10-CA','ValidationICDCPV') validationCpvId,
+			cims_util.getClassIDForClassName('ICD-10-CA','LongPresentation') longPresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA','ShortPresentation') shortPresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'CaEnhancementIndicator') caEnhancementIndicatorId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'DaggerAsteriskIndicator') daggerAsteriskIndicatorId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'CodeAlsoPresentation') codeAlsoPresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'DefinitionPresentation') definitionPresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'ExcludePresentation') excludePresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'IncludePresentation') includePresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'LongTitle') longTitleId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'NotePresentation') notePresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'ShortTitle') shortTitleId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'TablePresentation') tablePresentationId,
+			cims_util.getClassIDForClassName('ICD-10-CA', 'UserTitle') userTitleId
+			
+			from dual
+		)
+		, requests as 
+		(
+		   <include refid="basePartialCRQuery"/>
+		)
+		, contexts as (
+		     select sv.structureid, sv.change_request_id, sev.elementversionid, sev.elementid
+		     from structureversion sv , requests r , structureelementversion sev
+		     where sv.change_request_id  = r.change_request_id
+		     and sev.structureid = sv.structureid
+		)
+		, concepts as ( 
+			 <bind name="categoryFrom" value="CATEGORY_CODE_FROM != null ? CATEGORY_CODE_FROM : '8000'"/>
+			 <bind name="categoryTo" value="CATEGORY_CODE_TO != null ? CATEGORY_CODE_TO : 'Z99999'"/>
+		     select /*+ RESULT_CACHE*/ * from element e, class_ids where e.classid = class_ids.categoryId
+		     and e.elementuuid between 'ICD-10-CA:ConceptVersion:Category:'||#{categoryFrom} and 'ICD-10-CA:ConceptVersion:Category:'||#{categoryTo}||'.9999'
+		)
+		, change_types_all as (
+			select ctx.* from contexts ctx
+		)
+		, change_types_new as (
+			select ctxNew.* from contexts ctxNew, conceptversion cv, elementversion ev, concepts crange, class_ids 
+     		where cv.classid = class_ids.categoryId and cv.conceptid = ctxNew.elementversionid and cv.status = 'ACTIVE' and cv.elementid = crange.elementid and cv.elementid = ev.elementid
+      		and cv.conceptid = ev.elementversionid and ev.originatingcontextid = ctxNew.structureid and (ev.changedfromversionid is null or exists (select 1 from conceptversion cvOld 
+      		where cvOld.elementid = cv.elementid and cvOld.conceptid = ev.changedfromversionid and cvOld.classid = cv.classid and cvOld.status = 'DISABLED'))
+      	)
+      	, change_types_old as (
+      		select ctxOld.* from contexts ctxOld, conceptversion cv, elementversion ev, concepts crange, class_ids 
+     		where cv.classid = class_ids.categoryId and cv.conceptid = ctxOld.elementversionid and cv.status = 'DISABLED' and cv.elementid = crange.elementid and cv.elementid = ev.elementid
+      		and cv.conceptid = ev.elementversionid and ev.originatingcontextid = ctxOld.structureid and (ev.changedfromversionid is null or exists (select 1 from conceptversion cvOld 
+      		where cvOld.elementid = cv.elementid and cvOld.conceptid = ev.changedfromversionid and cvOld.classid = cv.classid and cvOld.status = 'ACTIVE'))
+      	)      
+		, result_new as (
+			select distinct cr.* from requests cr, change_types_new ct where ct.change_request_id = cr.change_request_id
+		)
+		, result_all as (
+			select distinct cr.* from requests cr, change_types_all ct where ct.change_request_id = cr.change_request_id
+		)
+		, result_old as ( 
+			select distinct cr.* from requests cr, change_types_old ct where ct.change_request_id = cr.change_request_id
+		)
+		, change_types as (
+			<trim prefixOverrides="UNION ALL">
+				<if test="SEARCH_IN_NEW_CODES != null and SEARCH_IN_NEW_CODES">
+					select * from change_types_new
+				</if>
+				<if test="SEARCH_IN_DISABLED_CODES != null and SEARCH_IN_DISABLED_CODES">    
+					union all
+					select * from change_types_old
+				</if>
+				<if test="SEARCH_IN_MODIFIED_PROPERTIES != null and SEARCH_IN_MODIFIED_PROPERTIES and  EVOLUTION_REQUIRED_IND_CODE != null and EVOLUTION_REQUIRED_IND_CODE and CHANGE_REQUEST_EVOLUTION_LANGUAGE != null">    
+					union all
+					select ctx.*
+					    from contexts ctx, textpropertyversion tpv, elementversion ev, concepts crange, class_ids
+					    where tpv.elementid = ctx.elementid
+					    and tpv.textpropertyid = ctx.elementversionid
+					    and tpv.domainelementid = crange.elementid
+					    and tpv.languagecode = #{CHANGE_REQUEST_EVOLUTION_LANGUAGE}
+					    and tpv.classid in (class_ids.shortTitleId, class_ids.longTitleId, class_ids.userTitleId)
+					    and ev.elementid = tpv.elementid
+					    and ev.classid = tpv.classid
+					    and ev.elementversionid = tpv.textpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from textpropertyversion tpvOld
+				           where tpvOld.elementid = tpv.elementid
+				           and tpvOld.textpropertyid = ev.changedfromversionid
+				           and tpvOld.text != tpv.text
+				        )
+					 union all
+					 select ctx.*
+					    from contexts ctx, htmlpropertyversion hpv, elementversion ev, concepts crange, class_ids
+					    where hpv.elementid = ctx.elementid
+					    and hpv.htmlpropertyid = ctx.elementversionid
+					    and hpv.domainelementid = crange.elementid
+					    and hpv.classid in (class_ids.tablePresentationId)
+					    and ev.elementid = hpv.elementid
+					    and ev.classid = hpv.classid
+					    and ev.elementversionid = hpv.htmlpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from htmlpropertyversion hpvOld
+				           where hpvOld.elementid = hpv.elementid
+				           and hpvOld.htmlpropertyid = ev.changedfromversionid
+				           and dbms_lob.compare(hpvOld.htmltext,hpv.htmltext) != 0
+				        )  
+					 union all
+					 select ctx.*
+					    from contexts ctx, xmlpropertyversion xpv, elementversion ev, concepts crange, class_ids
+					    where xpv.elementid = ctx.elementid
+					    and xpv.xmlpropertyid = ctx.elementversionid
+					    and xpv.domainelementid = crange.elementid
+					    and xpv.classid in (class_ids.codeAlsoPresentationId, class_ids.definitionPresentationId, class_ids.excludePresentationId,
+					    class_ids.includePresentationId, class_ids.notePresentationId)
+					    and ev.elementid = xpv.elementid
+					    and ev.classid = xpv.classid
+					    and ev.elementversionid = xpv.xmlpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from xmlpropertyversion xpvOld
+				           where xpvOld.elementid = xpv.elementid
+				           and xpvOld.xmlpropertyid = ev.changedfromversionid
+				           and dbms_lob.compare(xpvOld.xmltext,xpv.xmltext) != 0
+				        )
+					 union all
+					 select ctx.*
+					    from contexts ctx, booleanpropertyversion bpv, elementversion ev, concepts crange, class_ids
+					    where bpv.elementid = ctx.elementid
+					    and bpv.booleanpropertyid = ctx.elementversionid
+					    and bpv.domainelementid = crange.elementid
+					    and bpv.classid = class_ids.caEnhancementIndicatorId
+					    and ev.elementid = bpv.elementid
+					    and ev.classid = bpv.classid
+					    and ev.elementversionid = bpv.booleanpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from booleanpropertyversion bpvOld
+				           where bpvOld.elementid = bpv.elementid
+				           and bpvOld.booleanpropertyid = ev.changedfromversionid
+				           and bpvOld.booleanvalue != bpv.booleanvalue
+				        )
+				     union all
+					 select ctx.*
+					    from contexts ctx, conceptpropertyversion cpv, elementversion ev, concepts crange, class_ids
+					    where cpv.elementid = ctx.elementid
+					    and cpv.conceptpropertyid = ctx.elementversionid
+					    and cpv.domainelementid = crange.elementid
+					    and cpv.classid = class_ids.daggerAsteriskIndicatorId
+					    and ev.elementid = cpv.elementid
+					    and ev.classid = cpv.classid
+					    and ev.elementversionid = cpv.conceptpropertyid
+					    and ((ev.changedfromversionid is null and cpv.rangeelementid is not null)
+					        or exists (select 1 from conceptpropertyversion cpvOld
+					           where cpvOld.elementid = cpv.elementid
+					           and cpvOld.conceptpropertyid = ev.changedfromversionid
+					           and (cpvOld.rangeelementid != cpv.rangeelementid or cpvOld.status != cpv.status)
+					        )
+					    )    
+				</if>
+				
+				<if test="SEARCH_IN_MODIFIED_PROPERTIES != null and SEARCH_IN_MODIFIED_PROPERTIES and (EVOLUTION_REQUIRED_IND_CODE == null or !EVOLUTION_REQUIRED_IND_CODE)">    
+					union all
+					select ctx.*
+					    from contexts ctx, textpropertyversion tpv, elementversion ev, concepts crange, class_ids
+					    where tpv.elementid = ctx.elementid
+					    and tpv.textpropertyid = ctx.elementversionid
+					    and tpv.domainelementid = crange.elementid
+					    and tpv.classid in (class_ids.shortTitleId, class_ids.longTitleId, class_ids.userTitleId)
+					    and ev.elementid = tpv.elementid
+					    and ev.classid = tpv.classid
+					    and ev.elementversionid = tpv.textpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from textpropertyversion tpvOld
+				           where tpvOld.elementid = tpv.elementid
+				           and tpvOld.textpropertyid = ev.changedfromversionid
+				           and tpvOld.text != tpv.text
+				        )
+					 union all
+					 select ctx.*
+					    from contexts ctx, htmlpropertyversion hpv, elementversion ev, concepts crange, class_ids
+					    where hpv.elementid = ctx.elementid
+					    and hpv.htmlpropertyid = ctx.elementversionid
+					    and hpv.domainelementid = crange.elementid
+					    and hpv.classid in (class_ids.tablePresentationId)
+					    and ev.elementid = hpv.elementid
+					    and ev.classid = hpv.classid
+					    and ev.elementversionid = hpv.htmlpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from htmlpropertyversion hpvOld
+				           where hpvOld.elementid = hpv.elementid
+				           and hpvOld.htmlpropertyid = ev.changedfromversionid
+				           and dbms_lob.compare(hpvOld.htmltext,hpv.htmltext) != 0
+				        )  
+					 union all
+					 select ctx.*
+					    from contexts ctx, xmlpropertyversion xpv, elementversion ev, concepts crange, class_ids
+					    where xpv.elementid = ctx.elementid
+					    and xpv.xmlpropertyid = ctx.elementversionid
+					    and xpv.domainelementid = crange.elementid
+					    and xpv.classid in (class_ids.codeAlsoPresentationId, class_ids.definitionPresentationId, class_ids.excludePresentationId,
+					    class_ids.includePresentationId, class_ids.notePresentationId)
+					    and ev.elementid = xpv.elementid
+					    and ev.classid = xpv.classid
+					    and ev.elementversionid = xpv.xmlpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from xmlpropertyversion xpvOld
+				           where xpvOld.elementid = xpv.elementid
+				           and xpvOld.xmlpropertyid = ev.changedfromversionid
+				           and dbms_lob.compare(xpvOld.xmltext,xpv.xmltext) != 0
+				        )
+					 union all
+					 select ctx.*
+					    from contexts ctx, booleanpropertyversion bpv, elementversion ev, concepts crange, class_ids
+					    where bpv.elementid = ctx.elementid
+					    and bpv.booleanpropertyid = ctx.elementversionid
+					    and bpv.domainelementid = crange.elementid
+					    and bpv.classid = class_ids.caEnhancementIndicatorId
+					    and ev.elementid = bpv.elementid
+					    and ev.classid = bpv.classid
+					    and ev.elementversionid = bpv.booleanpropertyid
+					    and ev.changedfromversionid is not null
+				        and exists (select 1 from booleanpropertyversion bpvOld
+				           where bpvOld.elementid = bpv.elementid
+				           and bpvOld.booleanpropertyid = ev.changedfromversionid
+				           and bpvOld.booleanvalue != bpv.booleanvalue
+				        )
+				     union all
+					 select ctx.*
+					    from contexts ctx, conceptpropertyversion cpv, elementversion ev, concepts crange, class_ids
+					    where cpv.elementid = ctx.elementid
+					    and cpv.conceptpropertyid = ctx.elementversionid
+					    and cpv.domainelementid = crange.elementid
+					    and cpv.classid = class_ids.daggerAsteriskIndicatorId
+					    and ev.elementid = cpv.elementid
+					    and ev.classid = cpv.classid
+					    and ev.elementversionid = cpv.conceptpropertyid
+					    and ((ev.changedfromversionid is null and cpv.rangeelementid is not null)
+					        or exists (select 1 from conceptpropertyversion cpvOld
+					           where cpvOld.elementid = cpv.elementid
+					           and cpvOld.conceptpropertyid = ev.changedfromversionid
+					           and (cpvOld.rangeelementid != cpv.rangeelementid or cpvOld.status != cpv.status)
+					        )
+					    )    
+				</if>
+				
+				<if test="SEARCH_IN_VALIDATIONS != null and SEARCH_IN_VALIDATIONS">
+				    union all
+				    select ctx.* 
+				    from conceptversion cv, elementversion ev, 
+				    conceptpropertyversion cpv, structureelementversion cpvSev, 
+				    contexts ctx, concepts crange, class_ids
+				    where cv.elementid = ctx.elementid
+				    and cv.conceptid = ctx.elementversionid
+				    and cv.classid = class_ids.validationId
+				    and cpv.domainelementid = cv.elementid
+				    and cpv.classid = class_ids.validationCpvId
+				    and cpv.rangeelementid = crange.elementid
+				    and cpvSev.elementid = cpv.elementid
+				    and cpvSev.elementversionid = cpv.conceptpropertyid
+				    and cpvSev.structureid = ctx.structureid
+				    and ev.elementid = cv.elementid
+				    and ev.classid = cv.classid
+				    and ev.elementversionid = cv.conceptid
+				    and ((ev.changedfromversionid is null and cv.status = 'ACTIVE')
+				        or (ev.changedfromversionid is not null 
+				        and exists(select 1 from conceptversion cvOld
+				        where cvOld.elementid = cv.elementid
+				        and cvOld.conceptid = ev.changedfromversionid
+				        and cvOld.status != cv.status))
+				    )
+				    union all
+				    select ctx.*
+				    from contexts ctx, xmlpropertyversion xpv, elementversion ev, 
+				    conceptpropertyversion cpv, conceptversion cv,
+				    concepts crange, class_ids
+				    where xpv.elementid = ctx.elementid
+				    and xpv.xmlpropertyid = ctx.elementversionid
+				    and xpv.classid = class_ids.validationDefinitionId
+				    and cv.elementid = xpv.domainelementid
+				    and cv.classid = class_ids.validationId
+				    and cv.status = 'ACTIVE'
+				    and cpv.domainelementid = xpv.domainelementid
+				    and cpv.classid = class_ids.validationCpvId
+				    and cpv.rangeelementid = crange.elementid
+				    and ev.elementid = xpv.elementid
+				    and ev.classid = xpv.classid
+				    and ev.elementversionid = xpv.xmlpropertyid
+				    and (ev.changedfromversionid is null
+				        or exists (select 1 from xmlpropertyversion xpvOld
+				           where xpvOld.elementid = xpv.elementid
+				           and xpvOld.xmlpropertyid = ev.changedfromversionid
+				           and dbms_lob.compare(xpvOld.xmltext,xpv.xmltext) != 0
+				        )
+				    ) 
+				</if>
+				<if test="SEARCH_IN_CONCEPT_MOVEMENT != null and SEARCH_IN_CONCEPT_MOVEMENT">
+					
+					select * from result_all minus select * from result_new minus select * from result_old
+					
+				</if>
+			</trim>
+		)
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(distinct change_request_id) as count
+				from change_types
+			</when>
+			<otherwise>
+			<if test="SEARCH_IN_CONCEPT_MOVEMENT == null or !SEARCH_IN_CONCEPT_MOVEMENT">
+					select distinct cr.*
+					from requests cr, change_types ct
+					where ct.change_request_id = cr.change_request_id
+					<if test="$ORDER != null">
+				    	<trim prefix="order by" prefixOverrides=",">
+					    	<foreach item="column" index="key" collection="$ORDER">
+						        <if test='column.type.modelName == "change_request_name"'>
+						        	, cr.change_request_name
+						        </if>
+						        <if test='column.type.modelName == "change_request_id"'>
+						        	, cr.change_request_id
+						        </if>
+						        <if test='column.type.modelName == "change_request_category_desc"'>
+						        	, cr.change_request_category_desc
+						        </if>
+						        <if test='column.type.modelName == "change_request_status_desc"'>
+						        	, cr.change_request_status_desc
+						        </if>
+						        <if test='column.type.modelName == "change_req_lang_description"'>
+						        	, cr.change_req_lang_description
+						        </if>
+						        <if test='column.type.modelName == "nature_of_change"'>
+						        	, cr.nature_of_change
+						        </if>
+						        <if test='column.type.modelName == "requestor"'>
+						        	, cr.requestor
+						        </if>
+						        <if test='column.type.modelName == "type_of_change"'>
+						        	, cr.type_of_change asc
+						        </if>
+						        <if test='column.type.modelName == "evolution_required_ind_code"'>
+						        	, cr.evolution_required_ind_code
+						        </if>
+						        <if test='column.type.modelName == "index_required_ind_code"'>
+						        	, cr.index_required_ind_code
+						        </if>
+						        <if test='column.type.modelName == "pattern_change_ind_code"'>
+						        	, cr.pattern_change_ind_code
+						        </if>
+						        <if test='column.type.modelName == "pattern_topic"'>
+						        	, cr.pattern_topic
+						        </if>
+						        <if test='column.type.modelName == "user_name"'>
+						        	, cr.user_name
+						        </if>
+						        <if test='column.type.modelName == "assignee"'>
+						        	, cr.assignee 
+						        </if>
+						        <if test='column.type.modelName == "creation_date"'>
+						        	, cr.creation_date
+						        </if>
+						        <if test='column.type.modelName == "last_update_date"'>
+						        	, cr.last_update_date
+						        </if>
+						        <if test='column.type.modelName == "change_rationale_text"'>
+						        	, cr.change_rationale_text
+						        </if>
+						        <if test='column.type.modelName == "versioncode"'>
+						        	, cr.versioncode 
+						        </if>
+						        <if test='column.type.modelName == "classname"'>
+						        	, cr.classname 
+						        </if>
+						  	</foreach>
+					  	</trim>
+				    </if>
+			    </if> 
+			    <if test="SEARCH_IN_CONCEPT_MOVEMENT != null and SEARCH_IN_CONCEPT_MOVEMENT">
+			    	select * from change_types 
+			    </if>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="CCITabularCRQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with class_ids as ( 
+			select /*+ RESULT_CACHE*/  
+			cims_util.getClassIDForClassName('CCI','Group') groupId,  
+			cims_util.getClassIDForClassName('CCI','Rubric') rubricId, 
+			cims_util.getClassIDForClassName('CCI','CCICODE') codeId, 
+			cims_util.getClassIDForClassName('CCI','ValidationDefinition') validationDefinitionId, 
+			cims_util.getClassIDForClassName('CCI','ValidationCCI') validationId, 
+			cims_util.getClassIDForClassName('CCI','ValidationCCICPV') validationCpvId, 
+			cims_util.getClassIDForClassName('CCI','LongPresentation') longPresentationId, 
+			cims_util.getClassIDForClassName('CCI','ShortPresentation') shortPresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'CaEnhancementIndicator') caEnhancementIndicatorId, 
+			cims_util.getClassIDForClassName('CCI', 'InvasivenessLevelIndicator') invasivenessLevelIndicatorId, 
+			cims_util.getClassIDForClassName('CCI', 'CodeAlsoPresentation') codeAlsoPresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'OmitCodePresentation') omitCodePresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'DefinitionPresentation') definitionPresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'ExcludePresentation') excludePresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'IncludePresentation') includePresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'LongTitle') longTitleId, 
+			cims_util.getClassIDForClassName('CCI', 'NotePresentation') notePresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'ShortTitle') shortTitleId, 
+			cims_util.getClassIDForClassName('CCI', 'TablePresentation') tablePresentationId, 
+			cims_util.getClassIDForClassName('CCI', 'UserTitle') userTitleId 
+			from dual 
+		)
+		, requests as 
+		(
+		   <include refid="basePartialCRQuery"/>
+		)
+		, contexts as ( 
+		     select sv.structureid, sv.change_request_id, sev.elementversionid, sev.elementid 
+		     from structureversion sv , requests r , structureelementversion sev 
+		     where sv.change_request_id  = r.change_request_id 
+		     and sev.structureid = sv.structureid 
+		)
+		, concepts as ( 
+			 <choose>
+			 	<when test="RUBRIC_CODE_FROM != null">
+			 		<bind name="categoryFrom" value="RUBRIC_CODE_FROM != null ? RUBRIC_CODE_FROM : '1.AA.00'"/>
+					<bind name="categoryTo" value="RUBRIC_CODE_TO != null ? RUBRIC_CODE_TO : '9.ZZ.99'"/>
+			 		select /*+ RESULT_CACHE*/ * from element e, class_ids where e.classid=class_ids.rubricId 
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||#{categoryFrom} and 'CCI:ConceptVersion:Rubric:'||#{categoryTo}||'.^^' 
+		     		UNION ALL 
+		     		select /*+ RESULT_CACHE*/ * from element e, class_ids where e.classid=class_ids.codeId 
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||#{categoryFrom} and 'CCI:ConceptVersion:CCICODE:'||#{categoryTo}||'.ZZ-ZZ-ZZ' 
+			 	</when>
+			 	<otherwise>
+			 		<bind name="categoryFrom" value="GROUP_CODE_FROM != null ? GROUP_CODE_FROM : '1.AA'"/>
+					<bind name="categoryTo" value="GROUP_CODE_TO != null ? GROUP_CODE_TO : '9.ZZ'"/>
+		 			select /*+ RESULT_CACHE*/ * from element e, class_ids where e.classid=class_ids.groupId 
+	     			and e.elementuuid between 'CCI:ConceptVersion:Group:'||#{categoryFrom} and 'CCI:ConceptVersion:Group:'||#{categoryTo}||'.^^.^^' 
+	     			UNION ALL 
+	     			select /*+ RESULT_CACHE*/ * from element e, class_ids where e.classid=class_ids.rubricId 
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||#{categoryFrom} and 'CCI:ConceptVersion:Rubric:'||#{categoryTo}||'.99.^^' 
+		     		UNION ALL 
+		     		select /*+ RESULT_CACHE*/ * from element e, class_ids where e.classid=class_ids.codeId 
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||#{categoryFrom} and 'CCI:ConceptVersion:CCICODE:'||#{categoryTo}||'.99.ZZ-ZZ-ZZ' 
+			 	</otherwise>
+			 </choose>
+		)
+		, change_types_all as ( 
+			select ctx.* from contexts ctx 
+		)
+		, change_types_new as ( 
+			select  ctxNew.* from contexts ctxNew, conceptversion cv, elementversion ev, concepts crange, class_ids 
+			where cv.classid in (class_ids.codeId, class_ids.rubricId) and cv.conceptid = ctxNew.elementversionid 
+			and cv.status = 'ACTIVE' and cv.elementid = crange.elementid and cv.elementid = ev.elementid 
+			and cv.conceptid = ev.elementversionid and ev.originatingcontextid = ctxNew.structureid 
+			and (ev.changedfromversionid is null or exists (select 1 from conceptversion cvOld 
+			where cvOld.elementid = cv.elementid and cvOld.conceptid = ev.changedfromversionid 
+			and cvOld.classid = cv.classid and cvOld.status = 'DISABLED')) 
+      	) 
+      	, change_types_old as ( 
+      		select  ctx.* from contexts ctx, conceptversion cv, elementversion ev, concepts crange, class_ids 
+			where cv.classid in (class_ids.codeId, class_ids.rubricId) and cv.conceptid = ctx.elementversionid 
+			and cv.status = 'DISABLED' and cv.elementid = crange.elementid and cv.elementid = ev.elementid 
+			and cv.conceptid = ev.elementversionid and ev.originatingcontextid = ctx.structureid 
+			and (ev.changedfromversionid is null or exists (select 1 from conceptversion cvOld 
+			where cvOld.elementid = cv.elementid and cvOld.conceptid = ev.changedfromversionid 
+			and cvOld.classid = cv.classid and cvOld.status = 'ACTIVE')) 
+      	)  
+      	, result_new as ( 
+			select distinct cr.* from requests cr, change_types_new ct where ct.change_request_id = cr.change_request_id 
+		) 
+		, result_all as ( 
+			select distinct cr.* from requests cr, change_types_all ct where ct.change_request_id = cr.change_request_id 
+		) 
+		, result_old as (  
+			select distinct cr.* from requests cr, change_types_old ct where ct.change_request_id = cr.change_request_id 
+		) 
+		, change_types as ( 
+			<trim prefixOverrides="UNION ALL">
+				<if test="SEARCH_IN_NEW_CODES != null and SEARCH_IN_NEW_CODES">
+					select * from change_types_new 
+				</if>
+				<if test="SEARCH_IN_DISABLED_CODES != null and SEARCH_IN_DISABLED_CODES">    
+					union all 
+					select * from change_types_old 
+				</if>
+				<if test="SEARCH_IN_MODIFIED_PROPERTIES != null and SEARCH_IN_MODIFIED_PROPERTIES and  EVOLUTION_REQUIRED_IND_CODE != null and EVOLUTION_REQUIRED_IND_CODE and CHANGE_REQUEST_EVOLUTION_LANGUAGE != null">    
+					union all 
+					select ctx.* 
+					    from contexts ctx, textpropertyversion tpv, elementversion ev, concepts crange, class_ids 
+					    where tpv.elementid = ctx.elementid 
+					    and tpv.textpropertyid = ctx.elementversionid 
+					    and tpv.domainelementid = crange.elementid 
+					    and tpv.languagecode = #{CHANGE_REQUEST_EVOLUTION_LANGUAGE} 
+					    and tpv.classid in (class_ids.shortTitleId, class_ids.longTitleId, class_ids.userTitleId) 
+					    and ev.elementid = tpv.elementid 
+					    and ev.classid = tpv.classid 
+					    and ev.elementversionid = tpv.textpropertyid 
+					    and ev.changedfromversionid is not null  
+				        and exists (select 1 from textpropertyversion tpvOld 
+				           where tpvOld.elementid = tpv.elementid 
+				           and tpvOld.textpropertyid = ev.changedfromversionid 
+				           and tpvOld.text != tpv.text 
+				        ) 
+					 union all 
+					 select ctx.* 
+					    from contexts ctx, htmlpropertyversion hpv, elementversion ev, concepts crange, class_ids 
+					    where hpv.elementid = ctx.elementid 
+					    and hpv.htmlpropertyid = ctx.elementversionid 
+					    and hpv.domainelementid = crange.elementid 
+					    and hpv.classid in (class_ids.tablePresentationId) 
+					    and ev.elementid = hpv.elementid 
+					    and ev.classid = hpv.classid 
+					    and ev.elementversionid = hpv.htmlpropertyid 
+					    and ev.changedfromversionid is not null 
+				        and exists (select 1 from htmlpropertyversion hpvOld 
+				           where hpvOld.elementid = hpv.elementid 
+				           and hpvOld.htmlpropertyid = ev.changedfromversionid 
+				           and dbms_lob.compare(hpvOld.htmltext,hpv.htmltext) != 0 
+				        )   
+					 union all 
+					 select ctx.* 
+					    from contexts ctx, xmlpropertyversion xpv, elementversion ev, concepts crange, class_ids 
+					    where xpv.elementid = ctx.elementid 
+					    and xpv.xmlpropertyid = ctx.elementversionid 
+					    and xpv.domainelementid = crange.elementid 
+					    and xpv.classid in (class_ids.codeAlsoPresentationId, class_ids.definitionPresentationId, class_ids.excludePresentationId, 
+					    class_ids.includePresentationId, class_ids.notePresentationId, class_ids.omitCodePresentationId) 
+					    and ev.elementid = xpv.elementid 
+					    and ev.classid = xpv.classid 
+					    and ev.elementversionid = xpv.xmlpropertyid 
+					    and ev.changedfromversionid is not null 
+				        and exists (select 1 from xmlpropertyversion xpvOld 
+				           where xpvOld.elementid = xpv.elementid 
+				           and xpvOld.xmlpropertyid = ev.changedfromversionid 
+				           and dbms_lob.compare(xpvOld.xmltext,xpv.xmltext) != 0 
+				        ) 
+					 union all 
+					 select ctx.* 
+					    from contexts ctx, booleanpropertyversion bpv, elementversion ev, concepts crange, class_ids 
+					    where bpv.elementid = ctx.elementid 
+					    and bpv.booleanpropertyid = ctx.elementversionid 
+					    and bpv.domainelementid = crange.elementid 
+					    and bpv.classid = class_ids.caEnhancementIndicatorId 
+					    and ev.elementid = bpv.elementid 
+					    and ev.classid = bpv.classid 
+					    and ev.elementversionid = bpv.booleanpropertyid 
+					    and ev.changedfromversionid is not null 
+				        and exists (select 1 from booleanpropertyversion bpvOld 
+				           where bpvOld.elementid = bpv.elementid 
+				           and bpvOld.booleanpropertyid = ev.changedfromversionid 
+				           and bpvOld.booleanvalue != bpv.booleanvalue 
+				        )  
+				     union all 
+					 select ctx.* 
+					    from contexts ctx, conceptpropertyversion cpv, elementversion ev, concepts crange, class_ids 
+					    where cpv.elementid = ctx.elementid 
+					    and cpv.conceptpropertyid = ctx.elementversionid 
+					    and cpv.domainelementid = crange.elementid 
+					    and cpv.classid = class_ids.invasivenessLevelIndicatorId 
+					    and ev.elementid = cpv.elementid 
+					    and ev.classid = cpv.classid 
+					    and ev.elementversionid = cpv.conceptpropertyid 
+					    and ((ev.changedfromversionid is null and cpv.rangeelementid is not null) 
+					        or exists (select 1 from conceptpropertyversion cpvOld 
+					           where cpvOld.elementid = cpv.elementid 
+					           and cpvOld.conceptpropertyid = ev.changedfromversionid 
+					           and (cpvOld.rangeelementid != cpv.rangeelementid or cpvOld.status != cpv.status) 
+					        ) 
+					    )     
+				</if>
+				<if test="SEARCH_IN_MODIFIED_PROPERTIES != null and SEARCH_IN_MODIFIED_PROPERTIES and (EVOLUTION_REQUIRED_IND_CODE = null or !EVOLUTION_REQUIRED_IND_CODE)">    
+					union all 
+					select ctx.* 
+					    from contexts ctx, textpropertyversion tpv, elementversion ev, concepts crange, class_ids 
+					    where tpv.elementid = ctx.elementid 
+					    and tpv.textpropertyid = ctx.elementversionid 
+					    and tpv.domainelementid = crange.elementid 
+					    and tpv.classid in (class_ids.shortTitleId, class_ids.longTitleId, class_ids.userTitleId) 
+					    and ev.elementid = tpv.elementid 
+					    and ev.classid = tpv.classid 
+					    and ev.elementversionid = tpv.textpropertyid 
+					    and ev.changedfromversionid is not null 
+				        and exists (select 1 from textpropertyversion tpvOld 
+				           where tpvOld.elementid = tpv.elementid 
+				           and tpvOld.textpropertyid = ev.changedfromversionid 
+				           and tpvOld.text != tpv.text 
+				        ) 
+					 union all 
+					 select ctx.* 
+					    from contexts ctx, htmlpropertyversion hpv, elementversion ev, concepts crange, class_ids 
+					    where hpv.elementid = ctx.elementid 
+					    and hpv.htmlpropertyid = ctx.elementversionid 
+					    and hpv.domainelementid = crange.elementid 
+					    and hpv.classid in (class_ids.tablePresentationId) 
+					    and ev.elementid = hpv.elementid 
+					    and ev.classid = hpv.classid 
+					    and ev.elementversionid = hpv.htmlpropertyid 
+					    and ev.changedfromversionid is not null 
+				        and exists (select 1 from htmlpropertyversion hpvOld 
+				           where hpvOld.elementid = hpv.elementid 
+				           and hpvOld.htmlpropertyid = ev.changedfromversionid 
+				           and dbms_lob.compare(hpvOld.htmltext,hpv.htmltext) != 0 
+				        )   
+					 union all 
+					 select ctx.* 
+					    from contexts ctx, xmlpropertyversion xpv, elementversion ev, concepts crange, class_ids 
+					    where xpv.elementid = ctx.elementid 
+					    and xpv.xmlpropertyid = ctx.elementversionid 
+					    and xpv.domainelementid = crange.elementid 
+					    and xpv.classid in (class_ids.codeAlsoPresentationId, class_ids.definitionPresentationId, class_ids.excludePresentationId, 
+					    class_ids.includePresentationId, class_ids.notePresentationId, class_ids.omitCodePresentationId) 
+					    and ev.elementid = xpv.elementid 
+					    and ev.classid = xpv.classid 
+					    and ev.elementversionid = xpv.xmlpropertyid 
+					    and ev.changedfromversionid is not null 
+				        and exists (select 1 from xmlpropertyversion xpvOld 
+				           where xpvOld.elementid = xpv.elementid 
+				           and xpvOld.xmlpropertyid = ev.changedfromversionid 
+				           and dbms_lob.compare(xpvOld.xmltext,xpv.xmltext) != 0 
+				        ) 
+					 union all 
+					 select ctx.* 
+					    from contexts ctx, booleanpropertyversion bpv, elementversion ev, concepts crange, class_ids 
+					    where bpv.elementid = ctx.elementid 
+					    and bpv.booleanpropertyid = ctx.elementversionid 
+					    and bpv.domainelementid = crange.elementid 
+					    and bpv.classid = class_ids.caEnhancementIndicatorId 
+					    and ev.elementid = bpv.elementid 
+					    and ev.classid = bpv.classid	
+					    and ev.elementversionid = bpv.booleanpropertyid	
+					    and ev.changedfromversionid is not null	
+				        and exists (select 1 from booleanpropertyversion bpvOld	
+				           where bpvOld.elementid = bpv.elementid	
+				           and bpvOld.booleanpropertyid = ev.changedfromversionid	
+				           and bpvOld.booleanvalue != bpv.booleanvalue	
+				        ) 	
+				     union all	
+					 select ctx.*	
+					    from contexts ctx, conceptpropertyversion cpv, elementversion ev, concepts crange, class_ids	
+					    where cpv.elementid = ctx.elementid	
+					    and cpv.conceptpropertyid = ctx.elementversionid	
+					    and cpv.domainelementid = crange.elementid	
+					    and cpv.classid = class_ids.invasivenessLevelIndicatorId	
+					    and ev.elementid = cpv.elementid	
+					    and ev.classid = cpv.classid	
+					    and ev.elementversionid = cpv.conceptpropertyid	
+					    and ((ev.changedfromversionid is null and cpv.rangeelementid is not null)	
+					        or exists (select 1 from conceptpropertyversion cpvOld	
+					           where cpvOld.elementid = cpv.elementid	
+					           and cpvOld.conceptpropertyid = ev.changedfromversionid	
+					           and (cpvOld.rangeelementid != cpv.rangeelementid or cpvOld.status != cpv.status)	
+					        )	
+					    )     	
+				</if>
+				<if test="SEARCH_IN_VALIDATIONS != null and SEARCH_IN_VALIDATIONS">
+				    union all 
+				    select ctx.*  
+				    from conceptversion cv, elementversion ev,  
+				    conceptpropertyversion cpv, structureelementversion cpvSev, 
+				    contexts ctx, concepts crange, class_ids 
+				    where cv.elementid = ctx.elementid 
+				    and cv.conceptid = ctx.elementversionid 
+				    and cv.classid = class_ids.validationId 
+				    and cpv.domainelementid = cv.elementid 
+				    and cpv.classid = class_ids.validationCpvId 
+				    and cpv.rangeelementid = crange.elementid 
+				    and cpvSev.elementid = cpv.elementid 
+				    and cpvSev.elementversionid = cpv.conceptpropertyid 
+				    and cpvSev.structureid = ctx.structureid 
+				    and ev.elementid = cv.elementid 
+				    and ev.classid = cv.classid 
+				    and ev.elementversionid = cv.conceptid 
+				    and ((ev.changedfromversionid is null and cv.status = 'ACTIVE') 
+				        or (ev.changedfromversionid is not null  
+				        and exists(select 1 from conceptversion cvOld 
+				        where cvOld.elementid = cv.elementid 
+				        and cvOld.conceptid = ev.changedfromversionid 
+				        and cvOld.status != cv.status)) 
+				    ) 
+				    union all 
+				    select ctx.* 
+				    from contexts ctx, xmlpropertyversion xpv, elementversion ev,  
+				    conceptpropertyversion cpv, conceptversion cv, 
+				    concepts crange, class_ids 
+				    where xpv.elementid = ctx.elementid 
+				    and xpv.xmlpropertyid = ctx.elementversionid 
+				    and xpv.classid = class_ids.validationDefinitionId 
+				    and cv.elementid = xpv.domainelementid 
+				    and cv.classid = class_ids.validationId 
+				    and cv.status = 'ACTIVE' 
+				    and cpv.domainelementid = xpv.domainelementid 
+				    and cpv.classid = class_ids.validationCpvId 
+				    and cpv.rangeelementid = crange.elementid 
+				    and ev.elementid = xpv.elementid 
+				    and ev.classid = xpv.classid 
+				    and ev.elementversionid = xpv.xmlpropertyid 
+				    and (ev.changedfromversionid is null 
+				        or exists (select 1 from xmlpropertyversion xpvOld 
+				           where xpvOld.elementid = xpv.elementid 
+				           and xpvOld.xmlpropertyid = ev.changedfromversionid 
+				           and dbms_lob.compare(xpvOld.xmltext,xpv.xmltext) != 0 
+				        ) 
+				    )  
+				</if>
+				<if test="SEARCH_IN_CONCEPT_MOVEMENT != null and SEARCH_IN_CONCEPT_MOVEMENT"> 
+					select * from result_all minus select * from result_new minus select * from result_old 
+				</if>
+			</trim>
+		)
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(distinct change_request_id) as count 
+				from change_types 
+			</when>
+			<otherwise>
+				<if test="SEARCH_IN_CONCEPT_MOVEMENT == null or !SEARCH_IN_CONCEPT_MOVEMENT">
+					select distinct cr.* 
+					from requests cr, change_types ct 
+					where ct.change_request_id = cr.change_request_id 
+					<if test="$ORDER != null">
+				    	<trim prefix="order by" prefixOverrides=",">
+					    	<foreach item="column" index="key" collection="$ORDER">
+						        <if test='column.type.modelName == "change_request_name"'>
+						        	, cr.change_request_name 
+						        </if>
+						        <if test='column.type.modelName == "change_request_id"'>
+						        	, cr.change_request_id 
+						        </if>
+						        <if test='column.type.modelName == "change_request_category_desc"'>
+						        	, cr.change_request_category_desc 
+						        </if>
+						        <if test='column.type.modelName == "change_request_status_desc"'>
+						        	, cr.change_request_status_desc 
+						        </if>
+						        <if test='column.type.modelName == "change_req_lang_description"'>
+						        	, cr.change_req_lang_description 
+						        </if>
+						        <if test='column.type.modelName == "nature_of_change"'>
+						        	, cr.nature_of_change 
+						        </if>
+						        <if test='column.type.modelName == "requestor"'>
+						        	, cr.requestor 
+						        </if>
+						        <if test='column.type.modelName == "type_of_change"'>
+						        	, cr.type_of_change asc 
+						        </if>
+						        <if test='column.type.modelName == "evolution_required_ind_code"'>
+						        	, cr.evolution_required_ind_code 
+						        </if>
+						        <if test='column.type.modelName == "index_required_ind_code"'>
+						        	, cr.index_required_ind_code 
+						        </if>
+						        <if test='column.type.modelName == "pattern_change_ind_code"'>
+						        	, cr.pattern_change_ind_code 
+						        </if>
+						        <if test='column.type.modelName == "pattern_topic"'>
+						        	, cr.pattern_topic 
+						        </if>
+						        <if test='column.type.modelName == "user_name"'>
+						        	, cr.user_name 
+						        </if>
+						        <if test='column.type.modelName == "assignee"'>
+						        	, cr.assignee 
+						        </if>
+						        <if test='column.type.modelName == "creation_date"'>
+						        	, cr.creation_date 
+						        </if>
+						        <if test='column.type.modelName == "last_update_date"'>
+						        	, cr.last_update_date 
+						        </if>
+						        <if test='column.type.modelName == "change_rationale_text"'>
+						        	, cr.change_rationale_text 
+						        </if>
+						        <if test='column.type.modelName == "versioncode"'>
+						        	, cr.versioncode  
+						        </if>
+						        <if test='column.type.modelName == "classname"'>
+						        	, cr.classname  
+						        </if>
+						  	</foreach>
+					  	</trim>
+				    </if> 
+			    </if>
+			    <if test="SEARCH_IN_CONCEPT_MOVEMENT != null and SEARCH_IN_CONCEPT_MOVEMENT">
+			    	select * from change_types  
+			    </if>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="IndexCRQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with requests as 
+		(
+		   <include refid="basePartialCRQuery"/>
+		)
+		, contexts as (
+		     select sv.structureid, sv.change_request_id, sev.elementversionid
+		     from structureversion sv , requests r , structureelementversion sev
+		     where sv.change_request_id  = r.change_request_id
+		     and sev.structureid = sv.structureid
+		)
+		, subterms as (
+			select conceptpropertyid, rangeelementid, domainelementid
+			from conceptpropertyversion
+			start with domainelementid = #{LEAD_TERM_CONCEPT_ID}
+			connect by prior domainelementid = rangeelementid
+		)
+		, changed_terms as (
+			select ev.elementid, ctx.*
+			from elementversion ev, structureelementversion sev, subterms sub, contexts ctx
+			where ev.elementid = sub.domainelementid
+			and ev.elementversionid = ctx.elementversionid
+			and ev.elementid = sev.elementid
+			and ev.elementversionid = sev.elementversionid
+			and sev.structureid = ctx.structureid
+			UNION ALL
+			select tpv.domainelementid, ctx.*
+			from textpropertyversion tpv, structureelementversion sev, subterms sub, contexts ctx
+			where tpv.domainelementid = sub.domainelementid
+			and tpv.textpropertyid = ctx.elementversionid
+			and tpv.elementid = sev.elementid
+			and tpv.textpropertyid = sev.elementversionid
+			and sev.structureid = ctx.structureid
+			UNION ALL
+			select xpv.domainelementid, ctx.*
+			from xmlpropertyversion xpv, structureelementversion sev, subterms sub, contexts ctx
+			where xpv.domainelementid = sub.domainelementid
+			and xpv.xmlpropertyid = ctx.elementversionid 
+			and xpv.elementid = sev.elementid
+			and xpv.xmlpropertyid = sev.elementversionid
+			and sev.structureid = ctx.structureid
+		)   
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(distinct change_request_id) as count
+				from changed_terms
+			</when>
+			<otherwise>
+				select distinct cr.*
+				from requests cr, changed_terms ct
+				where ct.change_request_id = cr.change_request_id
+				<if test="$ORDER != null">
+			    	<trim prefix="order by" prefixOverrides=",">
+				    	<foreach item="column" index="key" collection="$ORDER">
+					        <if test='column.type.modelName == "change_request_name"'>
+					        	, cr.change_request_name
+					        </if>
+					        <if test='column.type.modelName == "change_request_id"'>
+					        	, cr.change_request_id
+					        </if>
+					        <if test='column.type.modelName == "change_request_category_desc"'>
+					        	, cr.change_request_category_desc
+					        </if>
+					        <if test='column.type.modelName == "change_request_status_desc"'>
+					        	, cr.change_request_status_desc
+					        </if>
+					        <if test='column.type.modelName == "change_req_lang_description"'>
+					        	, cr.change_req_lang_description
+					        </if>
+					        <if test='column.type.modelName == "nature_of_change"'>
+					        	, cr.nature_of_change
+					        </if>
+					        <if test='column.type.modelName == "requestor"'>
+					        	, cr.requestor
+					        </if>
+					        <if test='column.type.modelName == "type_of_change"'>
+					        	, cr.type_of_change asc
+					        </if>
+					        <if test='column.type.modelName == "evolution_required_ind_code"'>
+					        	, cr.evolution_required_ind_code
+					        </if>
+					        <if test='column.type.modelName == "index_required_ind_code"'>
+					        	, cr.index_required_ind_code
+					        </if>
+					        <if test='column.type.modelName == "pattern_change_ind_code"'>
+					        	, cr.pattern_change_ind_code
+					        </if>
+					        <if test='column.type.modelName == "pattern_topic"'>
+					        	, cr.pattern_topic
+					        </if>
+					        <if test='column.type.modelName == "user_name"'>
+					        	, cr.user_name
+					        </if>
+					        <if test='column.type.modelName == "assignee"'>
+					        	, cr.assignee 
+					        </if>
+					        <if test='column.type.modelName == "creation_date"'>
+					        	, cr.creation_date
+					        </if>
+					        <if test='column.type.modelName == "last_update_date"'>
+					        	, cr.last_update_date
+					        </if>
+					        <if test='column.type.modelName == "change_rationale_text"'>
+					        	, cr.change_rationale_text
+					        </if>
+					        <if test='column.type.modelName == "versioncode"'>
+					        	, cr.versioncode 
+					        </if>
+					        <if test='column.type.modelName == "classname"'>
+					        	, cr.classname 
+					        </if>
+					  	</foreach>
+				  	</trim>
+			    </if> 
+			</otherwise>
+		</choose>
+	</select>
+	<select id="ICDTabularComparativeQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with 
+		class_ids as ( 
+		     select /*+ RESULT_CACHE*/  
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ICD-10-CA') classificationId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Chapter') chapterId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Block') blockId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Category') categoryId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Code') codeId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ShortTitle') shortTitleId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'LongTitle') longTitleId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'UserTitle') userTitleId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'CaEnhancementIndicator') caEnhancementId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DaggerAsterisk') daggerAsteriskId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DaggerAsteriskIndicator') daggerAsteriskIndId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DomainValueCode') domainValueCodeId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'LongPresentation') longPresentationId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ShortPresentation') shortPresentationId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Narrower') narrowerId 
+		     from dual 
+		)  
+		, context as ( 
+		   select  
+		   sev.structureid, sev.elementversionid, sev.elementid 
+		   from structureelementversion sev, class_ids 
+		   where sev.structureid in 
+		         (select   
+		           structureid 
+		            from structureversion  
+		           where basestructureid is null 
+		             and structureid = #{CONTEXT_ID} 
+		             and classid = class_ids.classificationId)) 
+		, element_filter as ( 
+			<choose>
+				<when test="HIERARCHY_LEVEL == 0">
+				 select elementid  
+			     from element e, class_ids  
+			     where e.classid = class_ids.chapterId 
+				</when>
+				<when test="HIERARCHY_LEVEL == 1">
+				 	<bind name="chapter" value="CHAPTER_CODE != null ? CHAPTER_CODE : '01'"/> 
+					select cpv.domainelementid elementid 			     
+					from conceptpropertyversion cpv, element e, class_ids 
+					where cpv.classid = class_ids.narrowerId 
+					start with e.classid = class_ids.chapterId and e.elementuuid = 'ICD-10-CA:ConceptVersion:Chapter:' || #{chapter} and cpv.rangeelementid = e.elementid 
+					connect by prior cpv.domainelementid = cpv.rangeelementid and cpv.domainelementid = e.elementid and e.classid = class_ids.blockId 
+				</when>
+				<when test="HIERARCHY_LEVEL == 2">
+				 <bind name="categoryFrom" value="CATEGORY_CODE_FROM != null ? CATEGORY_CODE_FROM : '8000'"/> 
+				 <bind name="categoryTo" value="CATEGORY_CODE_TO != null ? CATEGORY_CODE_TO : 'Z99'"/> 
+			     select elementid  
+			     from element e 
+			     where e.elementuuid between 'ICD-10-CA:ConceptVersion:Category:' || #{categoryFrom} and 'ICD-10-CA:ConceptVersion:Category:' || #{categoryTo} || '.9999' 	
+				</when>
+			</choose>
+		)
+		, context_filtered as (	 
+			select ctx.* 
+		    from context ctx, element_filter ef 
+		    where ctx.elementid = ef.elementid 
+		 ) 
+		, change_types_new as ( 
+			select distinct ctxNew.*  
+				from conceptversion cv, context_filtered ctxNew, class_ids where cv.elementid = ctxNew.elementid and cv.conceptid = ctxNew.elementversionid  
+				and cv.status = 'ACTIVE' and cv.classid in (class_ids.chapterId, class_ids.blockId, class_ids.categoryId, class_ids.codeId) and (  
+				exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid 
+				and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid 
+				and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cvOld.status != cv.status) 
+				or not exists (select 1 from structureelementversion sevOld where sevOld.elementid = cv.elementid and sevOld.structureid = #{PRIOR_CONTEXT_ID}) 
+				or exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld, structureelementversion cvSevNew 
+                where cvOld.elementid = cv.elementid 
+                and cvOld.classid = cv.classid 
+                and cvOld.conceptid = cvSevOld.elementversionid 
+                and cvOld.elementid = cvSevOld.elementid 
+                and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} 
+                and cv.conceptid = cvSevNew.Elementversionid  
+                and cv.elementid = cvSevNew.Elementid 
+                and cvSevNew.structureid = #{CONTEXT_ID}     
+                and cims_util.hasActiveValidationRule(#{PRIOR_CONTEXT_ID},cvOld.elementid)='N' 
+                and cims_util.hasActiveValidationRule(#{CONTEXT_ID},cv.elementid)='Y') 
+				) 
+		) 
+		, change_types_old as ( 
+	         select distinct ctxOld.*  
+		        from conceptversion cv, context_filtered ctxOld, class_ids  
+		        where cv.elementid = ctxOld.elementid and cv.conceptid = ctxOld.elementversionid 
+		        and cv.classid in (class_ids.chapterId, class_ids.blockId, class_ids.categoryId, class_ids.codeId) 
+		        and (exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid 
+		        and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid 
+		        and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cv.status = 'DISABLED' and cvOld.status != cv.status) 
+		        or exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld, structureelementversion cvSevNew 
+                where cvOld.elementid = cv.elementid 
+                and cvOld.classid = cv.classid 
+                and cvOld.conceptid = cvSevOld.elementversionid 
+                and cvOld.elementid = cvSevOld.elementid 
+                and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} 
+                and cv.conceptid = cvSevNew.Elementversionid 
+                and cv.elementid = cvSevNew.Elementid 
+                and cvSevNew.structureid = #{CONTEXT_ID}    
+                and cims_util.hasActiveChildren(#{PRIOR_CONTEXT_ID},cvOld.elementid)='N' 
+                and cims_util.hasActiveChildren(#{CONTEXT_ID},cv.elementid)='Y') 
+		        ) 
+		) 
+		, changes as ( 
+			<choose>
+				<when test="COMPARATIVE_TYPE == 'code.new'">
+					select * from change_types_new 
+				</when>
+				<when test="COMPARATIVE_TYPE == 'code.disabled'">
+					select * from change_types_old 
+				</when>
+				<when test="COMPARATIVE_TYPE == 'code.title.modified' and MODIFIED_LANGUAGE != null">
+					select distinct ctx.* 
+					from context_filtered ctx, textpropertyversion tpv, 
+					structureelementversion sevTpv, conceptversion cv, 
+					structureelementversion sevCv, class_ids 
+					where cv.elementid = ctx.elementid 
+					and cv.conceptid = ctx.elementversionid 
+					and cv.status = 'ACTIVE' 
+					and sevCv.elementid = cv.elementid 
+					and sevCv.elementversionid = cv.conceptid 
+					and sevCv.structureid = ctx.structureid 
+					and tpv.classid in (class_ids.shortTitleId, class_ids.longTitleId, class_ids.userTitleId) 
+					and tpv.domainelementid = cv.elementid 
+					and tpv.textpropertyid = sevTpv.elementversionid 
+					and sevTpv.structureid = ctx.structureid 
+					and exists (select 1 from textpropertyversion tpvOld, structureelementversion sevOld 
+						where tpvOld.elementid = tpv.elementid 
+						and tpvOld.domainelementid = tpv.domainelementid 
+						and tpvOld.classid = tpv.classid 
+						and tpvOld.elementid = sevOld.elementid 
+						and tpvOld.textpropertyid = sevOld.elementversionid 
+						and sevOld.structureid = #{PRIOR_CONTEXT_ID} 
+						and tpvOld.text != tpv.text 
+						and tpvOld.languagecode = #{MODIFIED_LANGUAGE}) minus select * from change_types_new 
+						minus select * from change_types_old 
+				</when>
+				<when test="COMPARATIVE_TYPE == 'viewer.content.modified' and MODIFIED_LANGUAGE != null">
+					select distinct ctx.* 
+					from context_filtered ctx, htmlpropertyversion hpv, 
+					structureelementversion sevHpv, conceptversion cv, 
+					structureelementversion sevCv, class_ids 
+					where cv.elementid = ctx.elementid 
+					and cv.conceptid = ctx.elementversionid 
+					and cv.status = 'ACTIVE' 
+					and cv.elementid = sevCv.elementid 
+					and cv.conceptid = sevCv.elementversionid 
+					and sevCv.structureid = ctx.structureid 
+					and hpv.domainelementid = cv.elementid 
+					and hpv.classid in (class_ids.longPresentationId, class_ids.shortPresentationId) 
+					and hpv.elementid = sevHpv.elementid 
+					and hpv.htmlpropertyid = sevHpv.elementversionid                      
+					and sevHpv.structureid = ctx.structureid 
+					and exists (select 1 from htmlpropertyversion hpvOld, structureelementversion sevOld 
+						where hpvOld.elementid = hpv.elementid 
+						and hpvOld.domainelementid = hpv.domainelementid 
+						and hpvOld.classid = hpv.classid 
+						and hpvOld.elementid = sevOld.elementid 
+						and hpvOld.htmlpropertyid = sevOld.elementversionid 
+						and hpvOld.languagecode = #{MODIFIED_LANGUAGE} 
+						and sevOld.structureid = #{PRIOR_CONTEXT_ID} 
+						and dbms_lob.compare(hpvOld.htmltext, hpv.htmltext) != 0) minus select * from change_types_new 
+						minus select * from change_types_old 
+				</when>
+			</choose>
+		)
+		
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(1) as count 
+				from (select distinct chg.elementid, chg.structureid from changes chg) 
+			</when>
+			<otherwise>
+				<trim prefix="select distinct" prefixOverrides=",">
+				  <choose>
+				  	<when test="$COLUMNS == null || $COLUMNS.isEmpty()">
+				  		cims_util.getTextProperty(chg.elementid, 'Code', chg.structureid, null) code  
+				  	</when>
+				  	<otherwise>
+					  <foreach item="column" index="key" collection="$COLUMNS">
+					  	<if test='column.type.modelName == "hierarchy"'>
+				        	, decode(lower(cims_util.getClassNameForElementId(chg.elementid)), 'code', 'Code', 'block', 'Block ' || cims_util.retrieveCodeNestingLevel('ICD-10-CA',chg.structureid,chg.elementid), 'chapter', 'Chapter', 'category', 'Category ' || cims_util.retrieveCodeNestingLevel('ICD-10-CA',chg.structureid,chg.elementid)) hierarchy 
+				        </if>
+				        <if test='column.type.modelName == "code"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'Code', chg.structureid, null) code  
+				        </if>
+				        <if test='column.type.modelName == "short_title_new_en"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', chg.structureid, 'ENG') short_title_new_en 
+				        </if>
+				        <if test='column.type.modelName == "short_title_old_en"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', #{PRIOR_CONTEXT_ID}, 'ENG') short_title_old_en 
+				        </if>
+				        <if test='column.type.modelName == "short_title_new_fr"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', chg.structureid, 'FRA') short_title_new_fr 
+				        </if>
+				        <if test='column.type.modelName == "short_title_old_fr"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', #{PRIOR_CONTEXT_ID}, 'FRA') short_title_old_fr 
+				        </if>
+				        <if test='column.type.modelName == "long_title_new_en"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', chg.structureid, 'ENG') long_title_new_en 
+				        </if>
+				        <if test='column.type.modelName == "long_title_old_en"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', #{PRIOR_CONTEXT_ID}, 'ENG') long_title_old_en 
+				        </if>
+				        <if test='column.type.modelName == "long_title_new_fr"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', chg.structureid, 'FRA') long_title_new_fr 
+				        </if>
+				        <if test='column.type.modelName == "long_title_old_fr"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', #{PRIOR_CONTEXT_ID}, 'FRA') long_title_old_fr 
+				        </if>
+				        <if test='column.type.modelName == "user_title_new_en"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', chg.structureid, 'ENG') user_title_new_en 
+				        </if>
+				        <if test='column.type.modelName == "user_title_old_en"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', #{PRIOR_CONTEXT_ID}, 'ENG') user_title_old_en 
+				        </if>
+				        <if test='column.type.modelName == "user_title_new_fr"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', chg.structureid, 'FRA') user_title_new_fr 
+				        </if>
+				        <if test='column.type.modelName == "user_title_old_fr"'>
+				        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', #{PRIOR_CONTEXT_ID}, 'FRA') user_title_old_fr 
+				        </if>
+				        <if test='column.type.modelName == "dagger_asterisk_new"'>
+				        	, cims_util.getDomainPropertyCode(chg.elementid, 'DaggerAsterisk', chg.structureid) dagger_asterisk_new 
+				        </if>
+				        <if test='column.type.modelName == "dagger_asterisk_old"'>
+				        	, cims_util.getDomainPropertyCode(chg.elementid, 'DaggerAsterisk', #{PRIOR_CONTEXT_ID}) dagger_asterisk_old 
+				        </if>
+				        <if test='column.type.modelName == "ca_enhancement_new"'>
+				        	, decode(cims_util.getBooleanProperty(chg.elementid, 'CaEnhancementIndicator', chg.structureid), 'Y', 'Yes', 'No') ca_enhancement_new 
+				        </if>
+				        <if test='column.type.modelName == "ca_enhancement_old"'>
+				        	, decode(cims_util.getBooleanProperty(chg.elementid, 'CaEnhancementIndicator', #{PRIOR_CONTEXT_ID}), 'Y', 'Yes', 'No') ca_enhancement_old 
+				        </if>
+				        <if test='column.type.modelName == "valid_code_new"'>
+				        	, decode(cims_util.isValidCode(chg.structureid, chg.elementid), 'Y', 'Yes', 'No') valid_code_new 
+				        </if>
+				        <if test='column.type.modelName == "valid_code_old"'>
+				        	, decode(cims_util.isValidCode(#{PRIOR_CONTEXT_ID}, chg.elementid), 'Y', 'Yes', 'No') valid_code_old 
+				        </if>
+				      </foreach>
+				    </otherwise>
+				  </choose>
+				</trim>
+				from  
+				changes chg 
+				
+				<if test="$ORDER != null">
+					<trim prefix="order by" prefixOverrides=",">
+					  <choose>
+					  	<when test="$ORDER == null || $ORDER.isEmpty()">
+					  		code 
+					  	</when>
+					  	<otherwise>
+						  <foreach item="column" index="key" collection="$ORDER">
+							<if test='column.type.modelName == "hierarchy"'>
+					        	, hierarchy  
+					        </if>
+					        <if test='column.type.modelName == "code"'>
+					        	, code  
+					        </if>
+					        <if test='column.type.modelName == "short_title_new_en"'>
+					        	, short_title_new_en 
+					        </if>
+					        <if test='column.type.modelName == "short_title_old_en"'>
+					        	, short_title_old_en 
+					        </if>
+					        <if test='column.type.modelName == "short_title_new_fr"'>
+					        	, short_title_new_fr 
+					        </if>
+					        <if test='column.type.modelName == "short_title_old_fr"'>
+					        	, short_title_old_fr 
+					        </if>
+					        <if test='column.type.modelName == "long_title_new_en"'>
+					        	, long_title_new_en 
+					        </if>
+					        <if test='column.type.modelName == "long_title_old_en"'>
+					        	, long_title_old_en 
+					        </if>
+					        <if test='column.type.modelName == "long_title_new_fr"'>
+					        	, long_title_new_fr 
+					        </if>
+					        <if test='column.type.modelName == "long_title_old_fr"'>
+					        	, long_title_old_fr 
+					        </if>
+					        <if test='column.type.modelName == "user_title_new_en"'>
+					        	, user_title_new_en 
+					        </if>
+					        <if test='column.type.modelName == "user_title_old_en"'>
+					        	, user_title_old_en 
+					        </if>
+					        <if test='column.type.modelName == "user_title_new_fr"'>
+					        	, user_title_new_fr 
+					        </if>
+					        <if test='column.type.modelName == "user_title_old_fr"'>
+					        	, user_title_old_fr 
+					        </if>
+					        <if test='column.type.modelName == "dagger_asterisk_new"'>
+					        	, dagger_asterisk_new 
+					        </if>
+					        <if test='column.type.modelName == "dagger_asterisk_old"'>
+					        	, dagger_asterisk_old 
+					        </if>
+					        <if test='column.type.modelName == "ca_enhancement_new"'>
+					        	, ca_enhancement_new 
+					        </if>
+					        <if test='column.type.modelName == "ca_enhancement_old"'>
+					        	, ca_enhancement_old 
+					        </if>
+					        <if test='column.type.modelName == "valid_code_new"'>
+					        	, valid_code_new 
+					        </if>
+					        <if test='column.type.modelName == "valid_code_old"'>
+					        	, valid_code_old 
+					        </if>
+					      </foreach>
+					    </otherwise>
+					  </choose>
+					</trim>
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="CCITabularComparativeQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with
+		class_ids as (
+		     select /*+ RESULT_CACHE*/
+		     cims_util.getClassIDForClassName('CCI', 'CCI') classificationId,
+		     cims_util.getClassIDForClassName('CCI', 'Section') sectionId,
+		     cims_util.getClassIDForClassName('CCI', 'Block') blockId,
+		     cims_util.getClassIDForClassName('CCI', 'Group') groupId,
+		     cims_util.getClassIDForClassName('CCI', 'Rubric') rubricId,
+		     cims_util.getClassIDForClassName('CCI', 'CCICODE') codeId,
+		     cims_util.getClassIDForClassName('CCI', 'ShortTitle') shortTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'LongTitle') longTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'UserTitle') userTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'DomainValueCode') domainValueCodeId,
+		     cims_util.getClassIDForClassName('CCI', 'LongPresentation') longPresentationId,
+		     cims_util.getClassIDForClassName('CCI', 'ShortPresentation') shortPresentationId,
+		     cims_util.getClassIDForClassName('CCI', 'Narrower') narrowerId
+		     from dual
+		) 
+		, context as
+			 (select 
+			   sev.structureid, sev.elementversionid, sev.elementid
+			    from structureelementversion sev, class_ids
+			   where sev.structureid in
+			         (select 
+			           structureid
+			            from structureversion
+			           where basestructureid is null
+			             and structureid = #{CONTEXT_ID}
+			             and classid = class_ids.classificationId))
+		, element_filter as (
+			<choose>
+				<when test="HIERARCHY_LEVEL == 1">
+					<bind name="section" value="SECTION_CODE != null ? SECTION_CODE : '1'"/>
+				    select cpv.domainelementid elementid 
+				    from conceptpropertyversion cpv, element e, class_ids
+					where cpv.classid = class_ids.narrowerId
+					start with e.classid = class_ids.sectionId and e.elementuuid = 'CCI:ConceptVersion:Section:' || #{section} and cpv.rangeelementid = e.elementid
+					connect by prior cpv.domainelementid = cpv.rangeelementid and cpv.domainelementid = e.elementid and e.classid = class_ids.blockId 
+				</when>
+				<when test="HIERARCHY_LEVEL == 3">
+					<bind name="categoryFrom" value="GROUP_CODE_FROM != null ? GROUP_CODE_FROM : '1.AA'"/>
+					<bind name="categoryTo" value="GROUP_CODE_TO != null ? GROUP_CODE_TO : '9.ZZ'"/>
+		 			select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.groupId
+	     			and e.elementuuid between 'CCI:ConceptVersion:Group:'||#{categoryFrom} and 'CCI:ConceptVersion:Group:'||#{categoryTo}||'.^^.^^'
+	     			UNION ALL
+	     			select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.rubricId
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||#{categoryFrom} and 'CCI:ConceptVersion:Rubric:'||#{categoryTo}||'.9999.^^'
+		     		UNION ALL
+		     		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.codeId
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||#{categoryFrom} and 'CCI:ConceptVersion:CCICODE:'||#{categoryTo}||'.9999.ZZ-ZZ-ZZ'
+				</when>
+				<when test="HIERARCHY_LEVEL == 4">
+					<bind name="categoryFrom" value="RUBRIC_CODE_FROM != null ? RUBRIC_CODE_FROM : '1.AA.00'"/>
+					<bind name="categoryTo" value="RUBRIC_CODE_TO != null ? RUBRIC_CODE_TO : '9.ZZ.99'"/>
+			 		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.rubricId
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||#{categoryFrom} and 'CCI:ConceptVersion:Rubric:'||#{categoryTo}||'.^^'
+		     		UNION ALL
+		     		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.codeId
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||#{categoryFrom} and 'CCI:ConceptVersion:CCICODE:'||#{categoryTo}||'.ZZ-ZZ-ZZ'
+				</when>
+				<when test="HIERARCHY_LEVEL == 5">
+				 select elementid 
+			     from element e, class_ids 
+			     where e.classid = class_ids.sectionId
+				</when>
+			</choose>
+		)
+		, context_filtered as (	
+			select ctx.*
+		    from context ctx, element_filter ef
+		    where ctx.elementid = ef.elementid
+		 )
+		, change_types_new as (
+			select distinct ctxNew.* 
+				from conceptversion cv, context_filtered ctxNew, class_ids where cv.elementid = ctxNew.elementid and cv.conceptid = ctxNew.elementversionid
+				and cv.status = 'ACTIVE' and cv.classid in (class_ids.sectionId, class_ids.blockId, class_ids.rubricId, class_ids.codeId)
+				and ( exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid
+				and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid
+				and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cvOld.status != cv.status)
+				or not exists (select 1 from structureelementversion sevOld where sevOld.elementid = cv.elementid and sevOld.structureid = #{PRIOR_CONTEXT_ID}))
+		)
+		, change_types_old as (
+			select distinct ctxOld.* 
+				from conceptversion cv, context_filtered ctxOld, class_ids where cv.elementid = ctxOld.elementid
+				and cv.conceptid = ctxOld.elementversionid and cv.status = 'DISABLED' and cv.classid in (class_ids.sectionId, class_ids.blockId, class_ids.rubricId, class_ids.codeId)
+				and exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid
+				and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid
+				and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cvOld.status != cv.status)
+		)
+		, changes as (
+			<choose>
+				<when test="COMPARATIVE_TYPE == 'code.new'">
+					select * from change_types_new
+				</when>
+				<when test="COMPARATIVE_TYPE == 'code.disabled'">
+					select * from change_types_old
+				</when>
+				<when test="COMPARATIVE_TYPE == 'code.title.modified' and MODIFIED_LANGUAGE != null">
+					select distinct ctx.*
+					from context_filtered ctx, textpropertyversion tpv,
+					structureelementversion sevTpv, conceptversion cv,
+					structureelementversion sevCv, class_ids
+					where cv.elementid = ctx.elementid
+					and cv.conceptid = ctx.elementversionid
+					and cv.status = 'ACTIVE'
+					and sevCv.elementid = cv.elementid
+					and sevCv.elementversionid = cv.conceptid
+					and sevCv.structureid = ctx.structureid
+					and tpv.classid in (class_ids.shortTitleId, class_ids.longTitleId, class_ids.userTitleId)
+					and tpv.domainelementid = cv.elementid
+					and tpv.textpropertyid = sevTpv.elementversionid
+					and sevTpv.structureid = ctx.structureid
+					and exists (select 1 from textpropertyversion tpvOld, structureelementversion sevOld
+						where tpvOld.elementid = tpv.elementid
+						and tpvOld.domainelementid = tpv.domainelementid
+						and tpvOld.classid = tpv.classid
+						and tpvOld.elementid = sevOld.elementid
+						and tpvOld.textpropertyid = sevOld.elementversionid
+						and sevOld.structureid = #{PRIOR_CONTEXT_ID}
+						and tpvOld.text != tpv.text
+						and tpvOld.languagecode = #{MODIFIED_LANGUAGE}) minus select * from change_types_new
+						minus select * from change_types_old
+				</when>
+				<when test="COMPARATIVE_TYPE == 'viewer.content.modified' and MODIFIED_LANGUAGE != null">
+					select distinct ctx.*
+					from context_filtered ctx, htmlpropertyversion hpv,
+					structureelementversion sevHpv, conceptversion cv,
+					structureelementversion sevCv, class_ids
+					where cv.elementid = ctx.elementid
+					and cv.conceptid = ctx.elementversionid
+					and cv.status = 'ACTIVE'
+					and cv.elementid = sevCv.elementid
+					and cv.conceptid = sevCv.elementversionid
+					and sevCv.structureid = ctx.structureid
+					and hpv.domainelementid = cv.elementid
+					and hpv.classid in (class_ids.longPresentationId, class_ids.shortPresentationId)
+					and hpv.elementid = sevHpv.elementid
+					and hpv.htmlpropertyid = sevHpv.elementversionid                     
+					and sevHpv.structureid = ctx.structureid
+					and exists (select 1 from htmlpropertyversion hpvOld, structureelementversion sevOld
+						where hpvOld.elementid = hpv.elementid
+						and hpvOld.domainelementid = hpv.domainelementid
+						and hpvOld.classid = hpv.classid
+						and hpvOld.elementid = sevOld.elementid
+						and hpvOld.htmlpropertyid = sevOld.elementversionid
+						and hpvOld.languagecode = #{MODIFIED_LANGUAGE}
+						and sevOld.structureid = #{PRIOR_CONTEXT_ID}
+						and dbms_lob.compare(hpvOld.htmltext, hpv.htmltext) != 0) minus select * from change_types_new
+						minus select * from change_types_old
+				</when>
+			</choose>
+		)
+		
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(1) as count
+				from (select distinct chg.elementid, chg.structureid from changes chg)
+			</when>
+			<otherwise>
+			<trim prefix="select distinct" prefixOverrides=",">
+			  <choose>
+			  	<when test="$COLUMNS == null || $COLUMNS.isEmpty()">
+			  		cims_util.getTextProperty(chg.elementid, 'Code', chg.structureid, null) code 
+			  	</when>
+			  	<otherwise>
+				  <foreach item="column" index="key" collection="$COLUMNS">
+				  	<if test='column.type.modelName == "hierarchy"'>
+			        	, decode(lower(cims_util.getClassNameForElementId(chg.elementid)), 'ccicode', 'Code', 'group', 'Group', 'block', 'Block ' || cims_util.retrieveCodeNestingLevel('CCI',chg.structureid,chg.elementid), 'rubric', 'Rubric', 'section', 'Section') hierarchy 
+			        </if>
+			        <if test='column.type.modelName == "code"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'Code', chg.structureid, null) code 
+			        </if>
+			        <if test='column.type.modelName == "short_title_new_en"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', chg.structureid, 'ENG') short_title_new_en
+			        </if>
+			        <if test='column.type.modelName == "short_title_old_en"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', #{PRIOR_CONTEXT_ID}, 'ENG') short_title_old_en
+			        </if>
+			        <if test='column.type.modelName == "short_title_new_fr"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', chg.structureid, 'FRA') short_title_new_fr
+			        </if>
+			        <if test='column.type.modelName == "short_title_old_fr"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'ShortTitle', #{PRIOR_CONTEXT_ID}, 'FRA') short_title_old_fr
+			        </if>
+			        <if test='column.type.modelName == "long_title_new_en"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', chg.structureid, 'ENG') long_title_new_en
+			        </if>
+			        <if test='column.type.modelName == "long_title_old_en"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', #{PRIOR_CONTEXT_ID}, 'ENG') long_title_old_en
+			        </if>
+			        <if test='column.type.modelName == "long_title_new_fr"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', chg.structureid, 'FRA') long_title_new_fr
+			        </if>
+			        <if test='column.type.modelName == "long_title_old_fr"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'LongTitle', #{PRIOR_CONTEXT_ID}, 'FRA') long_title_old_fr
+			        </if>
+			        <if test='column.type.modelName == "user_title_new_en"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', chg.structureid, 'ENG') user_title_new_en
+			        </if>
+			        <if test='column.type.modelName == "user_title_old_en"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', #{PRIOR_CONTEXT_ID}, 'ENG') user_title_old_en
+			        </if>
+			        <if test='column.type.modelName == "user_title_new_fr"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', chg.structureid, 'FRA') user_title_new_fr
+			        </if>
+			        <if test='column.type.modelName == "user_title_old_fr"'>
+			        	, cims_util.getTextProperty(chg.elementid, 'UserTitle', #{PRIOR_CONTEXT_ID}, 'FRA') user_title_old_fr
+			        </if>
+			        <if test='column.type.modelName == "invasive_level_new"'>
+			        	, cims_util.getDomainPropertyCode(chg.elementid, 'InvasivenessLevel', chg.structureid) invasive_level_new
+			        </if>
+			        <if test='column.type.modelName == "invasive_level_old"'>
+			        	, cims_util.getDomainPropertyCode(chg.elementid, 'InvasivenessLevel', #{PRIOR_CONTEXT_ID}) invasive_level_old
+			        </if>
+			      </foreach>
+			    </otherwise>
+			  </choose>
+			</trim>
+			from 
+			changes chg
+			
+			<if test="$ORDER != null">
+				<trim prefix="order by" prefixOverrides=",">
+				  <choose>
+				  	<when test="$ORDER == null || $ORDER.isEmpty()">
+				  		replace(code, '^', '') 
+				  	</when>
+				  	<otherwise>
+					  <foreach item="column" index="key" collection="$ORDER">
+						<if test='column.type.modelName == "hierarchy"'>
+				        	, hierarchy 
+				        </if>
+				        <if test='column.type.modelName == "code"'>
+				        	, replace(code, '^', '') 
+				        </if>
+				        <if test='column.type.modelName == "short_title_new_en"'>
+				        	, short_title_new_en
+				        </if>
+				        <if test='column.type.modelName == "short_title_old_en"'>
+				        	, short_title_old_en
+				        </if>
+				        <if test='column.type.modelName == "short_title_new_fr"'>
+				        	, short_title_new_fr
+				        </if>
+				        <if test='column.type.modelName == "short_title_old_fr"'>
+				        	, short_title_old_fr
+				        </if>
+				        <if test='column.type.modelName == "long_title_new_en"'>
+				        	, long_title_new_en
+				        </if>
+				        <if test='column.type.modelName == "long_title_old_en"'>
+				        	, long_title_old_en
+				        </if>
+				        <if test='column.type.modelName == "long_title_new_fr"'>
+				        	, long_title_new_fr
+				        </if>
+				        <if test='column.type.modelName == "long_title_old_fr"'>
+				        	, long_title_old_fr
+				        </if>
+				        <if test='column.type.modelName == "user_title_new_en"'>
+				        	, user_title_new_en
+				        </if>
+				        <if test='column.type.modelName == "user_title_old_en"'>
+				        	, user_title_old_en
+				        </if>
+				        <if test='column.type.modelName == "user_title_new_fr"'>
+				        	, user_title_new_fr
+				        </if>
+				        <if test='column.type.modelName == "user_title_old_fr"'>
+				        	, user_title_old_fr
+				        </if>
+				        <if test='column.type.modelName == "invasive_level_new"'>
+				        	, invasive_level_new
+				        </if>
+				        <if test='column.type.modelName == "invasive_level_old"'>
+				        	, invasive_level_old
+				        </if>
+				      </foreach>
+				    </otherwise>
+				  </choose>
+				</trim>
+			</if>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="CCITabularSimpleQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+	  with
+		class_ids as (
+		     select /*+ RESULT_CACHE*/
+		     cims_util.getClassIDForClassName('CCI', 'CCI') classificationId,
+		     cims_util.getClassIDForClassName('CCI', 'Section') sectionId,
+		     cims_util.getClassIDForClassName('CCI', 'Block') blockId,
+		     cims_util.getClassIDForClassName('CCI', 'Group') groupId,
+		     cims_util.getClassIDForClassName('CCI', 'Rubric') rubricId,
+		     cims_util.getClassIDForClassName('CCI', 'CCICODE') codeId,
+		     cims_util.getClassIDForClassName('CCI', 'ShortTitle') shortTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'LongTitle') longTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'UserTitle') userTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'LongPresentation') longPresentationId,
+		     cims_util.getClassIDForClassName('CCI', 'ShortPresentation') shortPresentationId,
+		     cims_util.getClassIDForClassName('CCI', 'Narrower') narrowerId,
+		     cims_util.getClassIDForClassName('CCI', 'InvasivenessLevelIndicator') invasivenessLevelIndId,
+     		 cims_util.getClassIDForClassName('CCI', 'ValidationDefinition') validationDefinitionId
+		     from dual
+		) 
+		, context as (
+		    select /*+ RESULT_CACHE*/ sev.structureid, sev.elementversionid, sev.elementid 
+		    from structureelementversion sev, structureversion sv, class_ids
+		    where 
+		    sev.structureid = sv.structureid
+		    and sv.basestructureid is null
+		     <if test='CONTEXT_ID != null'>
+	        	<choose>
+	        		<when test="CONTEXT_ID instanceof java.util.Collection">
+	        			and sev.structureid in
+	        			<foreach item="classificationContext" index="index" collection="CONTEXT_ID" open="(" separator="," close=")">
+			        	 	#{classificationContext}
+			        	</foreach>
+	        		</when>
+	        		<otherwise>
+	        			and sev.structureid = #{CONTEXT_ID}
+	        		</otherwise>
+	        	</choose>
+	        </if>
+		    and sv.classid = class_ids.classificationId
+		)
+		, element_filter as (
+			<choose>
+				<when test="HIERARCHY_LEVEL == 1">
+					<bind name="section" value="SECTION_CODE != null ? SECTION_CODE : '1'"/>
+				    select cpv.domainelementid elementid 
+				    from conceptpropertyversion cpv, element e, class_ids
+					where cpv.classid = class_ids.narrowerId
+					start with e.classid = class_ids.sectionId and e.elementuuid = 'CCI:ConceptVersion:Section:' || #{section} and cpv.rangeelementid = e.elementid
+					connect by prior cpv.domainelementid = cpv.rangeelementid and cpv.domainelementid = e.elementid and e.classid = class_ids.blockId 
+				</when>
+				<when test="HIERARCHY_LEVEL == 3">
+					<bind name="categoryFrom" value="GROUP_CODE_FROM != null ? GROUP_CODE_FROM : '1.AA'"/>
+					<bind name="categoryTo" value="GROUP_CODE_TO != null ? GROUP_CODE_TO : '9.ZZ'"/>
+		 			select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.groupId
+	     			and e.elementuuid between 'CCI:ConceptVersion:Group:'||#{categoryFrom} and 'CCI:ConceptVersion:Group:'||#{categoryTo}||'.^^.^^'
+	     			UNION ALL
+	     			select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.rubricId
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||#{categoryFrom} and 'CCI:ConceptVersion:Rubric:'||#{categoryTo}||'.9999.^^'
+		     		UNION ALL
+		     		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.codeId
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||#{categoryFrom} and 'CCI:ConceptVersion:CCICODE:'||#{categoryTo}||'.9999.ZZ-ZZ-ZZ'
+				</when>
+				<when test="HIERARCHY_LEVEL == 4">
+					<bind name="categoryFrom" value="RUBRIC_CODE_FROM != null ? RUBRIC_CODE_FROM : '1.AA.00'"/>
+					<bind name="categoryTo" value="RUBRIC_CODE_TO != null ? RUBRIC_CODE_TO : '9.ZZ.99'"/>
+			 		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.rubricId
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||#{categoryFrom} and 'CCI:ConceptVersion:Rubric:'||#{categoryTo}||'.^^'
+		     		UNION ALL
+		     		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.codeId
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||#{categoryFrom} and 'CCI:ConceptVersion:CCICODE:'||#{categoryTo}||'.ZZ-ZZ-ZZ'
+				</when>
+				<when test="HIERARCHY_LEVEL == 5">
+				 select elementid 
+			     from element e, class_ids 
+			     where e.classid = class_ids.sectionId
+				</when>
+			</choose>
+		)
+		, context_filtered as (
+		    select ctx.*
+		    from context ctx, element_filter ef
+		    where ctx.elementid = ef.elementid
+		)
+		, context_filtered_status as (
+			<choose>
+				<when test="STATUS_CODE != null">
+					select ctx.*
+				    from context_filtered ctx, conceptversion cv
+				    where cv.elementid = ctx.elementid
+				    and cv.conceptid = ctx.elementversionid
+				    and cv.status = #{STATUS_CODE}
+				</when>
+				<otherwise>
+					select * from context_filtered
+				</otherwise>
+			</choose>
+		)
+		, criteria as (
+			select ctx.*
+			from context_filtered_status ctx
+			<where>
+				<if test="SEARCH_TEXT != null">
+					(
+					<if test="SEARCH_IN_ENG_SHORT == true or SEARCH_IN_ENG_LONG == true or SEARCH_IN_ENG_USER == true or SEARCH_IN_FR_SHORT == true or SEARCH_IN_FR_LONG == true or SEARCH_IN_FR_USER == true">
+						<bind name="SEARCH_TEXT_PATTERN" value="'%' + SEARCH_TEXT + '%'" />
+						exists (select 1 from textpropertyversion tpv, structureelementversion sev, class_ids
+								where 
+								sev.structureid = ctx.structureid
+								and sev.elementid = tpv.elementid
+								and sev.elementversionid = tpv.textpropertyid
+								and tpv.domainelementid = ctx.elementid
+								and (
+									<trim prefixOverrides="or">
+										<if test="SEARCH_IN_ENG_SHORT == true">
+											or (tpv.classid = class_ids.shortTitleId
+											and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+											and tpv.languagecode = 'ENG')
+										</if>
+										<if test="SEARCH_IN_ENG_LONG == true">
+											or (tpv.classid = class_ids.longTitleId
+											and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+											and tpv.languagecode = 'ENG')
+										</if>
+										<if test="SEARCH_IN_ENG_USER == true">
+											or (tpv.classid = class_ids.userTitleId
+											and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+											and tpv.languagecode = 'ENG')
+										</if>
+										<if test="SEARCH_IN_FR_SHORT == true">
+											or (tpv.classid = class_ids.shortTitleId
+											and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+											and tpv.languagecode = 'FRA')
+										</if>
+										<if test="SEARCH_IN_FR_LONG == true">
+											or (tpv.classid = class_ids.longTitleId
+											and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+											and tpv.languagecode = 'FRA')
+										</if>
+										<if test="SEARCH_IN_FR_USER == true">
+											or (tpv.classid = class_ids.userTitleId
+											and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+											and tpv.languagecode = 'FRA')
+										</if>
+									</trim> 
+								)
+							)
+						<if test="SEARCH_IN_ENG_VIEWER_CONTENT == true or SEARCH_IN_FR_VIEWER_CONTENT == true">
+							or 
+						</if>
+						</if>
+						<if test="SEARCH_IN_ENG_VIEWER_CONTENT == true or SEARCH_IN_FR_VIEWER_CONTENT == true">
+							exists (select 1 from htmlpropertyversion hpv, structureelementversion sev, class_ids
+								where 
+								sev.structureid = ctx.structureid
+								and sev.elementid = hpv.elementid
+								and sev.elementversionid = hpv.htmlpropertyid
+								and hpv.domainelementid = ctx.elementid
+								and (
+									<trim prefixOverrides="or">
+											<if test="SEARCH_IN_ENG_VIEWER_CONTENT == true">
+												or (hpv.classid in (class_ids.shortPresentationId, class_ids.longPresentationId)
+												and dbms_lob.instr(lower(hpv.htmltext), lower(#{SEARCH_TEXT})) > 0
+												and hpv.languagecode = 'ENG')
+											</if>
+											<if test="SEARCH_IN_FR_VIEWER_CONTENT == true">
+												or (hpv.classid in (class_ids.shortPresentationId, class_ids.longPresentationId)
+												and dbms_lob.instr(lower(hpv.htmltext), lower(#{SEARCH_TEXT})) > 0
+												and hpv.languagecode = 'FRA')
+											</if>
+									</trim>
+									)
+								)
+						</if>
+					)
+				</if>
+				<if test="REF_VALUE_STATUS_CODE != null or REF_VALUE_EXTENT_CODE != null or REF_VALUE_LOCATION_MODE_CODE != null">
+				and exists(select 1 from xmlpropertyversion xpv, structureelementversion xpvSev, conceptpropertyversion cpv2, structureelementversion sev2, class_ids 
+					<where>
+						<if test="REF_VALUE_STATUS_CODE != null">
+							dbms_lob.instr(xpv.xmltext, '&lt;STATUS_REF&gt;'||upper(#{REF_VALUE_STATUS_CODE})||'&lt;/STATUS_REF&gt;') &gt; 0
+						</if>
+						<if test="REF_VALUE_LOCATION_MODE_CODE != null">
+							and dbms_lob.instr(xpv.xmltext, '&lt;LOCATION_REF&gt;'||upper(#{REF_VALUE_LOCATION_MODE_CODE})||'&lt;/LOCATION_REF&gt;') &gt; 0
+						</if>
+						<if test="REF_VALUE_EXTENT_CODE != null">
+							and dbms_lob.instr(xpv.xmltext, '&lt;EXTENT_REF&gt;'||upper(#{REF_VALUE_EXTENT_CODE})||'&lt;/EXTENT_REF&gt;') &gt; 0
+						</if>
+						and xpv.classid = class_ids.validationDefinitionId
+						and xpv.elementid = xpvSev.elementid
+			            and xpv.xmlpropertyid = xpvSev.elementversionid
+			            and xpvSev.structureid = ctx.structureid
+						and xpv.domainelementid = cpv2.domainelementid
+						and cpv2.elementid = sev2.elementid
+						and cpv2.conceptpropertyid = sev2.elementversionid
+						and cpv2.rangeelementid = ctx.elementid
+						and sev2.structureid = ctx.structureid
+					</where>
+				)
+				</if>
+				<if test="INVASIVENESS_LEVEL_CONCEPT_ID != null">
+				and exists(select 1 from conceptpropertyversion cpv2, structureelementversion sev2, class_ids
+					where cpv2.classid = class_ids.invasivenessLevelIndId
+					and cpv2.domainelementid = ctx.elementid
+					and cpv2.conceptpropertyid = sev2.elementversionid
+					and cpv2.elementid = sev2.elementid
+					and sev2.structureid = ctx.structureid
+					and cpv2.rangeelementid = #{INVASIVENESS_LEVEL_CONCEPT_ID}
+				)
+				</if>
+			</where>
+		)
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(1) as count
+				from (select distinct cr.elementid, cr.structureid from criteria cr)
+			</when>
+			<otherwise>
+				<trim prefix="select distinct" prefixOverrides=",">
+				  <choose>
+				  	<when test="$COLUMNS == null || $COLUMNS.isEmpty()">
+				  		cims_util.getTextProperty(cr.elementid, 'Code', cr.structureid, null) code 
+				  	</when>
+				  	<otherwise>
+					  <foreach item="column" index="key" collection="$COLUMNS">
+					  	<if test='column.type.modelName == "hierarchy"'> 
+				        	, decode(lower(cims_util.getClassNameForElementId(cr.elementid)), 'ccicode', 'Code', 'group', 'Group', 'block', 'Block ' || cims_util.retrieveCodeNestingLevel('CCI',cr.structureid,cr.elementid), 'rubric', 'Rubric', 'section', 'Section') hierarchy
+				        </if>
+				        <if test='column.type.modelName == "code"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'Code', cr.structureid, null) code 
+				        </if>
+				        <if test='column.type.modelName == "short_title_en"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'ShortTitle', cr.structureid, 'ENG') short_title_en
+				        </if>
+				        <if test='column.type.modelName == "short_title_fr"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'ShortTitle', cr.structureid, 'FRA') short_title_fr
+				        </if>
+				        <if test='column.type.modelName == "long_title_en"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'LongTitle', cr.structureid, 'ENG') long_title_en
+				        </if>
+				        <if test='column.type.modelName == "long_title_fr"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'LongTitle', cr.structureid, 'FRA') long_title_fr
+				        </if>
+				        <if test='column.type.modelName == "user_title_en"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'UserTitle', cr.structureid, 'ENG') user_title_en
+				        </if>
+				        <if test='column.type.modelName == "user_title_fr"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'UserTitle', cr.structureid, 'FRA') user_title_fr
+				        </if>
+				        <if test='column.type.modelName == "invasiveness_level"'>
+				        	, cims_util.getDomainPropertyCode(cr.elementid, 'InvasivenessLevel', cr.structureid) invasiveness_level
+				        </if>
+				        <if test='column.type.modelName == "status"'>
+				        	, cims_util.getConceptStatus(cr.elementid, cr.structureid) status
+				        </if>
+				        <if test='column.type.modelName == "year"'>
+				        	, cims_util.getContextYear(cr.structureid) year
+				        </if>
+				      </foreach>
+				    </otherwise>
+				  </choose>
+				</trim>
+				from 
+				criteria cr
+				<if test="$ORDER != null">
+					<trim prefix="order by" prefixOverrides=",">
+					  <choose>
+					  	<when test="$ORDER == null || $ORDER.isEmpty()">
+					  		replace(code, '^', '')
+					  	</when>
+					  	<otherwise>
+						  <foreach item="column" index="key" collection="$ORDER">
+							<if test='column.type.modelName == "hierarchy"'>
+				        		, hierarchy  
+					        </if>
+					        <if test='column.type.modelName == "code"'>
+					        	, replace(code, '^', '')
+					        </if>
+					        <if test='column.type.modelName == "short_title_en"'>
+					        	, short_title_en
+					        </if>
+					        <if test='column.type.modelName == "short_title_fr"'>
+					        	, short_title_fr
+					        </if>
+					        <if test='column.type.modelName == "long_title_en"'>
+					        	, long_title_en
+					        </if>
+					        <if test='column.type.modelName == "long_title_fr"'>
+					        	, long_title_fr
+					        </if>
+					        <if test='column.type.modelName == "user_title_en"'>
+					        	, user_title_en
+					        </if>
+					        <if test='column.type.modelName == "user_title_fr"'>
+					        	, user_title_fr
+					        </if>
+					        <if test='column.type.modelName == "invasiveness_level"'>
+					        	, invasiveness_level
+					        </if>
+					        <if test='column.type.modelName == "status"'>
+					        	, status
+					        </if>
+					        <if test='column.type.modelName == "year"'>
+					        	, year
+					        </if>
+					      </foreach>
+					    </otherwise>
+					  </choose>
+					</trim>
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="ICDTabularSimpleQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with
+		class_ids as (
+		     select /*+ RESULT_CACHE*/
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ICD-10-CA') classificationId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Chapter') chapterId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Block') blockId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Category') categoryId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Code') codeId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ShortTitle') shortTitleId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'LongTitle') longTitleId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'UserTitle') userTitleId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'CaEnhancementIndicator') caEnhancementIndId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DaggerAsteriskIndicator') daggerAsteriskIndId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'LongPresentation') longPresentationId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ShortPresentation') shortPresentationId,
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Narrower') narrowerId
+		     from dual
+		)
+		, context as (
+		    select /*+ RESULT_CACHE*/ sev.structureid, sev.elementversionid, sev.elementid 
+		    from structureelementversion sev, structureversion sv, class_ids
+		    where 
+		    sev.structureid = sv.structureid
+		    and sv.basestructureid is null
+		     <if test='CONTEXT_ID != null'>
+	        	<choose>
+	        		<when test="CONTEXT_ID instanceof java.util.Collection">
+	        			and sev.structureid in
+	        			<foreach item="classificationContext" index="index" collection="CONTEXT_ID" open="(" separator="," close=")">
+			        	 	#{classificationContext}
+			        	</foreach>
+	        		</when>
+	        		<otherwise>
+	        			and sev.structureid = #{CONTEXT_ID}
+	        		</otherwise>
+	        	</choose>
+	        </if>
+		    and sv.classid = class_ids.classificationId
+		)			
+		, element_filter as (
+			<choose>
+				<when test="HIERARCHY_LEVEL == 0">
+				 select elementid 
+			     from element e, class_ids 
+			     where e.classid = class_ids.chapterId
+				</when>
+				<when test="HIERARCHY_LEVEL == 1">
+				 	<bind name="chapter" value="CHAPTER_CODE != null ? CHAPTER_CODE : '01'"/>
+					select cpv.domainelementid elementid			     
+					from conceptpropertyversion cpv, element e, class_ids
+					where cpv.classid = class_ids.narrowerId
+					start with e.classid = class_ids.chapterId and e.elementuuid = 'ICD-10-CA:ConceptVersion:Chapter:' || #{chapter} and cpv.rangeelementid = e.elementid
+					connect by prior cpv.domainelementid = cpv.rangeelementid and cpv.domainelementid = e.elementid and e.classid = class_ids.blockId
+				</when>
+				<when test="HIERARCHY_LEVEL == 2">
+				 <bind name="categoryFrom" value="CATEGORY_CODE_FROM != null ? CATEGORY_CODE_FROM : '8000'"/>
+				 <bind name="categoryTo" value="CATEGORY_CODE_TO != null ? CATEGORY_CODE_TO : 'Z99'"/>
+			     select elementid 
+			     from element e
+			     where e.elementuuid between 'ICD-10-CA:ConceptVersion:Category:' || #{categoryFrom} and 'ICD-10-CA:ConceptVersion:Category:' || #{categoryTo} ||'.9999'	
+				</when>
+			</choose>
+		)
+		, context_filtered as (
+		    select ctx.*
+		    from context ctx, element_filter ef
+		    where ctx.elementid = ef.elementid
+		)
+		, context_filtered_status as (
+			<choose>
+				<when test="STATUS_CODE != null">
+					select ctx.*
+				    from context_filtered ctx, conceptversion cv
+				    where cv.elementid = ctx.elementid
+				    and cv.conceptid = ctx.elementversionid
+				    and cv.status = #{STATUS_CODE}
+				</when>
+				<otherwise>
+					select * from context_filtered
+				</otherwise>
+			</choose>
+		)
+		, criteria as (
+			select ctx.* from context_filtered_status ctx
+			<where>
+				<if test="SEARCH_TEXT != null">
+						(
+						<if test="SEARCH_IN_ENG_SHORT == true or SEARCH_IN_ENG_LONG == true or SEARCH_IN_ENG_USER == true or SEARCH_IN_FR_SHORT == true or SEARCH_IN_FR_LONG == true or SEARCH_IN_FR_USER == true">
+							<bind name="SEARCH_TEXT_PATTERN" value="'%' + SEARCH_TEXT + '%'" />
+							exists (select 1 from textpropertyversion tpv, structureelementversion sev, class_ids
+									where 
+									sev.structureid = ctx.structureid
+									and sev.elementid = tpv.elementid
+									and sev.elementversionid = tpv.textpropertyid
+									and tpv.domainelementid = ctx.elementid
+									and (
+										<trim prefixOverrides="or">
+											<if test="SEARCH_IN_ENG_SHORT == true">
+												or (tpv.classid = class_ids.shortTitleId
+												and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+												and tpv.languagecode = 'ENG')
+											</if>
+											<if test="SEARCH_IN_ENG_LONG == true">
+												or (tpv.classid = class_ids.longTitleId
+												and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+												and tpv.languagecode = 'ENG')
+											</if>
+											<if test="SEARCH_IN_ENG_USER == true">
+												or (tpv.classid = class_ids.userTitleId
+												and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+												and tpv.languagecode = 'ENG')
+											</if>
+											<if test="SEARCH_IN_FR_SHORT == true">
+												or (tpv.classid = class_ids.shortTitleId
+												and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+												and tpv.languagecode = 'FRA')
+											</if>
+											<if test="SEARCH_IN_FR_LONG == true">
+												or (tpv.classid = class_ids.longTitleId
+												and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+												and tpv.languagecode = 'FRA')
+											</if>
+											<if test="SEARCH_IN_FR_USER == true">
+												or (tpv.classid = class_ids.userTitleId
+												and lower(tpv.text) like lower(#{SEARCH_TEXT_PATTERN})
+												and tpv.languagecode = 'FRA')
+											</if>
+										</trim> 
+									)
+								)
+							<if test="SEARCH_IN_ENG_VIEWER_CONTENT == true or SEARCH_IN_FR_VIEWER_CONTENT == true">
+								or 
+							</if>
+						</if>
+						<if test="SEARCH_IN_ENG_VIEWER_CONTENT == true or SEARCH_IN_FR_VIEWER_CONTENT == true">
+							exists (select 1 from htmlpropertyversion hpv, structureelementversion sev, class_ids
+								where 
+								sev.structureid = ctx.structureid
+								and sev.elementid = hpv.elementid
+								and sev.elementversionid = hpv.htmlpropertyid
+								and hpv.domainelementid = ctx.elementid
+								and (
+									<trim prefixOverrides="or">
+											<if test="SEARCH_IN_ENG_VIEWER_CONTENT == true">
+												or (hpv.classid in (class_ids.shortPresentationId, class_ids.longPresentationId)
+												and dbms_lob.instr(lower(hpv.htmltext), lower(#{SEARCH_TEXT})) > 0
+												and hpv.languagecode = 'ENG')
+											</if>
+											<if test="SEARCH_IN_FR_VIEWER_CONTENT == true">
+												or (hpv.classid in (class_ids.shortPresentationId, class_ids.longPresentationId)
+												and dbms_lob.instr(lower(hpv.htmltext), lower(#{SEARCH_TEXT})) > 0
+												and hpv.languagecode = 'FRA')
+											</if>
+									</trim>
+								)
+							)
+						</if>
+					)
+				</if>			
+				<if test="DAGGER_ASTERISK_CONCEPT_ID != null">
+					and exists(select 1 from conceptpropertyversion cpv, structureelementversion sev, class_ids
+						where cpv.classid = class_ids.daggerAsteriskIndId
+						and cpv.domainelementid = ctx.elementid
+						and cpv.conceptpropertyid = sev.elementversionid
+						and cpv.elementid = sev.elementid
+						and sev.structureid = ctx.structureid
+						and cpv.rangeelementid = #{DAGGER_ASTERISK_CONCEPT_ID}
+					)
+				</if>
+				<if test="CAN_ENHANCEMENT_IND != null">
+					and exists (select 1 from booleanpropertyversion bpv, structureelementversion sev, class_ids
+						where bpv.classid = class_ids.caEnhancementIndId
+						and bpv.booleanpropertyid = sev.elementversionid
+						and bpv.elementid = sev.elementid
+						and bpv.domainelementid = ctx.elementid
+						and sev.structureid = ctx.structureid
+						and bpv.booleanvalue = #{CAN_ENHANCEMENT_IND,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler}
+					)
+				</if>
+			</where>
+		)		
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(1) as count
+				from (select distinct cr.elementid, cr.structureid from criteria cr)
+			</when>
+			<otherwise>
+				<trim prefix="select distinct" prefixOverrides=",">
+				  <choose>
+				  	<when test="$COLUMNS == null || $COLUMNS.isEmpty()">
+				  		cims_util.getTextProperty(cr.elementid, 'Code', cr.structureid, null) code 
+				  	</when>
+				  	<otherwise>
+					  <foreach item="column" index="key" collection="$COLUMNS">
+					  	<if test='column.type.modelName == "hierarchy"'>
+				        	, decode(lower(cims_util.getClassNameForElementId(cr.elementid)), 'code', 'Code', 'block', 'Block ' || cims_util.retrieveCodeNestingLevel('ICD-10-CA',cr.structureid,cr.elementid), 'chapter', 'Chapter', 'category', 'Category ' || cims_util.retrieveCodeNestingLevel('ICD-10-CA',cr.structureid,cr.elementid)) hierarchy 
+				        </if>
+				        <if test='column.type.modelName == "code"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'Code', cr.structureid, null) code 
+				        </if>
+				        <if test='column.type.modelName == "short_title_en"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'ShortTitle', cr.structureid, 'ENG') short_title_en
+				        </if>
+				        <if test='column.type.modelName == "short_title_fr"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'ShortTitle', cr.structureid, 'FRA') short_title_fr
+				        </if>
+				        <if test='column.type.modelName == "long_title_en"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'LongTitle', cr.structureid, 'ENG') long_title_en
+				        </if>
+				        <if test='column.type.modelName == "long_title_fr"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'LongTitle', cr.structureid, 'FRA') long_title_fr
+				        </if>
+				        <if test='column.type.modelName == "user_title_en"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'UserTitle', cr.structureid, 'ENG') user_title_en
+				        </if>
+				        <if test='column.type.modelName == "user_title_fr"'>
+				        	, cims_util.getTextProperty(cr.elementid, 'UserTitle', cr.structureid, 'FRA') user_title_fr
+				        </if>
+				        <if test='column.type.modelName == "dagger_asterisk_ind"'>
+				        	, cims_util.getDomainPropertyCode(cr.elementid, 'DaggerAsterisk', cr.structureid) dagger_asterisk_ind
+				        </if>
+				        <if test='column.type.modelName == "ca_enhancement_ind"'>
+				        	, decode(cims_util.getBooleanProperty(cr.elementid, 'CaEnhancementIndicator', cr.structureid), 'Y', 'Yes', 'No') ca_enhancement_ind
+				        </if>
+				        <if test='column.type.modelName == "valid_code_ind"'>
+				        	, decode(cims_util.isValidCode(cr.structureid, cr.elementid),'Y','Yes','No') valid_code_ind
+				        </if>
+				        <if test='column.type.modelName == "status"'>
+				        	, cims_util.getConceptStatus(cr.elementid, cr.structureid) status
+				        </if>
+				        <if test='column.type.modelName == "year"'>
+				        	, cims_util.getContextYear(cr.structureid) year
+				        </if>
+				      </foreach>
+				    </otherwise>
+				  </choose>
+				</trim>
+				from 
+				criteria cr
+				
+				<if test="$ORDER != null">
+					<trim prefix="order by" prefixOverrides=",">
+					  <choose>
+					  	<when test="$ORDER == null || $ORDER.isEmpty()">
+					  		code 
+					  	</when>
+					  	<otherwise>
+						  <foreach item="column" index="key" collection="$ORDER">
+							<if test='column.type.modelName == "hierarchy"'>
+					        	, hierarchy 
+					        </if>
+					        <if test='column.type.modelName == "code"'>
+					        	, code 
+					        </if>
+					        <if test='column.type.modelName == "short_title_en"'>
+					        	, short_title_en
+					        </if>
+					        <if test='column.type.modelName == "short_title_fr"'>
+					        	, short_title_fr
+					        </if>
+					        <if test='column.type.modelName == "long_title_en"'>
+					        	, long_title_en
+					        </if>
+					        <if test='column.type.modelName == "long_title_fr"'>
+					        	, long_title_fr
+					        </if>
+					        <if test='column.type.modelName == "user_title_en"'>
+					        	, user_title_en
+					        </if>
+					        <if test='column.type.modelName == "user_title_fr"'>
+					        	, user_title_fr
+					        </if>
+					        <if test='column.type.modelName == "dagger_asterisk_ind"'>
+					        	, dagger_asterisk_ind
+					        </if>
+					        <if test='column.type.modelName == "ca_enhancement_ind"'>
+					        	, ca_enhancement_ind
+					        </if>			       
+					        <if test='column.type.modelName == "valid_code_ind"'>
+					        	, valid_code_ind
+					        </if>
+					        <if test='column.type.modelName == "status"'>
+					        	, status
+					        </if>
+					        <if test='column.type.modelName == "year"'>
+					        	, year
+					        </if>
+					      </foreach>
+					    </otherwise>
+					  </choose>
+					</trim>
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="CCIReferenceValuesComparativeQuery" parameterType="map" resultMap="searchResultMap" useCache="false">
+		with
+		class_ids as (
+		     select /*+ RESULT_CACHE*/
+		     cims_util.getClassIDForClassName('CCI', 'CCI') classificationId,
+		     cims_util.getClassIDForClassName('CCI', 'AttributeDescription') attributeDescriptionId,
+		     cims_util.getClassIDForClassName('CCI', 'AttributeMandatoryIndicator') attributeMandatoryIndicatorId,
+		     cims_util.getClassIDForClassName('CCI', 'GenericAttribute') genericAttributeId,
+		     cims_util.getClassIDForClassName('CCI', 'ReferenceAttribute') referenceAttributeId,
+		     cims_util.getClassIDForClassName('CCI', 'ReferenceAttributeCPV') referenceAttributeCPVId,
+		     cims_util.getClassIDForClassName('CCI', 'AttributeTypeIndicator') attributeTypeIndId,
+		     cims_util.getClassIDForClassName('CCI', 'Attribute') attributeId
+		     from dual
+		) 
+		, context as (
+		    select sev.structureid, sev.elementversionid, sev.elementid 
+		    from structureelementversion sev, class_ids
+		    where
+		    sev.structureid in (select structureid from structureversion where basestructureid is null
+		    and structureid = #{CONTEXT_ID}
+		    and classid = class_ids.classificationId)
+		)
+		, changes as (
+		<choose>
+			<when test="COMPARATIVE_TYPE == 'ref.value.new'">
+			  select distinct cv.elementid, ctx.structureid
+			  from conceptversion cv, structureelementversion sev, 
+			  conceptpropertyversion attrIndCpv, structureelementversion attrIndSev,
+			  context ctx, class_ids
+			  where cv.classid = class_ids.referenceAttributeId
+			  and cv.status = 'ACTIVE'
+			  and cv.elementid = ctx.elementid
+			  and cv.conceptid = ctx.elementversionid
+			  and cv.elementid = sev.elementid
+			  and cv.conceptid = sev.elementversionid
+			  and sev.structureid = ctx.structureid
+			  and cv.elementid = attrIndCpv.domainelementid
+			  and attrIndCpv.classid = class_ids.attributeTypeIndId
+			  and attrIndCpv.elementid = attrIndSev.elementid
+			  and attrIndCpv.conceptpropertyid = attrIndSev.elementversionid
+			  and attrIndSev.structureid = ctx.structureid
+			  <if test="ATTRIBUTE_TYPE_CONCEPT_ID != null">
+			  and attrIndCpv.rangeelementid = #{ATTRIBUTE_TYPE_CONCEPT_ID}
+			  </if>
+			  and not exists (select 1 from structureelementversion sevOld, class_ids 
+			  where sevOld.elementid = cv.elementid and sevOld.structureid = #{PRIOR_CONTEXT_ID})
+			</when>
+			<when test="COMPARATIVE_TYPE == 'ref.value.disabled'">
+			  select distinct cv.elementid, ctx.structureid
+			  from conceptversion cv, structureelementversion sev, 
+			  conceptpropertyversion attrIndCpv, structureelementversion attrIndSev,
+			  context ctx, class_ids
+			  where cv.classid = class_ids.referenceAttributeId
+			  and cv.status = 'DISABLED'
+			  and cv.elementid = ctx.elementid
+			  and cv.conceptid = ctx.elementversionid
+			  and cv.elementid = sev.elementid
+			  and cv.conceptid = sev.elementversionid
+			  and sev.structureid = ctx.structureid
+			  and cv.elementid = attrIndCpv.domainelementid
+			  and attrIndCpv.classid = class_ids.attributeTypeIndId
+			  and attrIndCpv.elementid = attrIndSev.elementid
+			  and attrIndCpv.conceptpropertyid = attrIndSev.elementversionid
+			  and attrIndSev.structureid = ctx.structureid
+			  <if test="ATTRIBUTE_TYPE_CONCEPT_ID != null">
+			  and attrIndCpv.rangeelementid = #{ATTRIBUTE_TYPE_CONCEPT_ID}
+			  </if>
+			  and exists (select 1 from conceptversion cvOld, structureelementversion sevOld, class_ids 
+			  where cvOld.elementid = cv.elementid
+			  and cvOld.classid = cv.classid
+			  and cvOld.status = 'ACTIVE'
+			  and cvOld.elementId = sevOld.elementid
+			  and cvOld.conceptid = sevOld.elementversionid
+			  and sevOld.structureid = #{PRIOR_CONTEXT_ID})
+			</when>
+			<when test="COMPARATIVE_TYPE == 'mandatory.ind.modified'">
+			  select distinct cv.elementid, ctx.structureid
+			  from conceptversion cv, structureelementversion sev, 
+			  conceptpropertyversion attrIndCpv, structureelementversion attrIndSev,
+			  booleanpropertyversion bpv,
+			  structureelementversion bpvSev,
+			  context ctx, class_ids
+			  where cv.classid = class_ids.referenceAttributeId
+			  and cv.status = 'ACTIVE'
+			  and cv.elementid = ctx.elementid
+			  and cv.conceptid = ctx.elementversionid
+			  and cv.elementid = sev.elementid
+			  and cv.conceptid = sev.elementversionid
+			  and sev.structureid = ctx.structureid
+			  and cv.elementid = attrIndCpv.domainelementid
+			  and attrIndCpv.classid = class_ids.attributeTypeIndId
+			  and attrIndCpv.elementid = attrIndSev.elementid
+			  and attrIndCpv.conceptpropertyid = attrIndSev.elementversionid
+			  and attrIndSev.structureid = ctx.structureid
+			  <if test="ATTRIBUTE_TYPE_CONCEPT_ID != null">
+			  and attrIndCpv.rangeelementid = #{ATTRIBUTE_TYPE_CONCEPT_ID}
+			  </if>
+			  and cv.elementid = bpv.domainelementid
+			  and bpv.classid = class_ids.attributeMandatoryIndicatorId
+			  and bpv.elementid = bpvSev.elementid
+			  and bpv.booleanpropertyid = bpvSev.elementversionid
+			  and bpvSev.structureid = ctx.structureid
+			  and exists (select 1 from conceptversion cvOld, structureelementversion sevOld, 
+			  booleanpropertyversion bpvOld, structureelementversion bpvSevOld, class_ids 
+			  where cvOld.elementid = cv.elementid
+			  and cvOld.classid = cv.classid
+			  and cvOld.status = 'ACTIVE'
+			  and cvOld.elementId = sevOld.elementid
+			  and cvOld.conceptid = sevOld.elementversionid
+			  and sevOld.structureid = #{PRIOR_CONTEXT_ID}
+			  and cvOld.elementid = bpvOld.domainelementid
+			  and bpvOld.elementid = bpvSev.elementid
+			  and bpvOld.classid = bpv.classid
+			  and bpvOld.booleanpropertyid = bpvSevOld.elementversionid
+			  and bpvSevOld.structureid = sevOld.structureid
+			  and bpv.booleanvalue != bpvOld.booleanvalue)
+			</when>
+			<when test="COMPARATIVE_TYPE == 'context.desc.modified'">
+			  select distinct refAttrCpv.rangeelementid elementid, ctx.structureid
+			  from context ctx, conceptpropertyversion refAttrCpv, 
+			  structureelementversion refAttrSev, class_ids,
+			  conceptversion cv, structureelementversion sev,
+			  conceptpropertyversion attrIndCpv, structureelementversion attrIndSev,
+			  textpropertyversion tpv1, textpropertyversion tpv2,
+			  structureelementversion tpvSev1, structureelementversion tpvSev2
+			  where tpv1.elementid = ctx.elementid
+			  and tpv1.textpropertyid = ctx.elementversionid
+			  and tpv1.classid = class_ids.attributeDescriptionId
+			  and tpv1.elementid = tpvSev1.elementid
+			  and tpv1.textpropertyid = tpvSev1.elementversionid
+			  and tpvSev1.structureid = ctx.structureid
+			  and tpv2.elementid = tpv1.elementid
+			  and tpv2.domainelementid = tpv2.domainelementid
+			  and tpv2.classid = tpv1.classid
+			  and tpv2.elementid = tpvSev2.elementid
+			  and tpv2.textpropertyid = tpvSev2.elementversionid
+			  and tpv1.textpropertyid != tpv2.textpropertyid
+			  and tpv1.domainelementid = refAttrCpv.domainelementid
+			  and refAttrCpv.classid = class_ids.referenceAttributeCPVId
+			  and refAttrCpv.conceptpropertyid = refAttrSev.elementversionid
+			  and refAttrCpv.elementid = refAttrSev.elementid
+			  and refAttrSev.structureid = ctx.structureid
+			  and attrIndCpv.domainelementid = refAttrCpv.domainelementid
+			  and attrIndCpv.classid = class_ids.attributeTypeIndId
+			  and attrIndCpv.elementid = attrIndSev.elementid
+			  and attrIndCpv.conceptpropertyid = attrIndSev.elementversionid
+			  and attrIndSev.structureid = ctx.structureid
+			  <if test="ATTRIBUTE_TYPE_CONCEPT_ID != null">
+			  and attrIndCpv.rangeelementid = #{ATTRIBUTE_TYPE_CONCEPT_ID}
+			  </if>
+			  and cv.classid = class_ids.attributeId
+			  and cv.status = 'ACTIVE'
+			  and cv.elementid = sev.elementid
+			  and cv.conceptid = sev.elementversionid
+			  and sev.structureid = ctx.structureid
+			  and cv.elementid = attrIndCpv.domainelementid
+			  and exists(select 1 from textpropertyversion tpvOld, structureelementversion tpvSevOld
+			        where tpv1.elementid = tpvOld.elementid
+			        and tpv1.classid = tpvOld.classid
+			        and tpv1.domainelementid = tpvOld.domainelementid
+			        and tpvOld.elementid = tpvSevOld.elementid
+			        and tpvOld.textpropertyid = tpvSevOld.elementversionid
+			        and tpvSevOld.structureid = #{PRIOR_CONTEXT_ID}
+			        and tpv1.text != tpvOld.text) 
+			</when>
+		</choose>
+		)
+		<choose>
+			<when test="$COUNT_ONLY != null">
+				select count(1) as count
+				from (select distinct chg.elementid, chg.structureid from changes chg)
+			</when>
+			<otherwise>
+				<trim prefix="select distinct" prefixOverrides=",">
+					<choose>
+					  	<when test="$COLUMNS == null || $COLUMNS.isEmpty()">
+					  		cims_util.getTextProperty(chg.elementid, 'AttributeCode', chg.structureid, null) attr_code  
+					  	</when>
+					  	<otherwise>
+					  		<foreach item="column" index="key" collection="$COLUMNS">
+							  	<if test='column.type.modelName == "attr_code"'>
+							  		, cims_util.getTextProperty(chg.elementid, 'AttributeCode', chg.structureid, null) attr_code 
+							  	</if>
+							  	<if test='column.type.modelName == "attr_desc_new_en"'>
+							  		, cims_util.getTextProperty(chg.elementid, 'AttributeDescription', chg.structureid, 'ENG') attr_desc_new_en
+							  	</if>
+							  	<if test='column.type.modelName == "attr_desc_old_en"'>
+							  		, cims_util.getTextProperty(chg.elementid, 'AttributeDescription', #{PRIOR_CONTEXT_ID}, 'ENG') attr_desc_old_en
+							  	</if>
+							  	<if test='column.type.modelName == "attr_desc_new_fr"'>
+							  		, cims_util.getTextProperty(chg.elementid, 'AttributeDescription', chg.structureid, 'FRA') attr_desc_new_fr
+							  	</if>
+							  	<if test='column.type.modelName == "attr_desc_old_fr"'>
+							  		, cims_util.getTextProperty(chg.elementid, 'AttributeDescription', #{PRIOR_CONTEXT_ID}, 'FRA') attr_desc_old_fr
+							  	</if>
+							  	<if test='column.type.modelName == "attr_notes_new_en"'>
+							  		, chg.elementid attr_notes_new_en
+							  	</if>
+							  	<if test='column.type.modelName == "attr_notes_old_en"'>
+							  		, chg.elementid attr_notes_old_en
+							  	</if>
+							  	<if test='column.type.modelName == "attr_notes_new_fr"'>
+							  		, chg.elementid attr_notes_new_fr
+							  	</if>
+							  	<if test='column.type.modelName == "attr_notes_old_fr"'>
+							  		, chg.elementid attr_notes_old_fr
+							  	</if>
+							  	<if test='column.type.modelName == "attr_type"'>
+							  		, cims_util.getDomainPropertyCode(chg.elementid, 'AttributeType', chg.structureid) attr_type
+							  	</if>
+							  	<if test='column.type.modelName == "attr_mandatory_ind_new"'>
+							  		, decode(cims_util.getBooleanProperty(chg.elementid, 'AttributeMandatoryIndicator', chg.structureid), 'Y', 'Yes', 'No') attr_mandatory_ind_new
+							  	</if>
+							  	<if test='column.type.modelName == "attr_mandatory_ind_old"'>
+							  		, decode(cims_util.getBooleanProperty(chg.elementid, 'AttributeMandatoryIndicator', #{PRIOR_CONTEXT_ID}), 'Y', 'Yes', 'No') attr_mandatory_ind_old
+							  	</if>
+							  	<if test='column.type.modelName == "gen_attr_list_new"'>
+							  		, chg.elementid gen_attr_list_new
+							  	</if>
+							  	<if test='column.type.modelName == "gen_attr_list_old"'>
+							  		, decode(cims_util.getElementVersionId(chg.elementid, #{PRIOR_CONTEXT_ID}),null,0,chg.elementid) gen_attr_list_old
+							  	</if>
+						  	</foreach>
+					  	</otherwise>
+					 </choose>
+				</trim>
+				from 
+				changes chg
+				<if test="$ORDER != null">
+					<trim prefix="order by" prefixOverrides=",">
+						<choose>
+							<when test="$ORDER == null || $ORDER.isEmpty()">
+								attr_code 
+							</when>
+							<otherwise>
+								<foreach item="column" index="key" collection="$ORDER">
+									<if test='column.type.modelName == "attr_code"'>
+										, attr_code
+									</if>
+									<if test='column.type.modelName == "attr_desc_new_en"'>
+										, attr_desc_new_en
+									</if>
+									<if test='column.type.modelName == "attr_desc_new_fr"'>
+										, attr_desc_new_fr
+									</if>
+									<if test='column.type.modelName == "attr_desc_old_en"'>
+										, attr_desc_old_en
+									</if>
+									<if test='column.type.modelName == "attr_desc_old_fr"'>
+										, attr_desc_old_fr
+									</if>
+									<if test='column.type.modelName == "attr_type"'>
+										, attr_type
+									</if>
+									<if test='column.type.modelName == "attr_mandatory_ind_new"'>
+										, attr_mandatory_ind_new
+									</if>
+									<if test='column.type.modelName == "attr_mandatory_ind_old"'>
+										, attr_mandatory_ind_old
+									</if>
+								</foreach>
+							</otherwise>
+						</choose>
+					</trim>
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.data.mapper.RequestMapper">
+   <resultMap id="notification" type="ca.cihi.cims.model.Notification">
+		<result property="notificationId" column="notification_id"/>		
+		<result property="versionCode" column="version_code"/>
+		<result property="subject" column="subject"/>
+		<result property="sender" column="sender"/>		
+		<result property="createDate" column="create_date"/>
+		<result property="recipient" column="recipient"/>
+		<result property="notificationType" column="notification_type"/>		
+	 </resultMap>
+	
+    <select id="getNotifications" resultMap="notification">
+		select t.notification_id,t.version_code,t.subject,t.create_date,t.sender,t.recipient, t.notification_type 
+		from S_NOTIFICATION t
+  		order by notification_id ASC
+   	</select>
+
+	
+</mapper>

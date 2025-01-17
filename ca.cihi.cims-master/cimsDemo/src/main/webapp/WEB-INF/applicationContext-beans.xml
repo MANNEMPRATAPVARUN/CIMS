@@ -1,0 +1,35 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:security="http://www.springframework.org/schema/security" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans                         http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/jee                         http://www.springframework.org/schema/jee/spring-jee.xsd                         http://www.springframework.org/schema/tx       http://www.springframework.org/schema/tx/spring-tx.xsd                         http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd                         http://www.springframework.org/schema/security                         http://www.springframework.org/schema/security/spring-security.xsd                         http://www.springframework.org/schema/context                         http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<bean class="org.springframework.context.annotation.CommonAnnotationBeanPostProcessor"/>
+	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+
+	<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<!-- Weaves in transaction advice around @Transactional methods -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+
+	<bean class="org.springframework.orm.ibatis.SqlMapClientFactoryBean" id="mainSqlMap">
+		<property name="configLocation" value="WEB-INF/SqlMapConfig.xml"/>
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<bean class="org.springframework.jndi.JndiObjectFactoryBean" id="dataSource">
+		<!--  <property name="jndiName" value="jdbc/CIMSDS" />-->
+		 <property name="jndiName" value="jdbc/TESTDS"/>
+	<property name="resourceRef" value="true"/></bean>
+
+	<bean class="ca.cihi.cims.data.CategoryDao" id="categoryDao">
+		<property name="sqlMapClient" ref="mainSqlMap"/>
+	</bean>
+	<!-- 
+	<bean id="elementDao" class="ca.cihi.cims.data.ElementDao">
+		<property name="sqlMapClient" ref="mainSqlMap" />
+	</bean>
+	 -->
+
+	<bean class="ca.cihi.cims.service.ViewServiceImpl" id="viewService">
+		<property name="categoryDao" ref="categoryDao"/>
+		<!--  <property name="elementDao" ref="elementDao" />-->
+	</bean>
+
+</beans>

@@ -1,0 +1,12 @@
+package ca.cihi.cims.refset.enums;
+
+/**
+ * ICD-10-CA-AUTOPOPULATE CCI-AUTOPOPULATE SNOMED CUSTOM SUBLIST
+ *
+ * @author MIftimie
+ * @version 1.0
+ * @created 27-Sep-2016 1:05:21 PM
+ */
+public enum ColumnCategory {
+ICD10CAAUTOPOPULATE, ICD10CAREFRESHABLE, CCIAUTOPOPULATE, CCIREFRESHABLE, SNOMED, CUSTOM, SUBLIST, CUSTOM_ALPHANUMERIC;
+}

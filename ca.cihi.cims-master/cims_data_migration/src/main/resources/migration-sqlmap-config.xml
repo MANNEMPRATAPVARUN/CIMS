@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE configuration  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"     "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+       <setting name="cacheEnabled" value="true"/>
+       <setting name="lazyLoadingEnabled" value="true"/>
+       <setting name="jdbcTypeForNull" value="NULL"/>
+     </settings>
+    <!-- iBatis configuration and SqlMap references -->
+     <mappers>
+        <mapper resource="sqlmaps/cims_SqlMap.xml"/>
+        <mapper resource="sqlmaps/transformation_SqlMap.xml"/>
+        <mapper resource="sqlmaps/concept_SqlMap.xml"/>
+        <mapper resource="sqlmaps/snomed_STG_SqlMap.xml"/>
+        <mapper resource="sqlmaps/snomed_SqlMap.xml"/>
+     </mappers>
+</configuration>

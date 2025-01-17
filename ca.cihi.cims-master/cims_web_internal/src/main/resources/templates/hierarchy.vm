@@ -1,0 +1,21 @@
+#macro(displayNode $nodeList)
+  #if($nodeList.size() > 0)
+    <ol style="list-style-type:none">
+	  #foreach($node in $nodeList)
+        <li><a href="$node.contentUrl">$node.itemLabel</a>
+		#displayNode($node.children)
+		</li>
+	  #end
+	</ol>  
+  #end
+#end
+<!DOCTYPE html>
+<html lang="${LANGUAGE}"> <!-- use "en" for English and "fr" for French -->
+<head>
+	<meta http-equiv="Content-Type" content="${CONTENT_TYPE}">
+	<title></title> <!-- optional title -->
+</head>
+<body>
+ #displayNode($HIERARCHYMODEL)
+</body>
+</html>

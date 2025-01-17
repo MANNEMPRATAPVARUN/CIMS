@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<templates>
+	<template id="NOTE" description="UC28: ICD/CCI Notes tab; UC12: Basic Info tab Notes section; UC17: Reference Value Notes screen">
+		<qualifierlist type="note">
+		<note>
+		<label> </label>
+		</note>
+		</qualifierlist>
+	</template>
+	<template id="DEFINITION" description="UC28: ICD Definition tab">
+		<qualifierlist type="definition">
+		<definition>
+		<label> </label>
+		</definition>
+		</qualifierlist>
+	</template>
+	<template id="INCLUDE" description="UC28: ICD/CCI Includes tab">	
+		<qualifierlist type="includes">
+		<include>
+		<label> </label>
+		</include>
+		</qualifierlist>
+	</template>
+	<template id="EXCLUDE" description="UC28: ICD/CCI Excludes tab">	
+		<qualifierlist type="excludes">
+		<exclude>
+		<label> <xref refid=" "> </xref></label>
+		</exclude>
+		</qualifierlist>
+	</template>
+	<template id="CODE_ALSO" description="UC28: ICD/CCI Code Also tab">	
+		<qualifierlist type="also">
+		<also><label> <xref refid=" "> </xref></label>
+		</also>
+		</qualifierlist>
+	</template>
+	<template id="OMIT_CODE" description="UC28: ICD/CCI Omit Code tab">	
+		<qualifierlist type="omit">
+		<omit>
+		<label> </label>
+		</omit>
+		</qualifierlist>
+	</template>
+	<template id="TABLE" description="UC28: ICD Category Table tab; UC28: CCI Rubric Table tab">	
+		<!--Table with 3 columns and 4 rows-->
+		<table cols="3" colwidth="200pt 100pt 100pt"><thead>
+		<tr>
+		<td><xref refid=" ">.^^</xref> </td>
+		<td> </td>
+		<td> </td>
+		</tr>
+		</thead><tbody>
+		<tr>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		</tr>
+		<tr>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		</tr>
+		<tr>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		</tr>
+		<tr>
+		<td> </td>
+		<td> </td>
+		<td> </td>
+		</tr>
+		</tbody></table>
+	</template>
+</templates>

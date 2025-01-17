@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.framework.mapper.ClasssMapper">
+	<resultMap id="classsDTOMap" type="ca.cihi.cims.framework.dto.ClasssDTO">
+		<result property="baseClassificationName" column="baseclassificationname" />
+		<result property="tableName" column="tablename" />
+		<result property="classsName" column="classname" />
+		<result property="classsId" column="classid" />
+		<result property="friendlyName" column="friendlyname" />
+	</resultMap>
+	
+	<insert id="createClasss"  parameterType="java.util.Map">
+       <selectKey resultType="java.lang.Long" keyProperty="classsId" order="BEFORE">  
+		        select CLASSID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into CLASS(
+                 CLASSID,
+                 TABLENAME,
+                 BASECLASSIFICATIONNAME,
+                 CLASSNAME,
+                 FRIENDLYNAME )
+        values ( #{classsId},
+                 #{tableName},
+                 #{baseClassificationName},
+                 #{classsName},
+                 #{friendlyName}
+        		)
+ 	</insert>
+ 	
+ 	<select id="getClasss" resultMap="classsDTOMap">
+ 		select * from class where classid=#{classsId}
+ 	</select>
+ 	
+ 	<select id="getClasssByClasssNameAndBaseClassificationName" resultMap="classsDTOMap" parameterType="java.util.Map">
+ 		select * from class where classname=#{classsName} and baseclassificationname=#{baseClassificationName}
+ 	</select>
+ 	
+ 	<select id="getClassses" resultMap="classsDTOMap" parameterType="java.util.Map">
+ 		select * from class where baseclassificationname=#{baseClassificationName}
+ 		and classname in
+	    <foreach item="item" index="index" collection="classsNames"
+	        open="(" separator="," close=")">
+	          #{item}
+	    </foreach>
+ 	</select>
+</mapper>

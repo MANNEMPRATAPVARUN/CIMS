@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="${LANGUAGE}">
+<head>
+	<meta http-equiv="Content-Type" content="${CONTENT_TYPE}">
+	<link href="css/cims.css" rel="stylesheet">
+	<title>${TITLE}</title>
+</head>
+<body> 
+	<div class="content">
+		    <p align="center">
+		          <b>
+		    	 	 	${TITLE}
+			      </b>
+			</p>
+		   <table>
+		   		<thead>
+		   			<tr>
+		   				<th>Code Value</th>
+		   				<th>Data Holding</th>
+		   				<th>Gender</th>
+						<th>Age Range</th>
+						<th>MRDx/Main</th>
+						<th>Dx Type 1</th>
+						<th>Dx Type 2</th>
+						<th>Dx Type 3</th>
+						<th>Dx Type 4</th>
+						<th>Dx Type 6</th>
+						<th>Dx Type 9</th>
+						<th>Dx Type W</th>
+						<th>Dx Type X</th>
+						<th>Dx Type Y</th>
+						<th>New Born</th>
+		   			</tr>
+		   		</thead>
+		   		<tbody>
+		   			#foreach($validation in $validations)
+		   			<tr>
+		   				<td>${$validation.code}</td>
+		   				<td>${$validation.dataHolding}</td>
+		   				<td>${$validation.gender}</td>
+		   				<td>${$validation.ageRange}</td>
+		   				<td>${$validation.decoratedMrdxMain}</td>
+		   				<td>${$validation.decoratedDxType1}</td>
+		   				<td>${$validation.decoratedDxType2}</td>
+		   				<td>${$validation.decoratedDxType3}</td>
+		   				<td>${$validation.decoratedDxType4}</td>
+		   				<td>${$validation.decoratedDxType6}</td>
+		   				<td>${$validation.decoratedDxType9}</td>
+		   				<td>${$validation.decoratedDxTypeW}</td>
+		   				<td>${$validation.decoratedDxTypeX}</td>
+		   				<td>${$validation.decoratedDxTypeY}</td>
+		   				<td>${$validation.decoratedNewBorn}</td>
+		   			</tr>
+		   			#end
+		   		</tbody>
+		   </table>
+	</div>
+</body>
+</html>

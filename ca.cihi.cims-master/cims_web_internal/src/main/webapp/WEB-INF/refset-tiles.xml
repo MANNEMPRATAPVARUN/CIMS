@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+	<definition name="refset-base" template="/WEB-INF/jsp/common/manage-refset-layout.jsp">
+        <put-attribute name="searchCR" value="/WEB-INF/jsp/requestmanagement/searchChangeRequests.jsp" /> 
+        <put-attribute name="menu" value="/WEB-INF/jsp/common/menu.jsp" /> 
+        <put-attribute name="refset-header"
+			value="/WEB-INF/jsp/refset/refset-headerAndTabs.jsp" />		
+        <put-attribute name="pageFooter" value="/WEB-INF/jsp/common/page-footer.jsp" /> 
+	</definition>
+
+    <definition name="refsetConfigDetail" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/refsetConfigDetail.jsp" />
+    </definition>
+    
+    <definition name="refsetEditDetail" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/refsetEditDetail.jsp" />
+    </definition>
+    
+    <definition name="/refset/picklists" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/picklists.jsp" />
+    </definition>
+    
+    <definition name="picklistAdd" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/picklistAdd.jsp" />
+    </definition>
+    
+    <definition name="picklistEdit" extends="refset-base">        
+        <put-attribute name="body">
+            <definition template="/WEB-INF/jsp/refset/picklistEdit.jsp">
+                <put-attribute name="refset-picklist-menu" value="/WEB-INF/jsp/refset/refset-picklist-menu.jsp" />                    
+            </definition>
+        </put-attribute>
+    </definition>
+    
+    <definition name="picklistView" extends="refset-base">        
+        <put-attribute name="body">
+            <definition template="/WEB-INF/jsp/refset/picklistView.jsp">
+                <put-attribute name="refset-picklist-menu" value="/WEB-INF/jsp/refset/refset-picklist-menu.jsp" />                    
+            </definition>
+        </put-attribute>
+    </definition>
+    
+    <definition name="picklistOutputConfig" extends="refset-base">        
+        <put-attribute name="body">
+            <definition template="/WEB-INF/jsp/refset/picklistOutputConfig.jsp">
+                <put-attribute name="refset-picklist-menu" value="/WEB-INF/jsp/refset/refset-picklist-menu.jsp" />                    
+            </definition>
+        </put-attribute>
+    </definition>
+    
+    <definition name="picklistColumnOutputConfig" extends="refset-base">        
+        <put-attribute name="body">
+            <definition template="/WEB-INF/jsp/refset/picklistColumnOutputConfig.jsp">
+                <put-attribute name="refset-picklist-menu" value="/WEB-INF/jsp/refset/refset-picklist-menu.jsp" />                    
+            </definition>
+        </put-attribute>
+    </definition>
+    
+    <definition name="listSupplement" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/listSupplement.jsp" />
+    </definition>
+    
+    <definition name="addSupplement" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/addSupplement.jsp" />
+    </definition>
+    
+    <definition name="productOutputConfig" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/productOutputConfig.jsp" />
+    </definition>
+    
+    <definition name="productOutputConfigDetail" extends="refset-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/productOutputConfigDetail.jsp" />
+    </definition>
+    
+    <definition name="sublist-popup-base" template="/WEB-INF/jsp/common/manage-sublist-popup-layout.jsp">        
+	</definition>
+	
+	<definition name="sublist-popup" extends="sublist-popup-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/sublistPopupDetail.jsp" />
+    </definition>
+</tiles-definitions>

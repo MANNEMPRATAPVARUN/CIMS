@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ChangeRequestStatusMapper">
+	<resultMap type="ca.cihi.cims.model.changerequest.ChangeRequestStatusIdentifierImpl" id="changeRequestStatusMap">
+		<result column="CHANGE_REQUEST_STATUS_ID" property="statusId"/>
+		<result column="CHANGE_REQUEST_STATUS_CODE" property="statusCode"/>
+		<result column="CHANGE_REQUEST_STATUS_DESC" property="statusDescription"/>
+		<result column="CHANGE_REQUEST_SUBSTATUS_CODE" property="subStatusCode"/>
+		<result column="CHANGE_REQUEST_SUBSTATUS_DESC" property="subStatusDescription"/>
+	</resultMap>
+	<select id="getChangeRequestStatuses" resultMap="changeRequestStatusMap">
+		select * from change_request_status
+		order by change_request_substatus_desc
+	</select>
+</mapper>

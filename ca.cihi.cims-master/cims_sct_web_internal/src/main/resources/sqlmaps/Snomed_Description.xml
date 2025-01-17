@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.sct.web.mapper.DescriptionMapper">
+
+	<select id="getDespByConceptId" resultType="ca.cihi.cims.sct.web.domain.Term" resultMap="termMap">
+		SELECT a.*, b.TERM_DESC FSN_TERM_DESC FROM  
+		sct_term a 
+		INNER JOIN sct_term b
+		ON a.CONCEPT_ID = b.CONCEPT_ID
+		WHERE a.CONCEPT_ID = #{conceptId} 
+		AND a.VERSION_CODE =#{version}
+		AND b.TERM_TYPE_CODE = 'FSN'
+ 		AND B.ACCEPTABILITY_TYPE_CODE = 'PR'			
+	    AND b.VERSION_CODE =#{version}
+	    ORDER BY a.TERM_TYPE_CODE, a.ACCEPTABILITY_TYPE_CODE DESC   		
+	</select>
+
+	<select id="getDespByDespId" resultType="ca.cihi.cims.sct.web.domain.Term" resultMap="termMap">
+
+		SELECT a.*, b.TERM_DESC FSN_TERM_DESC FROM  
+		sct_term a 
+		INNER JOIN sct_term b
+		ON a.CONCEPT_ID = b.CONCEPT_ID
+		WHERE a.TERM_ID = #{despId} 
+		AND a.VERSION_CODE =#{version}
+		AND b.TERM_TYPE_CODE = 'FSN'
+ 		AND B.ACCEPTABILITY_TYPE_CODE = 'PR'			
+	    AND b.VERSION_CODE =#{version}
+	    ORDER BY a.TERM_TYPE_CODE, a.ACCEPTABILITY_TYPE_CODE DESC		
+
+	</select>
+
+	<select id="getDespByTerm" resultType="ca.cihi.cims.sct.web.domain.Term" resultMap="termMap">
+		SELECT a.VERSION_CODE, a.CONCEPT_ID,  
+		  CASE
+		    WHEN C.CONCEPT_TYPE_CODE = 'CF'
+		    THEN 'Clinical finding'
+		    WHEN C.CONCEPT_TYPE_CODE = 'EV'
+		    THEN 'Event'
+		    WHEN C.CONCEPT_TYPE_CODE = 'PR'
+		    THEN 'Procedure'
+		    WHEN C.CONCEPT_TYPE_CODE = 'SI'
+		    THEN 'Situation with explicit context'
+		  END AS CONCEPT_TYPE_CODE,
+		b.TERM_ID FSN_ID, b.TERM_DESC FSN_TERM_DESC, 
+    	d.TERM_ID PR_ID, d.TERM_DESC PR_DESC, 
+    	a.TERM_ID, 
+		  CASE
+		    WHEN a.TERM_TYPE_CODE = 'SY'
+		    THEN 'Synonym'
+		    WHEN a.TERM_TYPE_CODE = 'FSN'
+		    THEN 'Fully specified name'
+		  END AS TERM_TYPE_CODE,
+    	 a.TERM_DESC, 
+		  CASE
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'PR'
+		    THEN 'Preferred'
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'AC'
+		    THEN 'Acceptable'
+		  END AS ACCEPTABILITY_TYPE_CODE,
+		  CASE
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'AC' and a.TERM_TYPE_CODE = 'SY'
+		    THEN a.TERM_ID ELSE NULL
+		  END AS SYNONYM_ID,
+		  CASE
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'AC' and a.TERM_TYPE_CODE = 'SY'
+		    THEN a.TERM_DESC ELSE NULL
+		  END AS SYNONYM_DESC  
+		FROM  
+		sct_term a 
+		INNER JOIN sct_term b
+			ON a.CONCEPT_ID = b.CONCEPT_ID AND a.VERSION_CODE = b.VERSION_CODE
+    	INNER JOIN SCT_CONCEPT c
+    		ON a.CONCEPT_ID = c.CONCEPT_ID AND a.VERSION_CODE = c.VERSION_CODE
+ 		INNER JOIN sct_term d
+			ON a.CONCEPT_ID = d.CONCEPT_ID AND a.VERSION_CODE = d.VERSION_CODE
+		WHERE 
+		<foreach item="item" index="index" collection="terms" open=" (" separator=" AND " close=") ">
+       		instr(lower(a.TERM_DESC), lower(#{item})) > 0 
+		</foreach>
+		AND a.VERSION_CODE = #{version}
+		AND b.TERM_TYPE_CODE = 'FSN'
+ 		AND b.ACCEPTABILITY_TYPE_CODE = 'PR'			
+		AND d.TERM_TYPE_CODE = 'SY'
+ 		AND d.ACCEPTABILITY_TYPE_CODE = 'PR'	
+		<if test="conceptType != null">
+			AND c.concept_type_code =  #{conceptType}
+	    </if>			
+	    <![CDATA[AND ROWNUM <= 100 ]]>
+	    ORDER BY a.TERM_TYPE_CODE, a.ACCEPTABILITY_TYPE_CODE DESC				
+
+	</select>
+
+
+	<select id="getDespByConceptIdOrDespId"  resultType="ca.cihi.cims.sct.web.domain.Term" resultMap="termMap">
+		SELECT a.VERSION_CODE, a.CONCEPT_ID,  
+		  CASE
+		    WHEN C.CONCEPT_TYPE_CODE = 'CF'
+		    THEN 'Clinical finding'
+		    WHEN C.CONCEPT_TYPE_CODE = 'EV'
+		    THEN 'Event'
+		    WHEN C.CONCEPT_TYPE_CODE = 'PR'
+		    THEN 'Procedure'
+		    WHEN C.CONCEPT_TYPE_CODE = 'SI'
+		    THEN 'Situation with explicit context'
+		  END AS CONCEPT_TYPE_CODE,
+		b.TERM_ID FSN_ID, b.TERM_DESC FSN_TERM_DESC, 
+    	d.TERM_ID PR_ID, d.TERM_DESC PR_DESC, 
+    	a.TERM_ID, 
+		  CASE
+		    WHEN a.TERM_TYPE_CODE = 'SY'
+		    THEN 'Synonym'
+		    WHEN a.TERM_TYPE_CODE = 'FSN'
+		    THEN 'Fully specified name'
+		  END AS TERM_TYPE_CODE,
+    	 a.TERM_DESC, 
+		  CASE
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'PR'
+		    THEN 'Preferred'
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'AC'
+		    THEN 'Acceptable'
+		  END AS ACCEPTABILITY_TYPE_CODE,
+		  CASE
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'AC' and a.TERM_TYPE_CODE = 'SY'
+		    THEN a.TERM_ID ELSE NULL
+		  END AS SYNONYM_ID,
+		  CASE
+		    WHEN a.ACCEPTABILITY_TYPE_CODE = 'AC' and a.TERM_TYPE_CODE = 'SY'
+		    THEN a.TERM_DESC ELSE NULL
+		  END AS SYNONYM_DESC 
+		FROM sct_term a
+	    INNER JOIN sct_term b
+		ON a.CONCEPT_ID = b.CONCEPT_ID AND a.VERSION_CODE = b.VERSION_CODE
+	    INNER JOIN SCT_CONCEPT c
+    		ON a.CONCEPT_ID = c.CONCEPT_ID AND a.VERSION_CODE = c.VERSION_CODE
+ 		INNER JOIN sct_term d
+			ON a.CONCEPT_ID = d.CONCEPT_ID AND a.VERSION_CODE = d.VERSION_CODE
+		WHERE (a.TERM_ID = #{id} OR a.CONCEPT_ID = #{id})  
+		AND a.VERSION_CODE = #{version}
+		AND b.TERM_TYPE_CODE = 'FSN'
+ 		AND b.ACCEPTABILITY_TYPE_CODE = 'PR'			
+		AND d.TERM_TYPE_CODE = 'SY'
+ 		AND d.ACCEPTABILITY_TYPE_CODE = 'PR'
+ 		<if test="conceptType != null">
+			AND c.concept_type_code =  #{conceptType}
+	    </if>			
+	    <![CDATA[AND ROWNUM <= 100 ]]>
+	    ORDER BY a.TERM_TYPE_CODE, a.ACCEPTABILITY_TYPE_CODE DESC				
+	</select>
+
+
+	<select id="getVersionsByStatus" resultMap="snomedSCTVersionMap" parameterType="map">
+		SELECT DISTINCT t.version_code, t.version_desc,t.effective_date,t.status_code
+		FROM SCT_VERSION t
+		WHERE STATUS_CODE= #{statusCode}
+		ORDER BY VERSION_CODE DESC
+	</select>
+	
+	<select id="getVersionDescByCode" resultType="java.lang.String" parameterType="map">
+		select t.version_desc from SCT_VERSION t
+        where t.version_code= #{code}
+	</select>
+	
+	<select id="getAllVersions" resultType="string">
+		SELECT DISTINCT VERSION_CODE FROM SCT_VERSION  ORDER BY VERSION_CODE DESC
+	</select>
+
+    <select id="getConceptTypes" resultType="ca.cihi.cims.sct.web.domain.ConceptType" resultMap="conceptTypeMap">
+		select t.concept_type_code, t.concept_type_pref_desc, t.concept_type_fsn_desc from SCT_CONCEPT_TYPE t
+	</select>
+
+	<resultMap id="termMap" type="ca.cihi.cims.sct.web.domain.Term">
+		<id property="selectedTermId" column="TERM_ID" />
+		<result property="version" column="VERSION_CODE"/>
+		<result property="conceptId" column="CONCEPT_ID"/>
+		<result property="conceptType" column="CONCEPT_TYPE_CODE"/>
+		<result property="conceptFsnId" column="FSN_ID"/>
+		<result property="conceptFsn" column="FSN_TERM_DESC"/>
+		<result property="conceptPreferredId" column="PR_ID"/>
+		<result property="conceptPreferred" column="PR_DESC"/>
+		<result property="selectedTermType" column="TERM_TYPE_CODE"/>
+		<result property="selectedTerm" column="TERM_DESC"/>
+		<result property="selectedTermAcceptability" column="ACCEPTABILITY_TYPE_CODE"/>
+		<result property="effectiveDate" column="EFFECTIVE_DATE"/>
+		<result property="synonymId" column="SYNONYM_ID"/>
+		<result property="synonym" column="SYNONYM_DESC"/>
+	</resultMap>
+	
+	<resultMap id="snomedSCTVersionMap" type="ca.cihi.cims.sct.web.domain.SCTVersion">
+	    <result property="versionCode" column="version_code" />
+		<result property="versionDesc" column="version_desc" />
+		<result property="effectiveDate" column="effective_date" />
+		<result property="statusCode" column="status_code" />
+	</resultMap>
+	
+	<resultMap id="conceptTypeMap" type="ca.cihi.cims.sct.web.domain.ConceptType">
+	    <result property="conceptTypeCode" column="concept_type_code" />
+		<result property="conceptTypePrefDesc" column="concept_type_pref_desc" />
+		<result property="conceptTypeFsnDesc" column="concept_type_fsn_desc" />
+	</resultMap>
+  
+</mapper>

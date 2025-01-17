@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.dao.mapper.ConceptMapper">
+
+   <resultMap id="idCodeDescriptionMap" type="ca.cihi.cims.model.IdCodeDescription">
+		<result property="id" 				column="id" />
+		<result property="code" 			column="code" />
+		<result property="description" 		column="description" />
+	</resultMap>
+	
+	<resultMap id="asteriskBlockInfoMap" type="ca.cihi.cims.model.AsteriskBlockInfo">
+		<result property="code" column="code"/>
+		<result property="userDescEng" column="userDescEng"/>
+		<result property="userDescFra" column="userDescFra"/>
+	</resultMap>
+	
+	<resultMap id="attributeInfoMap" type="ca.cihi.cims.model.AttributeInfo">
+		<result property="statusRef" column="statusRef"/>
+		<result property="locationRef" column="locationRef"/>
+		<result property="extentRef" column="extentRef"/>
+	</resultMap>
+	
+	<select id="getCCISectionIdBySectionCode" resultType="java.lang.Long" parameterType="java.util.Map">
+		with strelementversion as
+		(
+		  select elementversionid, elementid from structureelementversion where structureid=#{contextId}
+		  UNION  ALL 
+		  select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{contextId})
+		    and not exists (
+		      select elementid from structureelementversion cv where cv.structureid=#{contextId} 
+		      and cv.elementid = sv.elementid 
+		    )) 
+		
+		SELECT T.Domainelementid
+		FROM TEXTPROPERTYVERSION T
+		JOIN strelementversion SEV on T.textpropertyid = SEV.elementversionid
+		JOIN ELEMENT E on T.Domainelementid = E.Elementid and E.Classid = CIMS_CCI.getCCIClassID('ConceptVersion', 'Section')
+		WHERE T.Text = #{sectionCode} and T.Classid = CIMS_CCI.getCCIClassID('TextPropertyVersion', 'Code')
+	</select>
+
+    <select id="getCCIComponentsPerSection" resultMap="idCodeDescriptionMap">
+		select co.elementid id , tp.text code, tp2.text description
+		from textpropertyversion tp, structureelementversion sev_tp,
+			textpropertyversion tp2, structureelementversion sev_tp2,
+			conceptversion co, structureelementversion sev_co 
+		where tp.domainelementid in (
+	       		select domainelementid from conceptpropertyversion c, structureelementversion sev 
+	       		where c.rangeelementid = #{sectionId} 
+	       		and c.classid = cims_util.getClassIDForClassName('CCI', #{cpvClassName}) 
+	       		and sev.structureid = #{contextId}
+	       		and c.conceptpropertyid = sev.elementversionid
+			)
+			and co.elementid = tp.domainelementid
+			and tp.classid=   cims_util.getClassIDForClassName('CCI', 'ComponentCode')
+			and co.status = 'ACTIVE'
+			and co.classid = cims_util.getClassIDForClassName('CCI', #{componentClassName}) 
+			and tp2.classid = cims_util.getClassIDForClassName('CCI', 'ComponentShortTitle')
+			and tp2.languagecode = #{language}
+			and co.elementid = tp2.domainelementid
+			and sev_tp.structureid = #{contextId}
+			and sev_tp.elementversionid = tp.textpropertyid
+			and sev_tp2.structureid = #{contextId}
+			and sev_tp2.elementversionid = tp2.textpropertyid
+			and sev_co.structureid = #{contextId}
+			and sev_co.elementversionid = co.conceptid
+			order by 2
+	</select>
+	
+	<select id="getCCIComponentsPerSectionLongTitle" resultMap="idCodeDescriptionMap">
+		select co.elementid id , tp.text code, tp2.text description
+		from textpropertyversion tp, structureelementversion sev_tp,
+			textpropertyversion tp2, structureelementversion sev_tp2,
+			conceptversion co, structureelementversion sev_co 
+		where tp.domainelementid in (
+	       		select domainelementid from conceptpropertyversion c, structureelementversion sev 
+	       		where c.rangeelementid = #{sectionId} 
+	       		and c.classid = cims_util.getClassIDForClassName('CCI', #{cpvClassName}) 
+	       		and sev.structureid = #{contextId}
+	       		and c.conceptpropertyid = sev.elementversionid
+			)
+			and co.elementid = tp.domainelementid
+			and tp.classid=   cims_util.getClassIDForClassName('CCI', 'ComponentCode')
+			and co.status = 'ACTIVE'
+			and co.classid = cims_util.getClassIDForClassName('CCI', #{componentClassName}) 
+			and tp2.classid = cims_util.getClassIDForClassName('CCI', 'ComponentLongTitle')
+			and tp2.languagecode = #{language}
+			and co.elementid = tp2.domainelementid
+			and sev_tp.structureid = #{contextId}
+			and sev_tp.elementversionid = tp.textpropertyid
+			and sev_tp2.structureid = #{contextId}
+			and sev_tp2.elementversionid = tp2.textpropertyid
+			and sev_co.structureid = #{contextId}
+			and sev_co.elementversionid = co.conceptid
+			<if test="groupCode != NULL">
+				and substr(tp.text, 0, 1) = #{groupCode}
+			</if>
+			<if test='"code".equals(orderBy)'>order by 2</if>
+			<if test='"description".equals(orderBy)'>
+			order by NLSSORT(lower(tp2.text), 'NLS_SORT=generic_baseletter')
+			</if>
+	</select>
+	
+	<select id="getRefAttributePerType" resultMap="idCodeDescriptionMap">
+  with refattrclass as (
+    select classid from class c where c.baseclassificationname='CCI' and c.classname='ReferenceAttribute'
+  )
+  , codedescclasses as(
+    select cims_util.getClassIDForClassName('CCI', 'AttributeCode') classid from dual 
+    UNION ALL
+    select cims_util.getClassIDForClassName('CCI', 'AttributeDescription') classid from dual 
+  )
+  select domainelementid id, code , description from(
+    select domainelementid 
+           , max(decode(tpv.classid, cims_util.getClassIDForClassName('CCI', 'AttributeCode'), text,null)) code
+           , substr(max(decode(tpv.classid, cims_util.getClassIDForClassName('CCI', 'AttributeCode'), text,null)),1,1) type
+           , max(decode(tpv.classid, cims_util.getClassIDForClassName('CCI', 'AttributeDescription'), text,null)) description
+    from textpropertyversion tpv, structureelementversion sev, codedescclasses cs
+    where 
+        sev.elementversionid = tpv.textpropertyid
+      and sev.structureid = #{contextId}
+      and tpv.classid = cs.classid
+      and (languagecode = #{language} or languagecode is null)
+      and domainelementid in (
+          select c.elementid from conceptversion c, structureelementversion sev, refattrclass r 
+          where c.classid=r.classid 
+          and sev.structureid = #{contextId}
+          and sev.elementversionid = c.conceptid
+          and c.status='ACTIVE'
+      )
+    group by domainelementid
+    )
+  where type = nvl(#{attributeType}, type)
+  order by 2
+	</select>
+	
+	<select id="getBaseContextId" parameterType="java.util.Map" resultType="java.lang.Long">
+	   select basestructureid  from structureversion where structureid = #{contextId}
+	</select>
+	
+	<select id="getContextId" parameterType="java.util.Map" resultType="java.lang.Long">
+	   select sv.structureid  from structureversion sv, elementversion ev, class c where sv.basestructureid is null and sv.structureid=ev.elementversionid and ev.classid=c.classid and c.classname=#{classification} and ev.versioncode=#{versionCode}
+	</select>
+	
+	<select id="getAsteriskList" parameterType="java.util.Map" resultMap="asteriskBlockInfoMap">
+    with strelementversion as
+    (
+	    select elementversionid, elementid from structureelementversion where structureid=#{contextId} /*context id*/
+	    UNION  ALL 
+	    select elementversionid, elementid  from structureelementversion sv 
+	    where sv.structureid=(select basestructureid from structureversion where structureid=#{contextId} /*context id*/)
+	    and not exists ( 
+		    select elementid from structureelementversion cv where cv.structureid=#{contextId}  /*context id*/
+		    and cv.elementid = sv.elementid 
+    	)
+    ) 
+    , strelementversion1 as
+    (
+	    select elementversionid, elementid from structureelementversion where structureid=#{contextId} /*context id*/
+	    UNION  ALL 
+	    select elementversionid, elementid  from structureelementversion sv 
+	    where sv.structureid=(select basestructureid from structureversion where structureid=#{contextId} /*context id*/)
+	    and not exists ( 
+		    select elementid from structureelementversion cv where cv.structureid=#{contextId} /*context id*/ 
+		    and cv.elementid = sv.elementid 
+	    )
+    ) 
+    ,strelementversion2 as
+    (
+	    select elementversionid, elementid from structureelementversion where structureid=#{contextId} /*context id*/
+	    UNION  ALL 
+	    select elementversionid, elementid  from structureelementversion sv where sv.structureid=
+	    	(select basestructureid from structureversion where structureid=#{contextId} /*context id*/)
+	    and not exists ( 
+		    select elementid from structureelementversion cv where cv.structureid=#{contextId} /*context id*/
+		    and cv.elementid = sv.elementid 
+	    )
+    ) 
+    , asterisks as (
+	    select /*+ RESULT_CACHE*/code,chapterid, elemid from (
+		    select tp_code.text code, child_cptv.elementid elemid
+		    , cims_util.retrieveContainingPagebyId('ICD-10-CA',#{contextId}/*context id*/, child_cptv.elementid) chapterid
+		    ,( select tp.text dagger_asterisk 
+		                            from conceptpropertyversion cpv, textpropertyversion tp, strelementversion str_cpv
+		                            where cpv.classid = #{daggerClassId} --DaggerAsteriskIndicator class id
+		                            and cpv.domainelementid = child_cptv.elementid 
+		                            and tp.classid = #{domainValueCodeClassId} --DomainValueCode class id
+		                            and cpv.rangeelementid = tp.domainelementid
+		                            and str_cpv.elementversionid = cpv.conceptpropertyid
+		                ) as dagger_asterisk      
+		      FROM TEXTPROPERTYVERSION tp_code,STRELEMENTVERSION1 strelv_tp
+		        , STRELEMENTVERSION2 strelv_child, Conceptversion child_cptv
+		        WHERE  
+		       child_cptv.conceptid = strelv_child.elementversionid
+		       and child_cptv.elementid = tp_code.domainelementid
+		       and tp_code.textpropertyid = strelv_tp.elementversionid
+		       and tp_code.classid = #{codeClassId} -- Code class id
+		       and child_cptv.classid = #{categoryClassId} -- Category class id
+		       and child_cptv.status = 'ACTIVE'
+		       and length(tp_code.text) = 3 
+	   ) where dagger_asterisk = '*'
+	)
+   select a.code , 
+   		  cims_util.getTextProperty(elemId => elemid, classnme => 'UserTitle', strid => #{contextId}/*context id*/, language=>'ENG') userDescEng,
+    	  cims_util.getTextProperty(elemId => elemid, classnme => 'UserTitle', strid => #{contextId}/*context id*/, language=>'FRA') userDescFra
+   from asterisks a
+   where   chapterid = #{chapterElementId} /*Chapter element id */
+   order by 1
+		
+	</select>
+	
+	<select id="getBlockList" parameterType="java.util.Map" resultMap="asteriskBlockInfoMap">
+    with strelementversion as
+    (
+	    select elementversionid, elementid from structureelementversion where structureid=#{contextId}
+	    UNION  ALL 
+	    select elementversionid, elementid  from structureelementversion sv 
+	    where sv.structureid= (select basestructureid from structureversion where structureid=#{contextId})
+	    and not exists ( 
+		    select elementid from structureelementversion cv where cv.structureid=#{contextId} 
+		    and cv.elementid = sv.elementid 
+	    )
+    ) 
+    , strelementversion1 as
+    (
+	    select elementversionid, elementid from structureelementversion where structureid=#{contextId}
+	    UNION  ALL 
+	    select elementversionid, elementid  from structureelementversion sv 
+	    where sv.structureid=(select basestructureid from structureversion where structureid=#{contextId})
+	    and not exists ( 
+	    select elementid from structureelementversion cv where cv.structureid=#{contextId} 
+	    and cv.elementid = sv.elementid 
+    )
+    ) 
+    ,strelementversion2 as
+    (
+	    select elementversionid, elementid from structureelementversion where structureid=#{contextId}
+	    UNION  ALL 
+	    select elementversionid, elementid  from structureelementversion sv 
+	    where sv.structureid=(select basestructureid from structureversion where structureid=#{contextId})
+	    and not exists ( 
+		    select elementid from structureelementversion cv where cv.structureid=#{contextId} 
+		    and cv.elementid = sv.elementid 
+	    )
+    ) 
+    , concepthierarchy as (
+	    select narrow_cp.rangeelementid parent_elid, narrow_cp.domainelementid child_elid, tp_code.text code
+	      FROM CONCEPTPROPERTYVERSION narrow_cp, STRELEMENTVERSION strelv_cp
+	        , TEXTPROPERTYVERSION tp_code,STRELEMENTVERSION1 strelv_tp
+	        , STRELEMENTVERSION2 strelv_child
+	        , Conceptversion child_cptv
+	      WHERE narrow_cp.conceptpropertyid = narrow_cp.conceptpropertyid 
+	      and narrow_cp.conceptpropertyid = strelv_cp.elementversionid
+	      and narrow_cp.classid =  #{narrowerClassId}
+	      and tp_code.domainelementid = narrow_cp.domainelementid
+	      and tp_code.textpropertyid = strelv_tp.elementversionid
+	      AND tp_code.classid = #{codeClassId}
+	      AND child_cptv.elementid = tp_code.domainelementid
+	      and strelv_child.elementversionid = child_cptv.conceptid
+	      and child_cptv.classid in ( #{blockClassId}, #{chapterClassId}) 
+	      and tp_code.status = 'ACTIVE'
+	      and narrow_cp.status = 'ACTIVE'
+	      and child_cptv.status = 'ACTIVE'
+      ) select  code, 
+	      cims_util.getTextProperty(elemId => child_elid,classnme => 'UserTitle', strid =>#{contextId}, language=>'ENG') userDescEng, 
+	      cims_util.getTextProperty(elemId => child_elid,classnme => 'UserTitle', strid =>#{contextId}, language=>'FRA') userDescFra  
+      from concepthierarchy
+      CONNECT BY NOCYCLE PRIOR child_elid = parent_elid
+      start with parent_elid = #{chapterElementId} -- conceptId for Chapter or section
+      order by code
+	
+	</select>
+	
+	<select id="getCCIClassID" parameterType= "java.util.Map" resultType="java.lang.Long">
+	   SELECT cims_cci.getCCIClassID(#{tablename}, #{classname}) FROM DUAL
+	</select>
+	
+	<select id="getICDClassID" parameterType= "java.util.Map" resultType="java.lang.Long">
+	   SELECT cims_icd.getICD10CAClassID(#{tablename}, #{classname}) FROM DUAL
+	</select>
+	
+	<select id="findDadDHValidation" parameterType= "java.util.Map" resultType="java.lang.String">
+		select cims_util.getValidationRuleRefCodes(#{contextId}, pConceptId => #{elementId}, pDHCode => '1') from dual
+	</select>
+	
+	<select id="findDadDHValidationAtChildLevels" parameterType= "java.util.Map" resultType="java.lang.String">
+		select cims_util.getChildValidationRuleRefCodes(#{contextId}, pConceptId => #{elementId}, pDHCode => '1') from dual
+	</select>
+	
+	<select id="hasChildWithActiveValidationRule" parameterType= "java.util.Map" resultType="java.lang.String">
+		select cims_util.hasChildWithActiveValidRule(#{contextId}, pConceptId => #{elementId})  from dual
+	</select>
+	
+	<select id="hasActiveValidationRule" parameterType= "java.util.Map" resultType="java.lang.String">
+		select cims_util.hasActiveValidationRule(#{contextId}, pConceptId => #{elementId})  from dual
+	</select>
+	
+	<select id="hasActiveChildren" parameterType= "java.util.Map" resultType="java.lang.String">
+		select cims_util.hasActiveChildren(#{contextId}, pConceptId => #{elementId})  from dual
+	</select>
+	
+	<select id="isRefAttributeMandatory" parameterType= "java.util.Map" resultType="java.lang.String">
+		select cims_util.isRefAttributeMandatory(#{contextId}, #{refAttributeCode})  from dual
+	</select>
+	
+	<select id="retrieveContainingPagebyId" parameterType= "java.util.Map" resultType="java.lang.Long">
+		select cims_util.retrieveContainingPagebyId(#{classification}, #{contextId}, #{elementId})  from dual
+	</select>
+	
+	<select id="retrievePagebyIdForFolio" parameterType= "java.util.Map" resultType="java.lang.Long">
+		select cims_util.retrievePagebyIdForFolio(#{baseClassification}, #{contextId}, #{elemId})  from dual
+	</select>
+	
+	
+   <resultMap id="Diagram" type="ca.cihi.cims.model.Diagram">	
+	    <result column="diagramBytes" property="diagramBytes" jdbcType="BLOB"/>
+	</resultMap>
+
+ 
+  <select id="getDiagramByFileName" resultMap="Diagram">
+	  with strelementversion as 
+        ( 
+          select elementversionid, elementid from structureelementversion where structureid=#{currentContextId} 
+          UNION  ALL 
+          select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{currentContextId})  
+
+            and not exists ( 
+              select elementid from structureelementversion cv where cv.structureid=#{currentContextId} 
+              and cv.elementid = sv.elementid 
+            ) 
+         ) 
+      , strelementversion1 as 
+        ( 
+          select elementversionid, elementid from structureelementversion where structureid=#{currentContextId} 
+          UNION  ALL 
+          select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{currentContextId})  
+
+            and not exists ( 
+              select elementid from structureelementversion cv where cv.structureid=#{currentContextId} 
+              and cv.elementid = sv.elementid 
+            ) 
+         ) 
+      , strelementversion2 as 
+        ( 
+          select elementversionid, elementid from structureelementversion where structureid=#{currentContextId} 
+          UNION  ALL 
+          select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{currentContextId})  
+
+            and not exists ( 
+              select elementid from structureelementversion cv where cv.structureid=#{currentContextId} 
+              and cv.elementid = sv.elementid 
+            ) 
+         ) 
+            select gpv.graphicsblobvalue diagramBytes, tpv.*, 
+       --sev.*, 
+       gpv.* from graphicsPropertyversion gpv, textpropertyversion tpv, strelementversion sev, conceptversion cv1 , strelementversion1 sev1,  strelementversion2 sev2
+            where gpv.domainelementid = tpv.domainelementid 
+            and tpv.text = #{diagramFileName}  
+            and sev.elementversionid = gpv.graphicspropertyid 
+            and gpv.classid in (select classid from class where classname = 'DiagramFigure') 
+            and tpv.classid in (select classid from class where classname = 'DiagramFileName') 
+            and cv1.classid in (select classid from class where classname = 'Diagram')
+            and cv1.elementid = gpv.domainelementid 
+            and cv1.status = 'ACTIVE'
+            and cv1.conceptid = sev1.elementversionid
+            and tpv.textpropertyid = sev2.elementversionid	  
+  </select>
+
+
+	<resultMap id="diagramMap" type="ca.cihi.cims.model.Diagram">
+		<result property="diagramFileName" column="text"/>
+	    <result column="diagramBytes" property="diagramBytes" jdbcType="BLOB"/>
+	</resultMap>
+
+  <select id="getDiagramByContextId" resultMap="diagramMap">
+	  with strelementversion as 
+        ( 
+          select elementversionid, elementid from structureelementversion where structureid=#{currentContextId} 
+          UNION  ALL 
+          select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{currentContextId})  
+
+            and not exists ( 
+              select elementid from structureelementversion cv where cv.structureid=#{currentContextId} 
+              and cv.elementid = sv.elementid 
+            ) 
+         ) 
+
+      , strelementversion1 as 
+        ( 
+          select elementversionid, elementid from structureelementversion where structureid=#{currentContextId} 
+          UNION  ALL 
+          select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{currentContextId})  
+
+            and not exists ( 
+              select elementid from structureelementversion cv where cv.structureid=#{currentContextId} 
+              and cv.elementid = sv.elementid 
+            ) 
+         ) 
+      , strelementversion2 as 
+        ( 
+          select elementversionid, elementid from structureelementversion where structureid=#{currentContextId} 
+          UNION  ALL 
+          select elementversionid, elementid  from structureelementversion sv where sv.structureid=(select basestructureid from structureversion where structureid=#{currentContextId})  
+
+            and not exists ( 
+              select elementid from structureelementversion cv where cv.structureid=#{currentContextId} 
+              and cv.elementid = sv.elementid 
+            ) 
+         ) 
+            select gpv.graphicsblobvalue diagramBytes, tpv.*, 
+       --sev.*, 
+       gpv.* from graphicsPropertyversion gpv, textpropertyversion tpv, strelementversion sev, conceptversion cv1 , strelementversion1 sev1,  strelementversion2 sev2
+            where gpv.domainelementid = tpv.domainelementid 
+            and sev.elementversionid = gpv.graphicspropertyid 
+            and gpv.classid in (select classid from class where classname = 'DiagramFigure') 
+            and tpv.classid in (select classid from class where classname = 'DiagramFileName') 
+            and cv1.classid in (select classid from class where classname = 'Diagram')
+            and cv1.elementid = gpv.domainelementid 
+            and cv1.status = 'ACTIVE'
+            and cv1.conceptid = sev1.elementversionid
+            and tpv.textpropertyid = sev2.elementversionid
+  </select>
+</mapper>

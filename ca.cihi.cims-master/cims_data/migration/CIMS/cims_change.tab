@@ -1,0 +1,17 @@
+create table CIMS_CHANGE
+(
+  CHANGE_ID        NUMBER not null,
+  CHANGE_TYPE_CODE VARCHAR2(2),
+  ELEMENT_CODE     VARCHAR2(5),
+  ELEMENT_DATA     CLOB
+)
+;
+alter table CIMS_CHANGE
+  add constraint PK_CHANGE primary key (CHANGE_ID);
+alter table CIMS_CHANGE
+  add constraint FK_CHANGE_TYPE_CODE foreign key (CHANGE_TYPE_CODE)
+  references CIMS_CHANGE_TYPE (CHANGE_TYPE_CODE);
+alter table CIMS_CHANGE
+  add constraint FK_ELEMENT_CODE foreign key (ELEMENT_CODE)
+  references CIMS_ELEMENT (ELEMENT_CODE);
+

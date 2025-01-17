@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cims_report.xsd">
+	<worksheet name="CIMS Report">
+		<header>
+			<parameter>
+				<paraName>classification</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>year</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>language</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>6</row_number>
+			</parameter>
+			<parameter>
+				<paraName>owner</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>dateFrom</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>dateTo</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+				<row_number>6</row_number>
+			</parameter>
+			<parameter>
+				<paraName>statusFrom</paraName>
+				<!-- H -->
+				<column_number>8</column_number>
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>errorCount</paraName>
+				<!-- H -->
+				<column_number>8</column_number>
+				<row_number>5</row_number>
+			</parameter>
+		</header>
+		<detail startRowNumber="9" name="detail1">
+			<parameter>
+				<paraName>changeRequestId</paraName>
+				<!-- B -->
+				<column_number>2</column_number>
+			</parameter>
+			<parameter>
+				<paraName>sendBackDate</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+			</parameter>
+			<parameter>
+				<paraName>classification</paraName>
+				<!-- D -->
+				<column_number>4</column_number>
+			</parameter>
+			<parameter>
+				<paraName>language</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+			</parameter>
+			<parameter>
+				<paraName>owner</paraName>
+				<!-- F -->
+				<column_number>6</column_number>
+			</parameter>
+			<parameter>
+				<paraName>fromStatus</paraName>
+				<!-- G -->
+				<column_number>7</column_number>
+			</parameter>
+			<parameter>
+				<paraName>sendBackReason</paraName>
+				<!-- H -->
+				<column_number>8</column_number>
+			</parameter>
+		</detail>
+	</worksheet>
+</workbook>

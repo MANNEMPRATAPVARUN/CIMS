@@ -1,0 +1,8 @@
+target/
+.settings/
+.project
+.classpath
+build-number.txt
+.springBeans
+.vscode/
+copywar.bat

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ResourceAccessMapper" >
+
+ 
+  <resultMap id="UserRoleResourceAccessMap" type="ca.cihi.cims.model.resourceaccess.UserRoleResourceAccess" >
+     <result column="USER_ROLE_CODE" property="userRole"  />
+     <result column="ASSIGNMENT_TYPE_CODE" property="assignmentTypeCode" />
+     <result column="CHANGE_REQUEST_STATUS_ID" property="changeRequestStatus" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+     <result column="CHANGE_REQUEST_LANGUAGE_CODE" property="changeRequestLanguage" />
+     <result column="RESOURCE_CODE" property="resourceCode" />
+     <result column="ACCESS_CODE" property="accessCode" />
+  </resultMap>
+  
+  
+  <resultMap id="ResourceAccessMap" type="ca.cihi.cims.model.resourceaccess.ResourceAccess" >
+     <result column="RESOURCE_CODE" property="resourceCode" />
+     <result column="ACCESS_CODE" property="accessCode" />
+  </resultMap>
+  
+  
+  <select id="findMyResourceAccesses" resultMap="ResourceAccessMap" parameterType="ca.cihi.cims.model.resourceaccess.ResourceAccessQueryCriteria" >
+       select distinct RESOURCE_CODE,ACCESS_CODE
+       from USER_ROLE_ACCESS
+       where   USER_ROLE_CODE in 
+       <foreach item="userRole" index="index" collection="userRoles"
+           open="(" separator="," close=")">
+             #{userRole,  typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        </foreach>
+       and  ASSIGNMENT_TYPE_CODE =#{assignmentTypeCode, typeHandler=org.apache.ibatis.type.EnumTypeHandler }
+       and  CHANGE_REQUEST_STATUS_ID =#{changeRequestStatus,  typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler}
+       and  CHANGE_REQUEST_LANGUAGE_CODE=#{changeRequestLanguage, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+   </select> 
+  
+ 
+   
+ 
+
+
+</mapper>

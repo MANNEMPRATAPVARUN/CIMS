@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.framework.mapper.SearchMapper">
+	<resultMap id="hierarchyDTOMap" type="ca.cihi.cims.framework.dto.PropertyHierarchyDTO">
+		<id column="prel_elementid" />
+		<result property="conceptClasssId" column="conceptclasssid" />
+		<result property="propertyClasssId" column="propertyclasssid" />
+		<result property="propertyLanguage" column="propertylanguage" />
+		<result property="propertyValue" column="propertyvalue" />
+		<association property="conceptId" javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="cel_" />
+		<association property="parentId" javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="pael_" />
+		<association property="propertyId" javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="prel_" />
+	</resultMap>
+	
+	<select id="searchHierarchy" parameterType="java.util.Map" resultMap="hierarchyDTOMap">
+			with relationships as
+			(
+			select /*+ INLINE*/ r.classid, r.conceptpropertyid, r.domainelementid, r.elementid, r.rangeelementid
+			from structureelementversion sev, conceptpropertyversion r
+			where sev.structureid = #{contextId}
+			and r.conceptpropertyid = sev.elementversionid
+			and r.classid=#{relationshipId}
+			)
+			, concepts as
+			(
+			select /*+ INLINE*/ c.classid, c.conceptid, c.elementid, c.status
+			from structureelementversion sev, conceptversion c
+			where sev.structureid = #{contextId}
+			and c.conceptid = sev.elementversionid
+			and c.status = 'ACTIVE'
+			)
+			, properties as 
+			(
+			select 'TextProperty' propertyType, nvl(pv.languagecode,'NOLANGUAGE') propertyLanguage, pv.classid propertyClasssId, pv.text propertyValue, pv.textpropertyid propertyVersionId, pv.elementid propertyElementId, pv.domainelementid
+			from textpropertyversion pv, structureelementversion sev 
+			where sev.structureid = #{contextId}
+			and sev.elementversionid = pv.textpropertyid
+			and classid in 
+				<foreach item="item" index="index" collection="propertyClassIds"
+			        open="(" separator="," close=")">
+			          #{item}
+			    </foreach>
+			UNION
+			select 'NumericProperty' propertyType, 'NOLANGUAGE' propertyLanguage, pv.classid propertyClasssId, ''||pv.numericvalue propertyValue, pv.numericpropertyid propertyVersionId, pv.elementid propertyElementId, pv.domainelementid
+			from numericpropertyversion pv, structureelementversion sev 
+			where sev.structureid = #{contextId}
+			and sev.elementversionid = pv.numericpropertyid
+			and classid in 
+				<foreach item="item" index="index" collection="propertyClassIds"
+			        open="(" separator="," close=")">
+			          #{item}
+			    </foreach>
+			UNION
+			select 'ConceptProperty' propertyType,  'NOLANGUAGE' propertyLanguage, pv.classid propertyClasssId, ''||pv.rangeElementId propertyValue, pv.conceptpropertyid propertyVersionId, pv.elementid propertyElementId, pv.domainelementid
+			from conceptpropertyversion pv, structureelementversion sev
+			where sev.structureid = #{contextId}
+			and sev.elementversionid = pv.conceptpropertyid
+			and pv.classid in 
+				<foreach item="item" index="index" collection="propertyClassIds"
+			        open="(" separator="," close=")">
+			          #{item}
+			    </foreach>
+			)
+			, hierarchy as(
+			select /*+ INLINE*/ r.rangeelementid , r.domainelementid, c.classid, c.conceptid
+			from relationships r, concepts c
+			where r.domainelementid = c.elementid
+			connect by prior r.domainelementid = r.rangeelementid
+			<if test="level != null">
+				and level &lt;= #{level}
+			</if>
+			start with r.rangeelementid = #{startWithConceptId}
+			)
+			select   h.rangeelementid pael_elementid, sev.elementversionid pael_elementversionid, p.domainelementid cel_elementid, h.conceptid cel_elementversionid, h.classId conceptclasssid, p.propertyclasssid, p.propertyElementId prel_elementid, p.propertyversionid prel_elementversionid, p.propertyLanguage,  p.propertyValue propertyValue
+			from hierarchy h, properties p, structureelementversion sev
+			where h.domainelementid = p.domainelementid  and sev.structureid=#{contextId} and sev.elementid=h.rangeelementid
+			order by cel_elementid, prel_elementid
+	</select>
+</mapper>

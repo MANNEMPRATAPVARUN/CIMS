@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.framework.mapper.ConceptMapper">
+	
+	<resultMap id="conceptDTOMap" type="ca.cihi.cims.framework.dto.ConceptDTO">
+		<id column="el_elementid" />
+		<result property="elementUUID" column="elementuuid" />
+		<result property="changedFromVersionId" column="changedfromversionid" />
+		<result property="originatingContextId" column="originatingcontextid" />
+		<result property="versionCode" column="versioncode" />
+		<result property="versionTimestamp" column="versiontimestamp" />
+		<result property="elementStatus" column="elementstatus"/>
+		<association property="classs"  javaType="ca.cihi.cims.framework.dto.ClasssDTO" resultMap="ca.cihi.cims.framework.mapper.ClasssMapper.classsDTOMap" columnPrefix="cls_"/>
+		<association property="elementIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="el_"/>
+		<collection property="loadedProperties"  ofType="ca.cihi.cims.framework.dto.PropertyDTO" resultMap="ca.cihi.cims.framework.mapper.PropertyMapper.propertyDTOMap" columnPrefix="p_"/>
+	</resultMap>
+	
+	<resultMap id="propertyDTOMap" type="ca.cihi.cims.framework.dto.PropertyDTO">
+		<id column="el_elementid" />
+		<result property="elementUUID" column="elementuuid" />
+		<result property="changedFromVersionId" column="changedfromversionid" />
+		<result property="originatingContextId" column="originatingcontextid" />
+		<result property="versionCode" column="versioncode" />
+		<result property="versionTimestamp" column="versiontimestamp" />
+		<result property="elementStatus" column="elementstatus" />
+		<result property="domainElementId" column="domainelementid" />
+		<result property="language" column="language"  />
+		<result property="propertyType" column="propertytype"  />
+		<result property="value" column="value"/>
+		<association property="classs"  javaType="ca.cihi.cims.framework.dto.ClasssDTO" resultMap="ca.cihi.cims.framework.mapper.ClasssMapper.classsDTOMap" columnPrefix="cls_"/>
+		<association property="elementIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="el_"/>
+	</resultMap>
+	
+	<select id="loadPropertiesForConcept" parameterType="java.util.Map" resultMap="propertyDTOMap">
+	
+		with properties as
+		(
+		select 'TextProperty' propertyType, pv.domainElementId domainElementId, nvl(pv.languagecode,'NOLANGUAGE') language, pv.text value, pv.elementid, pv.textpropertyid elementversionId
+		from textpropertyversion pv, structureelementversion sev
+		where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+		and sev.elementversionid = pv.textpropertyid
+		UNION
+		select 'NumericProperty' propertyType, pv.domainElementId domainElementId, 'NOLANGUAGE' language , ''||pv.numericValue value, pv.elementid, pv.numericpropertyid elementversionId
+		from numericpropertyversion pv, structureelementversion sev
+		where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+		and sev.elementversionid = pv.numericpropertyid
+		UNION
+		select 'ConceptProperty' propertyType, pv.domainElementId domainElementId, 'NOLANGUAGE' language , ''||pv.rangeElementId value, pv.elementid, pv.conceptpropertyid elementversionId
+		from conceptpropertyversion pv, structureelementversion sev
+		where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+		and sev.elementversionid = pv.conceptpropertyid
+		)
+		select e.elementid el_elementid, e.elementuuid, c.classid cls_classid, c.baseclassificationname cls_baseclassificationname, c.classname cls_classname, c.friendlyname cls_friendlyname, c.tablename cls_tablename,
+		ev.elementversionid as el_elementversionid, ev.changedfromversionid, ev.versioncode, ev.versiontimestamp, ev.status elementstatus, ev.originatingcontextid,
+		p.domainElementId, p.language, p.value, p.propertyType
+		from elementversion ev, class c, element e, properties p
+		where p.elementversionId = ev.elementversionid and ev.status='ACTIVE'
+		and ev.elementid = e.elementid
+		and e.classid = c.classid
+		<if test="classsNames !=null">
+		and c.classname in 
+			<foreach item="item" index="index" collection="classsNames"
+		        open="(" separator="," close=")">
+		          #{item}
+		    </foreach>
+		</if>
+		
+		<if test="classsIds !=null">
+		and c.classid in 
+			<foreach item="item" index="index" collection="classsIds"
+		        open="(" separator="," close=")">
+		          #{item}
+		    </foreach>
+		</if>
+	</select>
+	
+	<select id="remove" parameterType="java.util.Map" statementType="CALLABLE"  flushCache="true">
+		<![CDATA[ 
+          	call cims_framework.removeConcept
+          	(
+				#{contextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{elementId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+ 	</select>
+ 	
+	<insert id="createConceptVersion" parameterType="java.util.Map" >
+		 insert into conceptversion (conceptid, classid, status, elementid) values (#{elementVersionId}, ${classsId}, 'ACTIVE', #{elementId})
+ 	</insert>
+ 	
+ 	<select id="findAncestorId" resultType="java.lang.Long">
+ 		select cims_util.findAncestorId(#{contextId}, #{ancestorClasssId}, #{relationshipClasssId}, #{conceptId}) from dual
+ 	</select>
+ 	
+ 	<select id="findConceptsByClassAndValues" parameterType="java.util.Map" resultMap="conceptDTOMap">
+ 		with elementversions as
+		(
+			select /*+ INLINE */ ev.* from elementversion ev, structureelementversion sev
+			where ev.elementversionid  =sev.elementversionid
+			and sev.structureid = #{contextId}
+			and ev.classid in 
+				<foreach item="item" index="index" collection="propertyClasssIds"
+			        open="(" separator="," close=")">
+			          #{item}
+			    </foreach>
+		)
+		, concepts as
+		(
+			select ce.elementid, cev.elementVersionId, ce.elementuuid, cclass.classid, cclass.baseclassificationname, cclass.classname, cclass.friendlyname, cclass.tablename,
+			cev.changedfromversionid, cev.versioncode, cev.versiontimestamp, cev.status, cev.originatingcontextid
+			from elementversion cev, class cclass, element ce, structureelementversion sev1
+			where cev.status='ACTIVE' and cev.elementversionid=sev1.elementversionid and sev1.structureid=#{contextId}
+				and cev.elementid = ce.elementid
+				and ce.classid = cclass.classid and cclass.classid=#{conceptClasssId}
+			<if test="conditionList != null">
+				<foreach item="item" index="index" collection="conditionList">
+				<choose>
+				<when test="item.propertyType=='TextProperty'">
+				and exists (
+					select 1 from textpropertyversion pv, structureelementversion sev 
+					where pv.domainelementid = ce.elementid and pv.textpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+					     <if test="item.operator=='EQUALS' or item.operator==null">
+					     and pv.text=#{item.value}
+					     </if>
+					     <if test="item.operator=='LIKE'">
+					     and pv.text like '%'||#{item.value}||'%'
+					     </if>
+					     <if test="item.operator=='IN'">
+					     and pv.text in 
+					     <foreach item="valueItem" index="index" collection="item.value"
+						      open="(" separator="," close=")">
+						        #{valueItem}
+						  </foreach>
+						  </if>
+						<if test="item.languageCode != null">
+							and pv.languagecode=#{item.languageCode,typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+						</if>
+					)
+				</when>
+				<when test="item.propertyType=='NumericProperty'">
+				and exists (
+					select 1 from numericpropertyversion pv, structureelementversion sev 
+					where pv.domainelementid = ce.elementid and pv.numericpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+					     <if test="item.operator=='EQUALS' or item.operator==null">
+					     and pv.numericvalue=#{item.value}
+					     </if>
+					     <if test="item.operator=='IN'">
+					     and pv.numericvalue in 
+					     <foreach item="valueItem" index="index" collection="item.value"
+						      open="(" separator="," close=")">
+						        #{valueItem}
+						  </foreach>
+						  </if>
+					)
+				</when>
+				<when test="item.propertyType=='ConceptProperty'">
+				and exists (
+					select 1 from conceptpropertyversion pv, structureelementversion sev 
+					<choose>
+					<when test="item.relationshipDirection=='DOWN' or item.relationshipDirection ==null">
+						where pv.domainelementid = ce.elementid and pv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+						     <if test="item.operator=='EQUALS' or item.operator==null">
+						     and pv.rangeelementid=#{item.value}
+						     </if>
+						     <if test="item.operator=='IN'">
+						     and pv.rangeelementid in 
+						     <foreach item="valueItem" index="index" collection="item.value"
+							      open="(" separator="," close=")">
+							        #{valueItem}
+							  </foreach>
+							  </if>
+					</when>
+					<otherwise>
+						where pv.rangeelementid = ce.elementid and pv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+						     <if test="item.operator=='EQUALS' or item.operator==null">
+						     and pv.domainelementid=#{item.value}
+						     </if>
+						     <if test="item.operator=='IN'">
+						     and pv.domainelementid in 
+						     <foreach item="valueItem" index="index" collection="item.value"
+							      open="(" separator="," close=")">
+							        #{valueItem}
+							  </foreach>
+							  </if>
+					</otherwise>
+					</choose>
+					)
+					
+				</when>
+				</choose>
+				</foreach>
+			</if>
+		)
+		, allproperties as (
+			select pv.propertyid as p_el_elementversionid, pe.elementid p_el_elementid, pe.elementuuid p_elementuuid, pclass.classid p_cls_classid, pclass.baseclassificationname p_cls_baseclassificationname, pclass.classname p_cls_classname, pclass.friendlyname p_cls_friendlyname, pclass.tablename p_cls_tablename,
+			els.changedfromversionid p_changedfromversionid, els.versioncode p_versioncode, els.versiontimestamp p_versiontimestamp, els.status p_elementstatus, els.originatingcontextid p_originatingcontextid,
+			rc.elementid as p_domainelementid, rc.elementversionid el_elementversionid, rc.elementid el_elementid, rc.elementuuid, rc.classid cls_classid, rc.baseclassificationname cls_baseclassificationname, rc.classname cls_classname, rc.friendlyname cls_friendlyname, rc.tablename cls_tablename,
+			rc.changedfromversionid, rc.versioncode, rc.versiontimestamp, rc.status elementstatus, rc.originatingcontextid
+			from propertyversion pv, elementversions els, concepts rc, class pclass, element pe
+			where pv.domainelementid=rc.elementid and els.elementversionid  = pv.propertyid	and pv.elementid = pe.elementid		and pe.classid = pclass.classid
+		), properties as (
+			select 'TextProperty' p_propertytype, nvl(pv.languagecode,'NOLANGUAGE') p_language, pv.text p_value, p.*
+			from textpropertyversion pv, allproperties p
+			where p.p_el_elementversionid = pv.textpropertyid
+			UNION
+			select 'NumericProperty' p_propertytype, 'NOLANGUAGE' p_language , ''||pv.numericValue p_value, p.*
+			from numericpropertyversion pv, allproperties p
+			where 
+			 p.p_el_elementversionid = pv.numericpropertyid
+			UNION
+			select 'ConceptProperty' p_propertytype,  'NOLANGUAGE' p_language , ''||pv.rangeElementId p_value, p.*
+			from conceptpropertyversion pv, allproperties p
+			where p.p_el_elementversionid = pv.conceptpropertyid
+		)
+		select * from properties
+
+ 	</select>
+ 	
+ 	<select id="findConceptIDsByClassAndValues" parameterType="java.util.Map" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap">
+		select ce.elementid, cev.elementVersionId
+		from elementversion cev, class cclass, element ce, structureelementversion sev1
+		where cev.status='ACTIVE' and cev.elementversionid=sev1.elementversionid and sev1.structureid=#{contextId}
+		and cev.elementid = ce.elementid
+		and ce.classid = cclass.classid and cclass.classid=#{conceptClasssId}
+		<if test="conditionList != null">
+			<foreach item="item" index="index" collection="conditionList">
+			<choose>
+			<when test="item.propertyType=='TextProperty'">
+			and exists (
+				select 1 from textpropertyversion pv, structureelementversion sev 
+				where pv.domainelementid = ce.elementid and pv.textpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+				     <if test="item.operator=='EQUALS' or item.operator==null">
+				     and pv.text=#{item.value}
+				     </if>
+				     <if test="item.operator=='LIKE'">
+				     and pv.text like '%'||#{item.value}||'%'
+				     </if>
+				     <if test="item.operator=='IN'">
+				     and pv.text in 
+				     <foreach item="valueItem" index="index" collection="item.value"
+					      open="(" separator="," close=")">
+					        #{valueItem}
+					  </foreach>
+					  </if>
+					<if test="item.languageCode != null">
+						and pv.languagecode=#{item.languageCode,typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+					</if>
+				)
+			</when>
+			<when test="item.propertyType=='NumericProperty'">
+			and exists (
+				select 1 from numericpropertyversion pv, structureelementversion sev 
+				where pv.domainelementid = ce.elementid and pv.numericpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+				     <if test="item.operator=='EQUALS' or item.operator==null">
+				     and pv.numericvalue=#{item.value}
+				     </if>
+				     <if test="item.operator=='IN'">
+				     and pv.numericvalue in 
+				     <foreach item="valueItem" index="index" collection="item.value"
+					      open="(" separator="," close=")">
+					        #{valueItem}
+					  </foreach>
+					  </if>
+				)
+			</when>
+			<when test="item.propertyType=='ConceptProperty'">
+			and exists (
+				select 1 from conceptpropertyversion pv, structureelementversion sev 
+				<choose>
+					<when test="item.relationshipDirection=='DOWN' or item.relationshipDirection ==null">
+						where pv.domainelementid = ce.elementid and pv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+						     <if test="item.operator=='EQUALS' or item.operator==null">
+						     and pv.rangeelementid=#{item.value}
+						     </if>
+						     <if test="item.operator=='IN'">
+						     and pv.rangeelementid in 
+						     <foreach item="valueItem" index="index" collection="item.value"
+							      open="(" separator="," close=")">
+							        #{valueItem}
+							  </foreach>
+							  </if>
+					</when>
+					<otherwise>
+						where pv.rangeelementid = ce.elementid and pv.conceptpropertyid=sev.elementversionid and sev.structureid=#{contextId} and pv.classid=#{item.classsId}
+						     <if test="item.operator=='EQUALS' or item.operator==null">
+						     and pv.domainelementid=#{item.value}
+						     </if>
+						     <if test="item.operator=='IN'">
+						     and pv.domainelementid in 
+						     <foreach item="valueItem" index="index" collection="item.value"
+							      open="(" separator="," close=")">
+							        #{valueItem}
+							  </foreach>
+							  </if>
+					</otherwise>
+					</choose>
+				)
+			</when>
+			</choose>
+			</foreach>
+		</if>
+
+ 	</select>
+ 	
+ 	<select id="findDisabledConceptIds" parameterType="java.util.Map" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap">
+ 		with oldcontext as
+        (
+          select /*+ RESULT_CACHE*/  sev.elementversionid, cv.elementid 
+          from structureelementversion sev, CONCEPTVERSION cv
+          where sev.structureid=#{fromContextId} --2015 old
+          and cv.classid = #{conceptClasssId}
+          and cv.conceptid = sev.elementversionid
+          and cv.status='ACTIVE'
+          
+        ) 
+        , newcontext as
+        (
+          select /*+ RESULT_CACHE*/ sev.elementversionid, cv.elementid 
+          from structureelementversion sev, CONCEPTVERSION cv
+          where sev.structureid=#{toContextId} --2018 old
+          and cv.classid = #{conceptClasssId}
+          and cv.conceptid = sev.elementversionid
+          and cv.status='DISABLED'
+        )
+        select newcontext.elementid, newcontext.elementversionid 
+        from newcontext, oldcontext
+        where newcontext.elementid = oldcontext.elementid
+        and newcontext.elementversionid != oldcontext.elementversionid
+ 	
+ 	</select>
+</mapper>

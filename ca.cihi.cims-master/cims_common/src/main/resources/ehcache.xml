@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Documentation: http://ehcache.org/ehcache.xml -->
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd">
+
+    <defaultCache eternal="true" maxElementsInMemory="200" overflowToDisk="false" />           
+
+<!-- Fix me later -->
+	<cache name="ICD-10-CA" maxElementsInMemory="200" eternal="true"
+		timeToIdleSeconds="300" timeToLiveSeconds="600" overflowToDisk="false" />
+
+	<cache name="CCI" maxElementsInMemory="200" eternal="true"
+		timeToIdleSeconds="300" timeToLiveSeconds="600" overflowToDisk="false" />
+
+	<cache name="BOOK_INDEXES_CACHE" maxElementsInMemory="10"
+		eternal="true" overflowToDisk="false" />
+
+</ehcache>

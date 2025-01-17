@@ -1,0 +1,80 @@
+.modal {
+	background: #000000 url('../img/indicator-400x400.gif') no-repeat center
+		center;
+	opacity: 0.1;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1200;
+	width: 100%;
+	filter:alpha(opacity=10); /*IE*/
+	cursor: progress;
+}
+
+.progress {
+	background: url('../img/indicator-400x400.gif') no-repeat center
+		center;
+	opacity: .5;
+}
+
+label.mandatory::after {
+	color: red;
+	content: "*";
+}
+.title1 {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 14px;
+	vertical-align: text-top;
+	color: black;
+}
+.title2 {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 13px;
+	vertical-align: text-top;
+	color: black;
+}
+.content1 {
+	font-family: Arial;
+	font-style: normal;
+	font-size: 14px;
+	vertical-align: text-top;
+	color: black;
+}
+.lsTable {  
+    width:40%;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+.lsTable tr {
+    width:40%;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+.lsTable td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+.lsSuccessMsg {
+	padding-top: 2px;
+	padding-bottom: 2px;
+	margin-top: 5px;
+	margin-bottom: 10px;	
+	font-family: Arial;
+	color: #00ff00; 
+	font-weight: bold;
+	font-size: 14px;
+}

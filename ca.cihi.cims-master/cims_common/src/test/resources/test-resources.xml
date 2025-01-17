@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/jee
+                        http://www.springframework.org/schema/jee/spring-jee.xsd
+                        http://www.springframework.org/schema/tx
+						http://www.springframework.org/schema/tx/spring-tx.xsd
+                        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
+                        http://www.springframework.org/schema/security
+                        http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+	
+	<bean id="dataSource" class="ca.cihi.blueprint.core.util.tomcat.TomcatVaultStoredDataSource" destroy-method="close">
+		<property name="driverClassName" value="oracle.jdbc.OracleDriver" />
+		<property name="url" value="jdbc:oracle:thin:@//cldawdbdev02.cihi.ca:1525/devdb05_orapp.cihi.ca" />
+		<property name="username" value="${local.cims.testdb.username}" />
+		<property name="password" value="${local.cims.testdb.password}" />
+		<property name="removeAbandoned" value="true" />
+		<property name="initialSize" value="10" />
+		<property name="maxActive" value="20" />
+	</bean>
+	
+	<!-- <bean id="snomedSCTDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="oracle.jdbc.OracleDriver" />
+		<property name="url"
+			value="jdbc:oracle:thin:@dm04-scan:1528/devdb05_orapp.cihi.ca" />
+		<property name="username" value="${testDbUsername}" />
+		<property name="password" value="${testDbPassword}" />
+		<property name="username" value="sct_md" />
+		<property name="password" value="rs3ft0fw3U" />
+		<property name="removeAbandoned" value="true" />
+		<property name="initialSize" value="10" />
+		<property name="maxActive" value="20" />
+	</bean> -->
+
+</beans>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ChangeRequestHistoryMapper" >
+   <resultMap id="ChangeRequestHistoryMap" type="ca.cihi.cims.model.changerequest.ChangeRequestHistory" >
+       <id column="CHANGE_REQUEST_HISTORY_ID" property="changeRequestHistoryId" />
+       <result column="CHANGE_REQUEST_ID" property="changeRequestId"  />
+       <result column="MODIFIED_BY_USER_NAME" property="modifiedByUser"  />
+       <result column="CREATION_DATE" property="createdDate"  />
+       <result column="ACTION_CODE" property="action"  />
+       <collection property="historyItems"  ofType="ca.cihi.cims.model.changerequest.ChangeRequestHistoryItem" resultMap="ChangeRequestHistoryItemMap" columnPrefix="item_"/>
+  </resultMap>
+   
+   <resultMap id="ChangeRequestHistoryItemMap" type="ca.cihi.cims.model.changerequest.ChangeRequestHistoryItem" >
+       <id column="REQUEST_HISTORY_ITEM_ID" property="changeRequestHistoryItemId" />
+       <result column="CHANGE_REQUEST_HISTORY_ID" property="changeRequestHistoryId"  />
+       <result column="LABEL_CODE" property="labelCode" />
+       <result column="ITEM" property="item"  />
+       <result column="LABEL_DESC_OVERRIDE" property="labelDescOverride"  />
+       
+   </resultMap>
+  
+  
+   <select id="findChangeRequestHistoryByChangeRequestId" resultMap="ChangeRequestHistoryMap">
+      select crh.CHANGE_REQUEST_HISTORY_ID,  crh.CHANGE_REQUEST_ID,
+             crh.MODIFIED_BY_USER_NAME, crh.CREATION_DATE,
+             crh.ACTION_CODE,
+             crhi.CHANGE_REQUEST_HISTORY_ITEM_ID as item_REQUEST_HISTORY_ITEM_ID , 
+             crhi.CHANGE_REQUEST_HISTORY_ID as item_CHANGE_REQUEST_HISTORY_ID,
+             crhi.LABEL_CODE as item_LABEL_CODE,
+             crhi.ITEM as item_ITEM,
+             crhi.LABEL_DESC_OVERRIDE as item_LABEL_DESC_OVERRIDE
+      from CHANGE_REQUEST_HISTORY crh  left join CHANGE_REQUEST_HISTORY_ITEM crhi on crh.CHANGE_REQUEST_HISTORY_ID = crhi.CHANGE_REQUEST_HISTORY_ID
+      where  crh.CHANGE_REQUEST_ID= #{changeRequestId}    
+      order by crh.CHANGE_REQUEST_HISTORY_ID desc, item_REQUEST_HISTORY_ITEM_ID
+  </select>
+  
+  
+  
+  
+  
+  <insert id="insertChangeRequestHistory"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestHistory">
+      <selectKey resultType="java.lang.Long" keyProperty="changeRequestHistoryId" order="BEFORE">  
+		        select HISTORY_ID_SEQ.nextval from dual 
+	  </selectKey>  
+      insert into CHANGE_REQUEST_HISTORY 
+                  (CHANGE_REQUEST_HISTORY_ID,CHANGE_REQUEST_ID,MODIFIED_BY_USER_NAME,CREATION_DATE,ACTION_CODE)
+      values (#{changeRequestHistoryId},#{changeRequestId},#{modifiedByUser},CURRENT_DATE,#{action} )
+  </insert>
+  
+ 
+  
+  
+   <insert id="insertChangeRequestHistoryItem"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestHistoryItem">
+       <selectKey resultType="java.lang.Long" keyProperty="changeRequestHistoryItemId" order="BEFORE">  
+		       select HISTORY_ITEM_ID_SEQ.nextval from dual 
+	  </selectKey>  
+      insert into CHANGE_REQUEST_HISTORY_ITEM(
+                 CHANGE_REQUEST_HISTORY_ITEM_ID,
+                 CHANGE_REQUEST_HISTORY_ID,
+                 LABEL_CODE,
+                 ITEM,
+                 LABEL_DESC_OVERRIDE )
+        values ( #{changeRequestHistoryItemId},
+                 #{changeRequestHistoryId},
+                 #{labelCode},
+                 #{item},
+                 #{labelDescOverride}
+                )         
+   </insert>
+  
+  
+  
+</mapper>
+ 

@@ -1,0 +1,87 @@
+<!-- cihi-cims-validation DTD
+
+  Description:
+
+  This DTD is to be used for the CIHI CIMS application project. 
+
+  The new outer elements are like this:
+
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE validation SYSTEM "cihi_cims_validation.dtd">
+<validation       
+       classification="ICD-10-CA" > 
+       <ELEMENT_ID>1111</ELEMENT_ID>
+	   <GENDER_CODE></GENDER_CODE> 
+	   <GENDER_DESC_ENG></GENDER_DESC_ENG>
+	   <GENDER_DESC_FRA></GENDER_DESC_FRA>
+	   <AGE_RANGE></AGE_RANGE>
+	   <MRDX_MAIN></MRDX_MAIN>
+	   <DX_TYPE_1></DX_TYPE_1>
+	   <DX_TYPE_2></DX_TYPE_2>
+	   <DX_TYPE_3></DX_TYPE_3>
+	   <DX_TYPE_4></DX_TYPE_4>
+	   <DX_TYPE_6></DX_TYPE_6>
+	   <DX_TYPE_9></DX_TYPE_9>
+	   <DX_TYPE_W></DX_TYPE_W>
+	   <DX_TYPE_X></DX_TYPE_X>
+	   <DX_TYPE_Y></DX_TYPE_Y>    
+	   <NEW_BORN></NEW_BORN> 
+</validation>
+-->
+
+<!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ELEMENT validation (	
+	    			ELEMENT_ID,
+					GENDER_CODE, 
+					GENDER_DESC_ENG,
+				    GENDER_DESC_FRA,
+					AGE_RANGE,
+					(MRDX_MAIN)*,
+					(DX_TYPE_1)*,
+					(DX_TYPE_2)*,
+					(DX_TYPE_3)*,
+					(DX_TYPE_4)*,
+					(DX_TYPE_6)*,
+					(DX_TYPE_9)*,
+					(DX_TYPE_W)*,
+					(DX_TYPE_X)*,
+					(DX_TYPE_Y)*,
+					(NEW_BORN)*,
+					(STATUS_REF)*,
+					(LOCATION_REF)*,
+					(EXTENT_REF)*)>
+					
+	<!ELEMENT ELEMENT_ID (#PCDATA)>
+	<!ELEMENT GENDER_CODE (#PCDATA)>
+	<!ELEMENT GENDER_DESC_ENG (#PCDATA)>
+	<!ELEMENT GENDER_DESC_FRA (#PCDATA)>
+	<!ELEMENT AGE_RANGE (#PCDATA)>
+	<!ELEMENT MRDX_MAIN (#PCDATA)>	
+	<!ELEMENT DX_TYPE_1 (#PCDATA)>	
+	<!ELEMENT DX_TYPE_2 (#PCDATA)>
+	<!ELEMENT DX_TYPE_3 (#PCDATA)>
+	<!ELEMENT DX_TYPE_4 (#PCDATA)>
+	<!ELEMENT DX_TYPE_6 (#PCDATA)>
+	<!ELEMENT DX_TYPE_9 (#PCDATA)>
+	<!ELEMENT DX_TYPE_W (#PCDATA)>
+	<!ELEMENT DX_TYPE_X (#PCDATA)>
+	<!ELEMENT DX_TYPE_Y (#PCDATA)>
+	<!ELEMENT NEW_BORN  (#PCDATA)>
+	<!ELEMENT STATUS_REF (#PCDATA)>
+	<!ELEMENT LOCATION_REF (#PCDATA)>
+	<!ELEMENT EXTENT_REF  (#PCDATA)>
+		
+	<!ATTLIST validation
+	   classification CDATA #IMPLIED
+	   language CDATA #IMPLIED >
+
+

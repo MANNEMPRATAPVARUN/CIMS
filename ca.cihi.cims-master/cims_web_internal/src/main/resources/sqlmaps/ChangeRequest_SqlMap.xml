@@ -1,0 +1,1203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ChangeRequestMapper" >
+   <resultMap id="ChangeRequestMap" type="ca.cihi.cims.model.changerequest.ChangeRequestDTO" >
+       <id column="CHANGE_REQUEST_ID" property="changeRequestId" />
+       <result column="BASE_CONTEXT_ID" property="baseContextId"  />
+       <result column="BASECLASSIFICATION" property="baseClassification"  />
+       <result column="BASEVERSIONCODE" property="baseVersionCode"  />
+       <result column="CHANGE_REQUEST_LANGUAGE_CODE" property="languageCode"  />
+       <result column="CHANGE_REQUEST_NAME" property="name" />
+       <result column="CHANGE_TYPE_ID" property="changeTypeId" />
+       <result property="status" column="CHANGE_REQUEST_STATUS_ID" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+       <result column="CHANGE_REQUEST_CATEGORY_CODE" property="category" />
+       <result column="REQUESTOR_ID" property="requestorId" />
+       <result column="CHANGE_NATURE_ID" property="changeNatureId" />
+       <result column="DEFERRED_CHANGE_REQUEST_ID" property="deferredChangeRequestId" />
+       <result column="ASSIGNEE_USER_PROFILE_ID" property="assigneeUserId" />
+       <result column="ASSIGNEE_DL_ID" property="assigneeDLId" />
+       <result column="OWNER_ID" property="ownerId" />
+       <result column="ASIGNOR_ID" property="assignorId" />
+       <result column="CHANGE_RATIONALE_TEXT" property="changeRationalTxt" />
+       <result column="LAST_UPDATE_DATE" property="lastUpdatedTime" />
+       <result column="INDEX_REQUIRED_IND_CODE" property="indexRequired" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+       <result column="EVOLUTION_REQUIRED_IND_CODE" property="evolutionRequired" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+       <result column="CONVERSION_REQUIRED_IND_CODE" property="conversionRequired" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+       <result column="PATTERN_CHANGE_IND_CODE" property="patternChange" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+       <result column="PATTERN_TOPIC" property="patternTopic"  />
+       <result column="RATIONALE_FOR_INCOMPLETE" property="rationaleForIncomplete"  />
+       <result column="RATIONALE_FOR_VALID" property="rationaleForValid"  />
+       <result column="RATIONALE_FOR_CLOSED_DEFERRED" property="rationaleForClosedDeferred"  />
+       <result column="RATIONALE_FOR_REJECT" property="rationaleForReject"  />
+       <result column="CREATION_DATE" property="creationDate"  />
+       <result column="CREATED_BY_USER_ID" property="createdByUserId" />
+       <result column="LAST_UPDATED_BY_USER_ID" property="lastUpdatedByUserId" />
+       <association property="assignor"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="asgnor_"/>
+       <association property="owner"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="owner_"/>
+       <association property="userAssignee"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="ua_"/>
+       <association property="dlAssignee"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="da_"/>
+       <association property="evolutionInfo"  javaType="ca.cihi.cims.model.changerequest.ChangeRequestEvolution" resultMap="ChangeRequestEvolutionMap" columnPrefix="ev_"/>
+       <association property="requestor"  javaType="ca.cihi.cims.model.AuxTableValue" resultMap="ca.cihi.cims.data.mapper.AdminMapper.AuxTableValueMap" columnPrefix="req_"/>
+       <association property="changeNature"  javaType="ca.cihi.cims.model.AuxTableValue" resultMap="ca.cihi.cims.data.mapper.AdminMapper.AuxTableValueMap" columnPrefix="cn_"/>
+       <association property="changeType"  javaType="ca.cihi.cims.model.AuxTableValue" resultMap="ca.cihi.cims.data.mapper.AdminMapper.AuxTableValueMap" columnPrefix="ct_"/>
+       <collection property="reviewGroups"  ofType="ca.cihi.cims.model.Distribution" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="rvwgrp_"/>
+      <!--  <collection property="questionForReviewers"  ofType="ca.cihi.cims.model.changerequest.QuestionForReviewer" resultMap="QuestionForReviewerMap" columnPrefix="rvwgrp_"/>
+      -->
+       <collection property="commentDiscussions"  ofType="ca.cihi.cims.model.changerequest.UserComment" resultMap="UserCommentMap" columnPrefix="cmt_"/>
+       <collection property="codingQuestions"  ofType="ca.cihi.cims.model.changerequest.DocumentReference" resultMap="DocumentReferenceMap" columnPrefix="cq_"/>
+       <collection property="urcAttachments"  ofType="ca.cihi.cims.model.changerequest.DocumentReference" resultMap="DocumentReferenceMap" columnPrefix="ud_"/>
+       <collection property="urcLinks"  ofType="ca.cihi.cims.model.changerequest.DocumentReference" resultMap="DocumentReferenceMap" columnPrefix="ul_"/>
+       <collection property="otherAttachments"  ofType="ca.cihi.cims.model.changerequest.DocumentReference" resultMap="DocumentReferenceMap" columnPrefix="oa_"/>
+       <collection property="otherLinks"  ofType="ca.cihi.cims.model.changerequest.DocumentReference" resultMap="DocumentReferenceMap" columnPrefix="ol_"/>
+       
+       
+       
+      
+      
+  </resultMap>
+   
+  
+   <resultMap id="QuestionForReviewerMap" type="ca.cihi.cims.model.changerequest.QuestionForReviewer" >
+       <id property="questionForReviewerId"  column="REVIEWER_QUESTION_ID"/>
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="questionNum"  column="QUESTION_NUM" />
+       <result property="reviewerId"  column="DISTRIBUTION_LIST_ID" />
+       <result property="questionForReviewerTxt"  column="REVIEWER_QUESTION_TEXT" />
+       <result property="lastUpdatedTime"  column="LAST_UPDATE_DATE" />
+       <association property="reviewer"  javaType="ca.cihi.cims.model.Distribution" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="re_"/>
+       <association property="sentOutNotification"  javaType="ca.cihi.cims.model.notification.Notification" resultMap="ca.cihi.cims.data.mapper.NotificationMapper.NotificationMap" columnPrefix="nt_" />
+       <collection property="questionComments"  ofType="ca.cihi.cims.model.changerequest.UserComment" resultMap="UserCommentMap" columnPrefix="cmt_"/>
+       
+   </resultMap>
+
+<!--
+   <resultMap id="ReviewGroupOutboundQuestionForReviewerMap" type="ca.cihi.cims.model.changerequest.ReviewGroupOutboundQuestionForReviewer" >
+       <id property="questionForReviewerId"  column="REVIEWER_QUESTION_ID"/>
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="changeRequestName"  column="CHANGE_REQUEST_NAME" />
+       <result property="questionNum"  column="QUESTION_NUM" />
+       <result property="reviewerId"  column="DISTRIBUTION_LIST_ID" />
+       <result property="questionForReviewerTxt"  column="REVIEWER_QUESTION_TEXT" />
+       <result property="lastUpdatedTime"  column="LAST_UPDATE_DATE" />
+       <association property="reviewer"  javaType="ca.cihi.cims.model.Distribution" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="re_"/>
+       <association property="sentOutNotification"  javaType="ca.cihi.cims.model.notification.Notification" resultMap="ca.cihi.cims.data.mapper.NotificationMapper.NotificationMap" columnPrefix="nt_" />
+       <collection property="questionComments"  ofType="ca.cihi.cims.model.changerequest.UserComment" resultMap="UserCommentMap" columnPrefix="cmt_"/>
+       
+   </resultMap>
+-->
+   <resultMap id="ReviewGroupOutboundQuestionForReviewerMap" type="ca.cihi.cims.model.changerequest.ReviewGroupOutboundQuestionForReviewer" >
+       <result property="questionForReviewerId"  column="REVIEWER_QUESTION_ID"/>
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="changeRequestName"  column="CHANGE_REQUEST_NAME" />
+       <result property="questionNum"  column="QUESTION_NUM" />
+       <result property="reviewerId"  column="DISTRIBUTION_LIST_ID" />
+       <result property="questionForReviewerTxt"  column="REVIEWER_QUESTION_TEXT" />
+       <result property="lastUpdatedTime"  column="LAST_UPDATE_DATE" />
+       <association property="reviewer"  javaType="ca.cihi.cims.model.Distribution" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="re_"/>
+       <association property="sentOutNotification"  javaType="ca.cihi.cims.model.notification.Notification" resultMap="ca.cihi.cims.data.mapper.NotificationMapper.NotificationMap" columnPrefix="nt_" />
+       <collection property="questionComments"  ofType="ca.cihi.cims.model.changerequest.UserComment" resultMap="UserCommentMap" columnPrefix="cmt_"/>
+       
+   </resultMap>
+
+   
+    <resultMap id="ChangeRequestEvolutionMap" type="ca.cihi.cims.model.changerequest.ChangeRequestEvolution" >
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="evolutionCodes"  column="EVOLUTION_CODES" />
+       <result property="evolutionTextEng"  column="EVOLUTION_TEXT_ENG" />
+       <result property="evolutionTextFra"  column="EVOLUTION_TEXT_FRA" />
+    </resultMap>
+   
+   
+   <resultMap id="AdviceMap" type="ca.cihi.cims.model.changerequest.Advice" >
+       <id property="adviceId"  column="ADVICE_ID"/>
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="subject"  column="SUBJECT" />
+       <result property="message"  column="MESSAGE" />
+       <result property="distributionListId"  column="DISTRIBUTION_LIST_ID" />
+       <result property="userProfileId"  column="USER_PROFILE_ID" />
+       <result property="senderId"  column="SENDER_ID" />
+       <result property="lastUpdatedTime"  column="LAST_UPDATE_DATE" />
+       <association property="sender"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="snd_"/>
+       <association property="userAdvisor"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="usradvisor_"/>
+       <association property="dlAdvisor"  javaType="ca.cihi.cims.model.Distribution" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="dl_"/>
+       <collection property="adviceComments"  ofType="ca.cihi.cims.model.changerequest.UserComment" resultMap="UserCommentMap" columnPrefix="cmt_"/>
+       
+   </resultMap>
+   
+   
+   <resultMap id="UserCommentMap" type="ca.cihi.cims.model.changerequest.UserComment" >
+       <id property="userCommentId"  column="USER_COMMENT_ID"/>
+       <result property="userCommentTxt"  column="USER_COMMENT_TEXT" />
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="reviewerQuestionId"  column="REVIEWER_QUESTION_ID" />
+       <result property="adviceId"  column="ADVICE_ID" />
+       <result property="userProfileId"  column="USER_PROFILE_ID" />
+       <result property="lastUpdatedTime"  column="LAST_UPDATE_DATE" />
+       <result property="commentType"  column="USER_COMMENT_TYPE_CODE" />
+       
+       <association property="commmentUser"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="cmtusr_"/>
+    
+   </resultMap>
+   
+   
+    <resultMap id="DocumentReferenceMap" type="ca.cihi.cims.model.changerequest.DocumentReference" >
+       <id property="documentReferenceId"  column="DOCUMENT_REFERENCE_ID"/>
+       <result property="referenceType"  column="DOCUMENT_REFERENCE_TYPE_CODE" />
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="fileName"  column="FILENAME" />
+       <result property="eQueryId"  column="EQUERY_ID" />
+       <result property="url"  column="URL" />
+       <result property="lastUpdatedTime"  column="LAST_UPDATE_DATE" />
+   </resultMap>  
+  
+   <resultMap id="ChangeRequestRealizationMap" type="ca.cihi.cims.model.changerequest.ChangeRequestRealization" >
+       <id property="realizationId"  column="CHANGE_REQUEST_REALIZATION_ID"/>
+       <result property="changeRequestId"  column="CHANGE_REQUEST_ID" />
+       <result property="realizationStatus"  column="STATUS_CODE" />
+       <result property="failedReason"  column="FAILED_REASON" />
+       <result property="processStep"  column="PROCESS_STEP" />
+   </resultMap>  
+  
+  
+  
+  
+  <select id="findChangeRequestById" resultMap="ChangeRequestMap">
+      select cr.CHANGE_REQUEST_ID,  cr.BASE_CONTEXT_ID,
+             c.CLASSNAME as BASECLASSIFICATION, ev.VERSIONCODE as BASEVERSIONCODE,
+             cr.CHANGE_REQUEST_LANGUAGE_CODE, cr.CHANGE_REQUEST_NAME,
+             cr.CHANGE_REQUEST_CATEGORY_CODE,  cr.CHANGE_TYPE_ID,
+             cr.REQUESTOR_ID, cr.CHANGE_NATURE_ID,
+             cr.DEFERRED_CHANGE_REQUEST_ID,
+             cr.ASSIGNEE_USER_PROFILE_ID,   cr.ASSIGNEE_DL_ID,
+             cr.OWNER_ID, cr.ASIGNOR_ID,
+             cr.CHANGE_RATIONALE_TEXT, cr.LAST_UPDATE_DATE,
+             cr.INDEX_REQUIRED_IND_CODE, cr.EVOLUTION_REQUIRED_IND_CODE,
+             cr.CONVERSION_REQUIRED_IND_CODE, cr.PATTERN_CHANGE_IND_CODE,
+             cr.PATTERN_TOPIC, cr.RATIONALE_FOR_INCOMPLETE,
+             cr.RATIONALE_FOR_VALID, cr.RATIONALE_FOR_CLOSED_DEFERRED,
+             cr.RATIONALE_FOR_REJECT, cr.CREATION_DATE,
+             crs.CHANGE_REQUEST_STATUS_ID
+      from CHANGE_REQUEST cr ,
+           CHANGE_REQUEST_STATUS crs ,
+           STRUCTUREVERSION sv,
+           CLASS c,
+           ELEMENTVERSION ev
+      where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+            cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+            sv.CLASSID = c.CLASSID and
+            sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+            cr.CHANGE_REQUEST_ID= #{changeRequestId}      
+  </select>
+  
+   <select id="findDeferedChangeRequestByOriginalId" resultMap="ChangeRequestMap">
+      select cr.CHANGE_REQUEST_ID,  cr.BASE_CONTEXT_ID,
+             c.CLASSNAME as BASECLASSIFICATION, ev.VERSIONCODE as BASEVERSIONCODE,
+             cr.CHANGE_REQUEST_LANGUAGE_CODE, cr.CHANGE_REQUEST_NAME,
+             cr.CHANGE_REQUEST_CATEGORY_CODE,  cr.CHANGE_TYPE_ID,
+             cr.REQUESTOR_ID, cr.CHANGE_NATURE_ID,
+             cr.DEFERRED_CHANGE_REQUEST_ID,
+             cr.ASSIGNEE_USER_PROFILE_ID,   cr.ASSIGNEE_DL_ID,
+             cr.OWNER_ID, cr.ASIGNOR_ID,
+             cr.CHANGE_RATIONALE_TEXT, cr.LAST_UPDATE_DATE,
+             cr.INDEX_REQUIRED_IND_CODE, cr.EVOLUTION_REQUIRED_IND_CODE,
+             cr.CONVERSION_REQUIRED_IND_CODE, cr.PATTERN_CHANGE_IND_CODE,
+             cr.PATTERN_TOPIC, cr.RATIONALE_FOR_INCOMPLETE,
+             cr.RATIONALE_FOR_VALID, cr.RATIONALE_FOR_CLOSED_DEFERRED,
+             cr.RATIONALE_FOR_REJECT,cr.CREATION_DATE,
+             crs.CHANGE_REQUEST_STATUS_ID
+      from CHANGE_REQUEST cr ,
+           CHANGE_REQUEST_STATUS crs ,
+           STRUCTUREVERSION sv,
+           CLASS c,
+           ELEMENTVERSION ev
+      where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+            cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+            sv.CLASSID = c.CLASSID and
+            sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+            cr.DEFERRED_CHANGE_REQUEST_ID= #{changeRequestId}      
+  </select>
+  
+  
+  
+  
+    <select id="findCourseGrainedChangeRequestById" resultMap="ChangeRequestMap">
+      select cr.CHANGE_REQUEST_ID,  cr.BASE_CONTEXT_ID,
+             c.CLASSNAME as BASECLASSIFICATION, ev.VERSIONCODE as BASEVERSIONCODE,
+             cr.CHANGE_REQUEST_LANGUAGE_CODE, cr.CHANGE_REQUEST_NAME,
+             cr.CHANGE_REQUEST_CATEGORY_CODE,  cr.CHANGE_TYPE_ID,
+             cr.REQUESTOR_ID, cr.CHANGE_NATURE_ID,
+             cr.DEFERRED_CHANGE_REQUEST_ID,
+             cr.ASSIGNEE_USER_PROFILE_ID,   cr.ASSIGNEE_DL_ID,
+             cr.OWNER_ID, cr.ASIGNOR_ID,
+             cr.CHANGE_RATIONALE_TEXT, cr.LAST_UPDATE_DATE,
+             cr.INDEX_REQUIRED_IND_CODE, cr.EVOLUTION_REQUIRED_IND_CODE,
+             cr.CONVERSION_REQUIRED_IND_CODE, cr.PATTERN_CHANGE_IND_CODE,
+             cr.PATTERN_TOPIC, cr.RATIONALE_FOR_INCOMPLETE,
+             cr.RATIONALE_FOR_VALID, cr.RATIONALE_FOR_CLOSED_DEFERRED,
+             cr.RATIONALE_FOR_REJECT,cr.CREATION_DATE,
+             crs.CHANGE_REQUEST_STATUS_ID,
+             reqor.Aux_Table_Value_ID as req_aux_table_value_id,
+             reqor.Aux_Table_Value_Label_Desc as req_aux_table_value_label_desc,
+             cn.Aux_Table_Value_ID as cn_aux_table_value_id,
+             cn.Aux_Table_Value_Label_Desc as cn_aux_table_value_label_desc,
+             ct.Aux_Table_Value_ID as ct_aux_table_value_id,
+             ct.Aux_Table_Value_Label_Desc as ct_aux_table_value_label_desc,
+             assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+             assignor.USER_NAME as asgnor_USER_NAME,
+             owner.USER_PROFILE_ID as owner_USER_PROFILE_ID,
+             owner.USER_NAME as owner_USER_NAME,
+             userAssignee.USER_NAME as ua_USER_NAME,
+             dlAssignee.distribution_list_name as da_distribution_list_name,
+             evolution.CHANGE_REQUEST_ID as ev_CHANGE_REQUEST_ID,
+             evolution.EVOLUTION_CODES as ev_EVOLUTION_CODES,
+             evolution.EVOLUTION_TEXT_ENG as ev_EVOLUTION_TEXT_ENG,
+             evolution.EVOLUTION_TEXT_FRA as ev_EVOLUTION_TEXT_FRA,
+             dl.distribution_list_id as rvwgrp_distribution_list_id,
+             dl.distribution_list_code as rvwgrp_distribution_list_code,
+             dl.distribution_list_name as rvwgrp_distribution_list_name,
+             dl.distribution_list_desc as rvwgrp_distribution_list_desc,
+             uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+             uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+             uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+             uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+             uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+             uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+             uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+             cmtusr.USER_NAME as cmt_cmtusr_USER_NAME,
+             cq.DOCUMENT_REFERENCE_ID as cq_DOCUMENT_REFERENCE_ID,
+             cq.CHANGE_REQUEST_ID as cq_CHANGE_REQUEST_ID,
+             cq.EQUERY_ID as cq_EQUERY_ID,
+             cq.URL as cq_URL,
+             ud.DOCUMENT_REFERENCE_ID as ud_DOCUMENT_REFERENCE_ID,
+             ud.FILENAME as ud_FILENAME,
+             ud.CHANGE_REQUEST_ID as ud_CHANGE_REQUEST_ID,
+             ul.DOCUMENT_REFERENCE_ID as ul_DOCUMENT_REFERENCE_ID,
+             ul.CHANGE_REQUEST_ID as ul_CHANGE_REQUEST_ID,
+             ul.URL as ul_URL,
+             oa.DOCUMENT_REFERENCE_ID as oa_DOCUMENT_REFERENCE_ID,
+             oa.FILENAME as oa_FILENAME,
+             oa.CHANGE_REQUEST_ID as oa_CHANGE_REQUEST_ID,
+             ol.DOCUMENT_REFERENCE_ID as ol_DOCUMENT_REFERENCE_ID,
+             ol.CHANGE_REQUEST_ID as ol_CHANGE_REQUEST_ID,
+             ol.URL as ol_URL
+      from CHANGE_REQUEST_STATUS crs ,
+           STRUCTUREVERSION sv,
+           CLASS c,
+           ELEMENTVERSION ev,  CHANGE_REQUEST cr 
+           left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+           left join USER_PROFILE owner on cr.OWNER_ID = owner.USER_PROFILE_ID
+           left join USER_PROFILE userAssignee on cr.ASSIGNEE_USER_PROFILE_ID = userAssignee.USER_PROFILE_ID
+           left join DISTRIBUTION_LIST dlAssignee on cr.ASSIGNEE_DL_ID= dlAssignee.DISTRIBUTION_LIST_ID
+           left join CHANGE_REQ_EVOLUTION evolution on cr.CHANGE_REQUEST_ID = evolution.CHANGE_REQUEST_ID
+           left join CHANGE_REQUEST_REVIEW_GROUP crrg on cr.CHANGE_REQUEST_ID = crrg.CHANGE_REQUEST_ID
+           left join DISTRIBUTION_LIST dl on crrg.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+           left join USER_COMMENT uc on (cr.CHANGE_REQUEST_ID = uc.CHANGE_REQUEST_ID and uc.USER_COMMENT_TYPE_CODE='C')
+           left join USER_PROFILE cmtusr on (uc.USER_PROFILE_ID = cmtusr.USER_PROFILE_ID)
+           left join DOCUMENT_REFERENCE cq on (cr.CHANGE_REQUEST_ID = cq.CHANGE_REQUEST_ID and cq.DOCUMENT_REFERENCE_TYPE_CODE='CODING_QUESTION') 
+           left join DOCUMENT_REFERENCE ud on (cr.CHANGE_REQUEST_ID = ud.CHANGE_REQUEST_ID and ud.DOCUMENT_REFERENCE_TYPE_CODE='URC_FILE')
+           left join DOCUMENT_REFERENCE ul on (cr.CHANGE_REQUEST_ID = ul.CHANGE_REQUEST_ID and ul.DOCUMENT_REFERENCE_TYPE_CODE='URC_LINK')
+           left join DOCUMENT_REFERENCE oa on (cr.CHANGE_REQUEST_ID = oa.CHANGE_REQUEST_ID and oa.DOCUMENT_REFERENCE_TYPE_CODE='OTHER_FILE')
+           left join DOCUMENT_REFERENCE ol on (cr.CHANGE_REQUEST_ID = ol.CHANGE_REQUEST_ID and ol.DOCUMENT_REFERENCE_TYPE_CODE='OTHER_LINK')
+           left join Aux_Table_Value reqor on (cr.requestor_id = reqor.Aux_Table_Value_ID)
+           left join Aux_Table_Value cn on (cr.change_nature_id = cn.Aux_Table_Value_ID)
+           left join Aux_Table_Value ct on (cr.change_type_id = ct.Aux_Table_Value_ID)
+           
+      where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+            cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+            sv.CLASSID = c.CLASSID and
+            sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+            cr.CHANGE_REQUEST_ID= #{changeRequestId}
+            order by cmt_USER_COMMENT_ID ,   cq_DOCUMENT_REFERENCE_ID , ud_DOCUMENT_REFERENCE_ID,ul_DOCUMENT_REFERENCE_ID, oa_DOCUMENT_REFERENCE_ID, ol_DOCUMENT_REFERENCE_ID
+  </select>
+  
+  
+  
+  <select id="findReviewQuestionsForChangeRequest" resultMap="QuestionForReviewerMap">
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+      where rq.CHANGE_REQUEST_ID = #{changeRequestId}
+      order by rq.REVIEWER_QUESTION_ID, cmt_USER_COMMENT_ID
+  </select>
+  
+  
+   <select id="findAdvicesForChangeRequest" resultMap="AdviceMap">
+       select ad.ADVICE_ID, ad.CHANGE_REQUEST_ID, ad.SUBJECT, ad.MESSAGE, ad.DISTRIBUTION_LIST_ID, ad.USER_PROFILE_ID, ad.LAST_UPDATE_DATE, ad.SENDER_ID,
+              sender.USER_NAME as snd_USER_NAME,
+              usrrecipient.USER_NAME as usradvisor_USER_NAME,
+              dlrecipient.DISTRIBUTION_LIST_NAME as dl_DISTRIBUTION_LIST_NAME,
+              uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+              uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+              uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+              uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+              uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+              uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+              uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+              advisor.USER_NAME as cmt_cmtusr_USER_NAME
+       from ADVICE ad left join USER_PROFILE sender on  ad.SENDER_ID= sender.USER_PROFILE_ID
+                      left join USER_PROFILE usrrecipient on ad.USER_PROFILE_ID = usrrecipient.USER_PROFILE_ID
+                      left join DISTRIBUTION_LIST dlrecipient on ad.DISTRIBUTION_LIST_ID= dlrecipient.DISTRIBUTION_LIST_ID
+                      left join USER_COMMENT uc on ad.ADVICE_ID= uc.ADVICE_ID
+                      left join USER_PROFILE advisor on uc.USER_PROFILE_ID = advisor.USER_PROFILE_ID
+       where ad.CHANGE_REQUEST_ID =  #{changeRequestId} 
+       order by ad.ADVICE_ID    
+  </select>
+  
+  
+  
+  
+  
+  
+   <select id="findMyChangeRequests" resultMap="ChangeRequestMap">
+       select cr.CHANGE_REQUEST_ID,
+             cr.BASE_CONTEXT_ID,
+             c.CLASSNAME as BASECLASSIFICATION,
+             ev.VERSIONCODE as BASEVERSIONCODE,
+             cr.CHANGE_REQUEST_LANGUAGE_CODE,
+             cr.CHANGE_REQUEST_NAME,
+             crs.CHANGE_REQUEST_STATUS_ID,
+             assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+             assignor.USER_NAME as asgnor_USER_NAME
+      from CHANGE_REQUEST_STATUS crs ,
+           STRUCTUREVERSION sv,
+           CLASS c,
+           ELEMENTVERSION ev,
+           CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+      where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+            cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+            sv.CLASSID = c.CLASSID and
+            sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+            cr.ASSIGNEE_USER_PROFILE_ID =#{userId}
+  </select>
+  
+   <select id="findAllChangeRequests" resultMap="ChangeRequestMap">
+    select cr.CHANGE_REQUEST_ID,
+           cr.BASE_CONTEXT_ID,
+           c.CLASSNAME as BASECLASSIFICATION,
+           ev.VERSIONCODE as BASEVERSIONCODE,
+           cr.CHANGE_REQUEST_LANGUAGE_CODE,
+           cr.CHANGE_REQUEST_NAME,
+           crs.CHANGE_REQUEST_STATUS_ID,
+           assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+           assignor.USER_NAME as asgnor_USER_NAME,
+           cr.CREATION_DATE,
+           cr.LAST_UPDATE_DATE
+           from CHANGE_REQUEST_STATUS crs ,
+                STRUCTUREVERSION sv,
+                CLASS c,
+                ELEMENTVERSION ev,
+                CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+           where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+                 crs.CHANGE_REQUEST_STATUS_CODE !='DELETED' and
+                 cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+                 sv.CLASSID = c.CLASSID and
+                 sv.STRUCTUREID = ev.ELEMENTVERSIONID 
+           order by cr.CHANGE_REQUEST_ID desc  
+     </select>
+     
+     <select id="findAllICDChangeRequests" resultMap="ChangeRequestMap">
+	    select cr.CHANGE_REQUEST_ID,
+	           cr.BASE_CONTEXT_ID,
+	           c.CLASSNAME as BASECLASSIFICATION,
+	           ev.VERSIONCODE as BASEVERSIONCODE,
+	           cr.CHANGE_REQUEST_LANGUAGE_CODE,
+	           cr.CHANGE_REQUEST_NAME,
+	           crs.CHANGE_REQUEST_STATUS_ID,
+	           assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+	           assignor.USER_NAME as asgnor_USER_NAME,
+	           cr.CREATION_DATE,
+	           cr.LAST_UPDATE_DATE
+	           from CHANGE_REQUEST_STATUS crs ,
+	                STRUCTUREVERSION sv,
+	                CLASS c,
+	                ELEMENTVERSION ev,
+	                CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+	           where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+	                 crs.CHANGE_REQUEST_STATUS_CODE !='DELETED' and
+	                 cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+	                 sv.CLASSID = c.CLASSID and c.BaseClassificationName='ICD-10-CA' and
+	                 sv.ContextStatus='OPEN' and
+	                 sv.STRUCTUREID = ev.ELEMENTVERSIONID 
+	           order by ev.versioncode desc, cr.CHANGE_REQUEST_NAME  
+	     </select>
+	     
+   <select id="findAllCCIChangeRequests" resultMap="ChangeRequestMap">
+	    select cr.CHANGE_REQUEST_ID,
+	           cr.BASE_CONTEXT_ID,
+	           c.CLASSNAME as BASECLASSIFICATION,
+	           ev.VERSIONCODE as BASEVERSIONCODE,
+	           cr.CHANGE_REQUEST_LANGUAGE_CODE,
+	           cr.CHANGE_REQUEST_NAME,
+	           crs.CHANGE_REQUEST_STATUS_ID,
+	           assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+	           assignor.USER_NAME as asgnor_USER_NAME,
+	           cr.CREATION_DATE,
+	           cr.LAST_UPDATE_DATE
+	           from CHANGE_REQUEST_STATUS crs ,
+	                STRUCTUREVERSION sv,
+	                CLASS c,
+	                ELEMENTVERSION ev,
+	                CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+	           where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+	                 crs.CHANGE_REQUEST_STATUS_CODE !='DELETED' and
+	                 cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+	                 sv.CLASSID = c.CLASSID and c.BaseClassificationName='CCI' and
+	                 sv.ContextStatus='OPEN' and
+	                 sv.STRUCTUREID = ev.ELEMENTVERSIONID 
+	           order by ev.versioncode desc, cr.CHANGE_REQUEST_NAME 
+	     </select>
+  
+  
+   <select id="findNumOfMyChangeRequests" resultType="java.lang.Integer">
+      select count(*)
+      from CHANGE_REQUEST cr 
+      where  cr.ASSIGNEE_USER_PROFILE_ID =#{userId}
+   </select>
+   
+   <select id="findNumOfChangeRequests" resultType="java.lang.Integer">
+      select cims_util.getChangeRequestCount(#{conceptId})
+      from dual
+   </select>
+  
+  <select id="findChangeRequestsByCode" resultMap="ChangeRequestMap" parameterType="java.lang.String">
+  	SELECT cr.*
+       FROM (SELECT ROWNUM rn, inner.*
+             FROM (  select cr.CHANGE_REQUEST_ID,
+                            cr.BASE_CONTEXT_ID,
+                            c.CLASSNAME as BASECLASSIFICATION,
+                            ev.VERSIONCODE as BASEVERSIONCODE,
+                            cr.CHANGE_REQUEST_LANGUAGE_CODE,
+                            cr.CHANGE_REQUEST_NAME,
+                            cr.CHANGE_REQUEST_CATEGORY_CODE,
+                            crs.CHANGE_REQUEST_STATUS_ID,
+                            assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+                            assignor.USER_NAME as asgnor_USER_NAME
+                     from CHANGE_REQUEST_STATUS crs ,
+                          STRUCTUREVERSION sv,
+                          CLASS c,
+                          ELEMENTVERSION ev,
+                          CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+                     where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+                           cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+                           sv.CLASSID = c.CLASSID and
+                           sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+                           ev.VERSIONCODE in (select min(versioncode) from CIMS.elementversion t where t.versioncode LIKE '2%' AND (length(trim(t.versioncode)) = 4) AND t.versioncode >  (select to_char(sysdate, 'YYYY') from dual)
+                           AND REMAINDER(TO_NUMBER(SUBSTR(t.VERSIONCODE,-2,2),'99'), 3) = 0 ) and
+                           Substr(cr.CHANGE_REQUEST_NAME, 1, LENGTH(#{code})) = #{code} and
+                           cr.CHANGE_REQUEST_CATEGORY_CODE = 'T'
+                      ) inner) cr
+                      order by                  			                     
+                            CHANGE_REQUEST_ID
+  </select>
+  
+  <select id="findChangeRequestsByLeadTerm" resultMap="ChangeRequestMap" parameterType="java.lang.String">
+  	SELECT cr.*
+       FROM (SELECT ROWNUM rn, inner.*
+             FROM (  select cr.CHANGE_REQUEST_ID,
+                            cr.BASE_CONTEXT_ID,
+                            c.CLASSNAME as BASECLASSIFICATION,
+                            ev.VERSIONCODE as BASEVERSIONCODE,
+                            cr.CHANGE_REQUEST_LANGUAGE_CODE,
+                            cr.CHANGE_REQUEST_NAME,
+                            cr.CHANGE_REQUEST_CATEGORY_CODE,
+                            crs.CHANGE_REQUEST_STATUS_ID,
+                            assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+                            assignor.USER_NAME as asgnor_USER_NAME
+                     from CHANGE_REQUEST_STATUS crs ,
+                          STRUCTUREVERSION sv,
+                          CLASS c,
+                          ELEMENTVERSION ev,
+                          CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+                     where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+                           cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+                           sv.CLASSID = c.CLASSID and
+                           sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+                           ev.VERSIONCODE in (select min(versioncode) from elementversion t where t.versioncode LIKE '2%' AND (length(trim(t.versioncode)) = 4) AND t.versioncode >  (select to_char(sysdate, 'YYYY') from dual)
+                           AND REMAINDER(TO_NUMBER(SUBSTR(t.VERSIONCODE,-2,2),'99'), 3) = 0 ) and
+                           (Substr(cr.CHANGE_REQUEST_NAME, 1, instr(cr.CHANGE_REQUEST_NAME, ' ') - 1) = #{leadTerm} OR
+                           Substr(cr.CHANGE_REQUEST_NAME, 1, instr(cr.CHANGE_REQUEST_NAME, ',') - 1) = #{leadTerm} ) and
+                           cr.CHANGE_REQUEST_CATEGORY_CODE = 'I'
+                      ) inner) cr
+                      order by
+                         CHANGE_REQUEST_ID
+  </select>
+   
+  
+  <select id="findChangeRequestsBySearchCriteria" resultMap="ChangeRequestMap" parameterType="ca.cihi.cims.model.UserSearchCriteria">
+       SELECT cr.*
+       FROM (SELECT ROWNUM rn, inner.*
+             FROM (  select cr.CHANGE_REQUEST_ID,
+                            cr.BASE_CONTEXT_ID,
+                            c.CLASSNAME as BASECLASSIFICATION,
+                            ev.VERSIONCODE as BASEVERSIONCODE,
+                            cr.CHANGE_REQUEST_LANGUAGE_CODE,
+                            cr.CHANGE_REQUEST_NAME,
+                            cr.CHANGE_REQUEST_CATEGORY_CODE,
+                            crs.CHANGE_REQUEST_STATUS_ID,
+                            assignor.USER_PROFILE_ID as asgnor_USER_PROFILE_ID,
+                            assignor.USER_NAME as asgnor_USER_NAME
+                     from CHANGE_REQUEST_STATUS crs ,
+                          STRUCTUREVERSION sv,
+                          CLASS c,
+                          ELEMENTVERSION ev,
+                          CHANGE_REQUEST cr left join USER_PROFILE assignor on cr.ASIGNOR_ID = assignor.USER_PROFILE_ID
+                     where cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID and
+                           cr.BASE_CONTEXT_ID = sv.STRUCTUREID and
+                           sv.CLASSID = c.CLASSID and
+                           sv.STRUCTUREID = ev.ELEMENTVERSIONID and
+                           cr.ASSIGNEE_USER_PROFILE_ID =#{userId}
+                     order by 
+                      <choose>
+                         <when test="sortBy == 'ID'">
+                            CHANGE_REQUEST_ID
+                               <if test="not ascending">
+		                         DESC
+		                       </if>
+		                 </when>
+		                 <when test="sortBy == 'VERSIONCODE'">
+                            BASEVERSIONCODE
+                               <if test="not ascending">
+		                            DESC
+		                        </if>
+		                 </when>
+		                 <when test="sortBy == 'NAME'">
+                            upper(CHANGE_REQUEST_NAME)
+                            <if test="not ascending">
+		                            DESC
+		                     </if>
+		                 </when>
+		                  <when test="sortBy == 'CLASSIFICATION'">
+                            BASECLASSIFICATION 
+                             <if test="not ascending">
+		                       DESC
+		                     </if>
+		                     ,  upper(CHANGE_REQUEST_NAME)
+		                 </when>
+		                 
+		                 <when test="sortBy == 'STATUS'">
+                            CHANGE_REQUEST_STATUS_ID
+                             <if test="not ascending">
+		                            DESC
+		                     </if>
+		                 </when>
+		                 <otherwise>
+                            CHANGE_REQUEST_ID
+                          </otherwise>
+		              </choose>
+		            
+		              
+                      ) inner) cr
+           WHERE cr.rn &gt;=#{startRow} AND cr.rn &lt;= #{endRow}
+    </select>
+  
+  
+   <select id="findOpenTabularChangeRequestsByClassificationAndVersionYear" resultMap="ChangeRequestMap" >
+              select cr.CHANGE_REQUEST_ID,
+                     cr.BASE_CONTEXT_ID,
+                     c.CLASSNAME as BASECLASSIFICATION,
+                     ev.VERSIONCODE as BASEVERSIONCODE,
+                     cr.CHANGE_REQUEST_LANGUAGE_CODE,
+                     cr.CHANGE_REQUEST_NAME,
+                     cr.CHANGE_REQUEST_CATEGORY_CODE,
+                     crs.CHANGE_REQUEST_STATUS_ID
+              from CHANGE_REQUEST_STATUS crs ,
+                          STRUCTUREVERSION sv,
+                          CLASS c,
+                          ELEMENTVERSION ev,
+                          CHANGE_REQUEST cr  
+              where   cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID 
+                 and  cr.BASE_CONTEXT_ID = sv.STRUCTUREID  
+                 and  sv.CLASSID = c.CLASSID
+                 and  sv.STRUCTUREID = ev.ELEMENTVERSIONID
+                 and  cr.CHANGE_REQUEST_CATEGORY_CODE='T'
+                 and  crs.CHANGE_REQUEST_STATUS_CODE not in ('DEFERRED','REJECTED','DELETED','Closed-Approved')
+                 and  c.ClassName=#{baseClassification} 
+                 and  ev.VERSIONCODE = #{versionCode}              
+   </select>
+  
+   <select id="findOpenChangeRequestsByClassificationAndVersionYear" resultMap="ChangeRequestMap" >
+              select cr.CHANGE_REQUEST_ID,
+                     cr.BASE_CONTEXT_ID,
+                     c.CLASSNAME as BASECLASSIFICATION,
+                     ev.VERSIONCODE as BASEVERSIONCODE,
+                     cr.CHANGE_REQUEST_LANGUAGE_CODE,
+                     cr.CHANGE_REQUEST_NAME,
+                     cr.CHANGE_REQUEST_CATEGORY_CODE,
+                     crs.CHANGE_REQUEST_STATUS_ID
+              from CHANGE_REQUEST_STATUS crs ,
+                          STRUCTUREVERSION sv,
+                          CLASS c,
+                          ELEMENTVERSION ev,
+                          CHANGE_REQUEST cr  
+              where   cr.CHANGE_REQUEST_STATUS_ID=crs.CHANGE_REQUEST_STATUS_ID 
+                 and  cr.BASE_CONTEXT_ID = sv.STRUCTUREID  
+                 and  sv.CLASSID = c.CLASSID
+                 and  sv.STRUCTUREID = ev.ELEMENTVERSIONID
+                 and  crs.CHANGE_REQUEST_STATUS_CODE not in ('DEFERRED','REJECTED','DELETED','Closed-Approved')
+                 and  c.ClassName=#{baseClassification} 
+                 and  ev.VERSIONCODE = #{versionCode}              
+    </select>
+  
+  
+  
+  
+  
+              
+  <select id="isChangeRequestNameExist" resultType="java.lang.String">
+      SELECT CASE
+             WHEN EXISTS (SELECT *
+                            FROM   CHANGE_REQUEST cr,
+                                   CHANGE_REQUEST_STATUS crs
+                            WHERE  cr.CHANGE_REQUEST_STATUS_ID = crs.CHANGE_REQUEST_STATUS_ID and 
+                            cr.CHANGE_REQUEST_NAME = #{name} and crs.CHANGE_REQUEST_STATUS_CODE !='DELETED' )
+             THEN
+                  'true'
+             ELSE 'false'
+             END AS result
+      FROM   dual
+   </select>
+  
+   <select id="isChangeRequestNameExistInContext" resultType="java.lang.String">
+      SELECT CASE
+             WHEN EXISTS (SELECT *
+                            FROM   CHANGE_REQUEST cr,
+                                   CHANGE_REQUEST_STATUS crs
+                            WHERE  cr.CHANGE_REQUEST_STATUS_ID = crs.CHANGE_REQUEST_STATUS_ID and
+                            cr.CHANGE_REQUEST_NAME = #{name} and
+                            cr.BASE_CONTEXT_ID = #{baseContextId} and
+                            crs.CHANGE_REQUEST_STATUS_CODE not in ('DELETED','DEFERRED','REJECTED' ))
+             THEN
+                  'true'
+             ELSE 'false'
+             END AS result
+      FROM   dual
+   </select>
+
+   <select id="isSameChangeRequestNameExist" resultType="java.lang.String">
+      SELECT CASE
+             WHEN EXISTS (SELECT *
+                            FROM   CHANGE_REQUEST cr,
+                                   CHANGE_REQUEST_STATUS crs
+                            WHERE  cr.CHANGE_REQUEST_STATUS_ID = crs.CHANGE_REQUEST_STATUS_ID and 
+                            cr.CHANGE_REQUEST_NAME = #{name} and 
+                            cr.CHANGE_REQUEST_ID != #{changeRequestId} and
+                            crs.CHANGE_REQUEST_STATUS_CODE not in ('DELETED','DEFERRED','REJECTED' ))
+             THEN
+                  'true'
+             ELSE 'false'
+             END AS result
+      FROM   dual
+   </select>
+  
+  <select id="searchPatternTopic" resultType="java.lang.String">
+      SELECT DISTINCT PATTERN_TOPIC 
+      FROM CHANGE_REQUEST cr
+      where upper(cr.PATTERN_TOPIC) like upper(#{searchString})
+      and rownum &lt;=#{maxResults}
+   </select>
+  
+   <select id="searchPatternTopicByContext" resultType="java.lang.String">
+      select * from (SELECT DISTINCT PATTERN_TOPIC 
+      FROM CHANGE_REQUEST cr
+      where upper(cr.PATTERN_TOPIC) like upper(#{searchString})
+      <choose>
+      	<when test="searchContext instanceof java.util.Collection">
+      		and cr.BASE_CONTEXT_ID in 
+      		<foreach collection="searchContext" item="contextId" open="(" close=")" separator=",">
+      			#{contextId}
+      		</foreach>
+      	</when>
+      	<otherwise>
+      		and cr.BASE_CONTEXT_ID =#{searchContext}
+      	</otherwise>
+      </choose>
+      order by PATTERN_TOPIC
+      )  where rownum &lt;=#{maxResults}
+   </select>
+  
+  
+  <select id="findDistinctQFRReviewerId" resultType="java.lang.Long">
+      SELECT DISTINCT rq.DISTRIBUTION_LIST_ID 
+      FROM REVIEWER_QUESTION  rq
+      where rq.CHANGE_REQUEST_ID=#{changeRequestId}
+   </select>
+   
+   <select id="findRunningChangeRequestRealization" resultMap="ChangeRequestRealizationMap">
+      SELECT * FROM CHANGE_REQUEST_REALIZATION 
+      where STATUS_CODE='PROCESS_BEGINS'
+   </select>
+   
+   <select id="findChangeRequestRealizationById" resultMap="ChangeRequestRealizationMap">
+      SELECT * FROM CHANGE_REQUEST_REALIZATION 
+      where CHANGE_REQUEST_REALIZATION_ID=#{changeRequestRealizationId}
+   </select>
+   
+    <select id="findCurrentRunningRealizationByChangeRequestId" resultMap="ChangeRequestRealizationMap">
+       SELECT * FROM CHANGE_REQUEST_REALIZATION  
+       where change_request_realization_id =
+           ( select max(change_request_realization_id) from  CHANGE_REQUEST_REALIZATION 
+                 where CHANGE_REQUEST_ID=#{changeRequestId})
+   </select>
+   
+   
+   
+   
+   <select id="synchronizeRealization" resultType="java.lang.Long">
+        select REALIZATION_LOCK_SEQ.nextval from dual for update
+   </select>     
+    
+    
+    <insert id="insertChangeRequest"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      <selectKey resultType="java.lang.Long" keyProperty="changeRequestId" order="BEFORE">  
+		        select CHANGE_REQUEST_ID_SEQ.nextval from dual 
+	  </selectKey>  
+      insert into CHANGE_REQUEST 
+                  (CHANGE_REQUEST_ID,BASE_CONTEXT_ID,CHANGE_REQUEST_LANGUAGE_CODE,CHANGE_REQUEST_NAME,CHANGE_REQUEST_STATUS_ID,
+                   CHANGE_REQUEST_CATEGORY_CODE,CHANGE_TYPE_ID,REQUESTOR_ID,CHANGE_NATURE_ID,DEFERRED_CHANGE_REQUEST_ID,
+                   ASSIGNEE_USER_PROFILE_ID,ASSIGNEE_DL_ID, OWNER_ID,ASIGNOR_ID,CHANGE_RATIONALE_TEXT, LAST_UPDATE_DATE,
+                   INDEX_REQUIRED_IND_CODE,EVOLUTION_REQUIRED_IND_CODE,CONVERSION_REQUIRED_IND_CODE,PATTERN_CHANGE_IND_CODE,PATTERN_TOPIC,CREATION_DATE,
+                   CREATED_BY_USER_ID,LAST_UPDATED_BY_USER_ID  )
+      values (#{changeRequestId},#{baseContextId},#{languageCode},trim(#{name}),#{status.statusId},
+              #{category}, #{changeTypeId}, #{requestorId}, #{changeNatureId}, #{deferredChangeRequestId},
+              #{assigneeUserId}, #{assigneeDLId}, #{ownerId},  #{assignorId} ,#{changeRationalTxt},CURRENT_DATE,
+              #{indexRequired,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+              #{evolutionRequired,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+              #{conversionRequired,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+              #{patternChange,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+              #{patternTopic}, CURRENT_DATE,
+              #{createdByUserId}, #{lastUpdatedByUserId} )
+  </insert>
+  
+  <update id="updateChangeRequest"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequest" >
+      update CHANGE_REQUEST set
+         CHANGE_REQUEST_LANGUAGE_CODE = #{languageCode},
+         CHANGE_REQUEST_NAME = trim(#{name}),
+         CHANGE_REQUEST_STATUS_ID = #{status.statusId},
+         BASE_CONTEXT_ID = #{baseContextId},
+         CHANGE_REQUEST_CATEGORY_CODE = #{category},
+         CHANGE_TYPE_ID = #{changeTypeId},
+         REQUESTOR_ID = #{requestorId},
+         CHANGE_NATURE_ID = #{changeNatureId},
+         ASSIGNEE_USER_PROFILE_ID = #{assigneeUserId},
+         ASSIGNEE_DL_ID = #{assigneeDLId},
+         OWNER_ID =#{ownerId},
+         ASIGNOR_ID= #{assignorId},
+         CHANGE_RATIONALE_TEXT = #{changeRationalTxt}, 
+         LAST_UPDATE_DATE = CURRENT_DATE,
+         INDEX_REQUIRED_IND_CODE = #{indexRequired,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+         EVOLUTION_REQUIRED_IND_CODE = #{evolutionRequired,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+         CONVERSION_REQUIRED_IND_CODE = #{conversionRequired,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+         PATTERN_CHANGE_IND_CODE = #{patternChange,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+         PATTERN_TOPIC = #{patternTopic},
+         RATIONALE_FOR_INCOMPLETE = #{rationaleForIncomplete} ,
+         RATIONALE_FOR_VALID = #{rationaleForValid},
+         RATIONALE_FOR_CLOSED_DEFERRED = #{rationaleForClosedDeferred},
+         RATIONALE_FOR_REJECT = #{rationaleForReject},
+         LAST_UPDATED_BY_USER_ID = #{lastUpdatedByUserId}
+         
+      where CHANGE_REQUEST_ID = #{changeRequestId} and LAST_UPDATE_DATE=#{lastUpdatedTime}
+</update>
+
+  <update id="updateChangeRequestLastUpdateTime">
+      update CHANGE_REQUEST set
+         LAST_UPDATE_DATE = #{lastUpdateDate},
+         LAST_UPDATED_BY_USER_ID = #{lastUpdatedByUserId}
+      where CHANGE_REQUEST_ID = #{changeRequestId} and LAST_UPDATE_DATE=#{lockTimestamp}
+  </update>
+ 
+ 
+  <update id="publishAllChangeRequestsForBaseContext">
+      update CHANGE_REQUEST set
+         CHANGE_REQUEST_STATUS_ID = 19,
+         LAST_UPDATED_BY_USER_ID = #{lastUpdatedByUserId},
+         LAST_UPDATE_DATE = CURRENT_DATE
+      where BASE_CONTEXT_ID = #{baseContextId} and CHANGE_REQUEST_STATUS_ID=18
+  </update>
+ 
+<!-- 
+<insert id="insertChangeRequestReviewGroup"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestReviewGroup">
+     <selectKey resultType="java.lang.Long" keyProperty="changeRequestReviewGroupId" order="BEFORE">  
+		        select REVIEWER_GROUP_ID_SEQ.nextval from dual 
+	  </selectKey>       
+     insert into CHANGE_REQUEST_REVIEW_GROUP(
+                 CHANGE_REQUEST_REVIEW_GROUP_ID,
+                 CHANGE_REQUEST_ID,
+                 DISTRIBUTION_LIST_ID  )
+        values  (#{changeRequestReviewGroupId},
+                 #{changeRequestId},
+                 #{distribution.distributionlistid}
+                 )
+</insert>
+-->
+<insert id="insertChangeRequestEvolution"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestEvolution">
+     insert into CHANGE_REQ_EVOLUTION(
+                     CHANGE_REQUEST_ID,
+                     EVOLUTION_CODES,
+                     EVOLUTION_TEXT_ENG,
+                     EVOLUTION_TEXT_FRA)
+           values (#{changeRequestId},
+                   #{evolutionCodes},
+                   #{evolutionTextEng},
+                   #{evolutionTextFra}
+                  )          
+</insert>
+
+
+
+<delete id="deleteChangeRequestEvolution" parameterType="java.lang.Long">
+    delete CHANGE_REQ_EVOLUTION 
+    where CHANGE_REQUEST_ID = #{changeRequestId}
+</delete>
+
+
+<insert id="insertChangeRequestReviewGroups"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      insert into CHANGE_REQUEST_REVIEW_GROUP(
+                 CHANGE_REQUEST_REVIEW_GROUP_ID,
+                 CHANGE_REQUEST_ID,
+                 DISTRIBUTION_LIST_ID  )(
+		select
+		   REVIEWER_GROUP_ID_SEQ.nextval,A.* from(
+		   <foreach collection="reviewGroups" item="reviewGroup" index="index"
+			  separator="union all">
+			  select #{changeRequestId}, #{reviewGroup.distributionlistid}
+			  from dual
+		   </foreach>
+		)A)           
+ </insert>
+
+<delete id="deleteChangeRequestReviewGroups" parameterType="java.lang.Long">
+    delete CHANGE_REQUEST_REVIEW_GROUP 
+    where CHANGE_REQUEST_ID = #{changeRequestId}
+</delete>
+
+
+
+
+<insert id="insertChangeRequestCommentDiscussion" parameterType="ca.cihi.cims.model.changerequest.UserComment"  >
+       <selectKey resultType="java.lang.Long" keyProperty="userCommentId" order="BEFORE">  
+		        select USER_COMMENT_ID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into USER_COMMENT(
+                 USER_COMMENT_ID,
+                 USER_COMMENT_TEXT,
+                 CHANGE_REQUEST_ID,
+                 USER_PROFILE_ID,
+                 USER_COMMENT_TYPE_CODE,
+                 LAST_UPDATE_DATE )
+        values ( #{userCommentId},
+                 #{userCommentTxt},
+                 #{changeRequestId},
+                 #{userProfileId},
+                 #{commentType},
+                 CURRENT_DATE
+        )
+ </insert>
+ 
+
+  <update id="updateChangeRequestCommentDiscussion" parameterType="ca.cihi.cims.model.changerequest.UserComment">
+      update USER_COMMENT set
+         USER_COMMENT_TEXT = #{userCommentTxt},
+         LAST_UPDATE_DATE = CURRENT_DATE
+      where CHANGE_REQUEST_ID = #{changeRequestId} AND USER_PROFILE_ID = #{userProfileId} AND USER_COMMENT_ID = #{userCommentId}
+  </update>
+
+  <select id="findNumOfUserComments" resultType="java.lang.Integer">
+  	select count(*) from USER_COMMENT where CHANGE_REQUEST_ID = #{changeRequestId}
+  </select>	
+ 
+ <insert id="insertChangeRequestReviewerQuestion"  parameterType="ca.cihi.cims.model.changerequest.QuestionForReviewer">
+        <selectKey resultType="java.lang.Long" keyProperty="questionForReviewerId" order="BEFORE">  
+		        select REVIEWER_QUESTION_ID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into REVIEWER_QUESTION(
+                 REVIEWER_QUESTION_ID,
+                 CHANGE_REQUEST_ID,
+                 QUESTION_NUM,
+                 DISTRIBUTION_LIST_ID,
+                 REVIEWER_QUESTION_TEXT,
+                 LAST_UPDATE_DATE  )
+        values ( #{questionForReviewerId},
+                 #{changeRequestId},
+                 #{questionNum},
+                 #{reviewerId},
+                 #{questionForReviewerTxt},
+                 CURRENT_DATE
+        )
+ </insert>
+ 
+ <delete id="deleteChangeRequestReviewerQuestion" parameterType="java.lang.Long">
+    delete REVIEWER_QUESTION 
+    where REVIEWER_QUESTION_ID= #{questionForReviewerId}
+ </delete>
+
+ <update id="updateChangeRequestReviewerQuestion"  parameterType="ca.cihi.cims.model.changerequest.QuestionForReviewer" >
+      update REVIEWER_QUESTION set
+         DISTRIBUTION_LIST_ID = #{reviewerId},
+         REVIEWER_QUESTION_TEXT = #{questionForReviewerTxt},
+         LAST_UPDATE_DATE = CURRENT_DATE
+      where REVIEWER_QUESTION_ID = #{questionForReviewerId}
+ </update>
+
+ <insert id="insertCommentForReviewerQuestion"  parameterType="ca.cihi.cims.model.changerequest.UserComment">
+        <selectKey resultType="java.lang.Long" keyProperty="userCommentId" order="BEFORE">  
+		        select USER_COMMENT_ID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into USER_COMMENT(
+                 USER_COMMENT_ID,
+                 USER_COMMENT_TEXT,
+                 CHANGE_REQUEST_ID,
+                 USER_PROFILE_ID,
+                 REVIEWER_QUESTION_ID,
+                 USER_COMMENT_TYPE_CODE,
+                 LAST_UPDATE_DATE )
+        values ( #{userCommentId},
+                 #{userCommentTxt},
+                 #{changeRequestId},
+                 #{userProfileId},
+                 #{reviewerQuestionId},
+                 #{commentType},
+                 CURRENT_DATE
+        )
+ </insert>
+
+<insert id="insertAdvice"  parameterType="ca.cihi.cims.model.changerequest.Advice">
+        <selectKey resultType="java.lang.Long" keyProperty="adviceId" order="BEFORE">  
+		        select ADVICE_ID_SEQ.nextval from dual 
+	    </selectKey>
+      insert into ADVICE(
+                 ADVICE_ID,
+                 CHANGE_REQUEST_ID,
+                 SUBJECT,
+                 MESSAGE,
+                 DISTRIBUTION_LIST_ID,
+                 USER_PROFILE_ID,
+                 LAST_UPDATE_DATE,
+                 SENDER_ID  )
+        values ( #{adviceId},
+                 #{changeRequestId},
+                 #{subject},
+                 #{message},
+                 #{distributionListId},
+                 #{userProfileId},
+                 CURRENT_DATE,
+                 #{senderId}
+               )
+ </insert>
+
+
+
+ <insert id="insertCommentForAdvice"  parameterType="ca.cihi.cims.model.changerequest.UserComment">
+        <selectKey resultType="java.lang.Long" keyProperty="userCommentId" order="BEFORE">  
+		        select USER_COMMENT_ID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into USER_COMMENT(
+                 USER_COMMENT_ID,
+                 USER_COMMENT_TEXT,
+                 CHANGE_REQUEST_ID,
+                 USER_PROFILE_ID,
+                 ADVICE_ID,
+                 USER_COMMENT_TYPE_CODE,
+                 LAST_UPDATE_DATE )
+        values ( #{userCommentId},
+                 #{userCommentTxt},
+                 #{changeRequestId},
+                 #{userProfileId},
+                 #{adviceId},
+                 #{commentType},
+                 CURRENT_DATE
+        )
+ </insert>
+
+ <insert id="insertChangeRequestCodingQuestions"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      insert into DOCUMENT_REFERENCE(
+                 DOCUMENT_REFERENCE_ID,
+                 DOCUMENT_REFERENCE_TYPE_CODE,
+                 CHANGE_REQUEST_ID,
+                 EQUERY_ID,
+                 URL,
+                 LAST_UPDATE_DATE)(
+		select
+		   DOCUMENT_REFERENCE_ID_SEQ.nextval,CQ.* from(
+		   <foreach collection="codingQuestions" item="codingQuestion" index="index"
+			  separator="union all">
+			  select #{codingQuestion.referenceType}, 
+			         #{changeRequestId},
+			         #{codingQuestion.eQueryId}, 
+			         #{codingQuestion.url},
+			         CURRENT_DATE
+			  from dual
+		   </foreach>
+		)CQ)           
+ </insert>
+
+<delete id="deleteChangeRequestCodingQuestions" parameterType="java.lang.Long">
+    delete DOCUMENT_REFERENCE 
+    where DOCUMENT_REFERENCE_TYPE_CODE='CODING_QUESTION' 
+      and CHANGE_REQUEST_ID = #{changeRequestId}
+</delete>
+
+
+
+ <insert id="insertChangeRequestUrcAttachments"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      insert into DOCUMENT_REFERENCE(
+                  DOCUMENT_REFERENCE_ID,
+                  DOCUMENT_REFERENCE_TYPE_CODE,
+                  CHANGE_REQUEST_ID,
+                  FILENAME,
+                 LAST_UPDATE_DATE)(
+		select
+		     DOCUMENT_REFERENCE_ID_SEQ.nextval,UD.* from(
+		   <foreach collection="urcAttachments" item="urcAttachment" index="index"
+			  separator="union all">
+			  select #{urcAttachment.referenceType},
+			         #{changeRequestId},
+			         #{urcAttachment.fileName}, 
+			         CURRENT_DATE
+			  from dual
+		   </foreach>
+		)UD)           
+ </insert>
+
+
+ <insert id="insertChangeRequestUrcLinks"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      insert into DOCUMENT_REFERENCE(
+                  DOCUMENT_REFERENCE_ID,
+                  DOCUMENT_REFERENCE_TYPE_CODE,
+                  CHANGE_REQUEST_ID,
+                  URL,
+                 LAST_UPDATE_DATE)(
+		select
+		     DOCUMENT_REFERENCE_ID_SEQ.nextval,UD.* from(
+		   <foreach collection="urcLinks" item="urcLink" index="index"
+			  separator="union all">
+			  select #{urcLink.referenceType},
+			         #{changeRequestId},
+			         #{urcLink.url}, 
+			         CURRENT_DATE
+			  from dual
+		   </foreach>
+		)UD)           
+ </insert>
+<delete id="deleteChangeRequestUrcLinks" parameterType="java.lang.Long">
+    delete DOCUMENT_REFERENCE 
+    where DOCUMENT_REFERENCE_TYPE_CODE='URC_LINK' 
+      and CHANGE_REQUEST_ID = #{changeRequestId}
+</delete>
+
+
+ <insert id="insertChangeRequestOtherAttachments"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      insert into DOCUMENT_REFERENCE(
+                  DOCUMENT_REFERENCE_ID,
+                  DOCUMENT_REFERENCE_TYPE_CODE,
+                  CHANGE_REQUEST_ID,
+                  FILENAME,
+                  LAST_UPDATE_DATE)(
+		select
+		    DOCUMENT_REFERENCE_ID_SEQ.nextval,OA.* from(
+		   <foreach collection="otherAttachments" item="otherAttachment" index="index"
+			  separator="union all">
+			  select #{otherAttachment.referenceType},
+			         #{changeRequestId},
+			         #{otherAttachment.fileName}, 
+			         CURRENT_DATE
+			  from dual
+		   </foreach>
+		)OA)           
+ </insert>
+
+
+ <insert id="insertChangeRequestOtherLinks"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestDTO">
+      insert into DOCUMENT_REFERENCE(
+                  DOCUMENT_REFERENCE_ID,
+                  DOCUMENT_REFERENCE_TYPE_CODE,
+                  CHANGE_REQUEST_ID,
+                  URL,
+                  LAST_UPDATE_DATE)(
+		select
+		    DOCUMENT_REFERENCE_ID_SEQ.nextval,OA.* from(
+		   <foreach collection="otherLinks" item="otherLink" index="index"
+			  separator="union all">
+			  select #{otherLink.referenceType},
+			         #{changeRequestId},
+			         #{otherLink.url}, 
+			         CURRENT_DATE
+			  from dual
+		   </foreach>
+		)OA)           
+ </insert>
+
+
+ <delete id="deleteChangeRequestOtherLinks" parameterType="java.lang.Long">
+    delete DOCUMENT_REFERENCE 
+    where DOCUMENT_REFERENCE_TYPE_CODE='OTHER_LINK' 
+      and CHANGE_REQUEST_ID = #{changeRequestId}
+ </delete>
+
+
+
+ <delete id="deleteDocumentReferenceById" parameterType="java.lang.Long">
+    delete DOCUMENT_REFERENCE 
+    where DOCUMENT_REFERENCE_ID=#{documentReferenceId}
+ </delete>
+
+
+  <insert id="insertChangeRequestRealization"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestRealization">
+      <selectKey resultType="java.lang.Long" keyProperty="realizationId" order="BEFORE">  
+		        select CHANGE_REQ_REALIZATION_ID_SEQ.nextval from dual 
+	  </selectKey>  
+      insert into CHANGE_REQUEST_REALIZATION 
+                  (CHANGE_REQUEST_REALIZATION_ID,CHANGE_REQUEST_ID,STATUS_CODE,FAILED_REASON,PROCESS_STEP)
+      values (#{realizationId},
+              #{changeRequestId},
+              #{realizationStatus},
+              #{failedReason},
+              #{processStep}
+             )
+   </insert>
+
+   <update id="updateChangeRequestRealization"  parameterType="ca.cihi.cims.model.changerequest.ChangeRequestRealization" >
+      update CHANGE_REQUEST_REALIZATION set
+         STATUS_CODE  = #{realizationStatus},
+         PROCESS_STEP = #{processStep},
+         FAILED_REASON = #{failedReason}
+      where CHANGE_REQUEST_REALIZATION_ID = #{realizationId}
+   </update>
+
+   <delete id="deleteChangeRequestRealizationById" parameterType="java.lang.Long">
+      delete CHANGE_REQUEST_REALIZATION 
+      where CHANGE_REQUEST_REALIZATION_ID = #{realizationId}
+   </delete>
+
+   
+
+
+
+	<!-- sample To call function. -->
+	<!-- 
+	<select id="listChangeRequest"  statementType="CALLABLE" parameterType="java.util.Map"  resultMap="ChangeRequestMap">
+	   {  #{out,jdbcType=CURSOR,javaType=java.sql.ResultSet, resultMap=ChangeRequestMap, mode=OUT}  = call CIMS_UTIL.sp_ListChangeRequest() } 
+	</select>
+    -->
+    
+    
+    
+    
+    
+    
+  
+</mapper>
+ 

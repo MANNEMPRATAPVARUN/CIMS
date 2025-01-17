@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.data.mapper.SnomedSTGMapper">
+
+    <resultMap id="LogMessage" type="ca.cihi.cims.model.snomed.ETLLog">
+		<result property="id" column="id" />
+		<result property="runId" column="run_id" />
+		<result property="messageDate" column="message_date" />
+		<result property="message" column="message" />
+		<result property="sctVersionCode" column="sct_version_code" />
+	</resultMap>
+	
+	 <!-- To call stored procedure. -->
+	<update id="truncateFileTables"  statementType="CALLABLE">
+	   {  call CIMS_SNOMED_STG_API.truncateFileTables() } 
+	</update>
+	
+	 <!-- To call stored procedure. -->
+	<update id="truncateLogTable"  statementType="CALLABLE">
+	   {  call CIMS_SNOMED_STG_API.truncateLogTable() } 
+	</update>
+	
+	 <!-- To call stored procedure. -->
+	<update id="insertLog"  statementType="CALLABLE" parameterType="map">
+	   {  call CIMS_SNOMED_STG_API.insertLog(#{message},#{sctVersionCode}) } 
+	</update>
+    
+    <!-- To call stored procedure. -->
+	<update id="processData"  statementType="CALLABLE" parameterType="map">
+	   {  call CIMS_SNOMED_STG_API.processData(#{sctVersionCode}) } 
+	</update>
+    
+    <insert id="insertConcept" parameterType="java.util.List">
+       insert into sct_md_stg.snomed_concept_file(id,effective_time,active_ind_code,module_id,definition_status_id)(
+		<foreach collection="list" item="element" index="index" separator="union all">
+			(select #{element.id},#{element.effectiveTime},#{element.activeIndCode},#{element.moduleId},#{element.definitionStatusId} from dual)
+    	</foreach>
+    	)
+    </insert>
+    
+    <insert id="insertDesc" parameterType="java.util.List">
+       insert into sct_md_stg.snomed_desc_file(id,effective_time,active_ind_code,module_id,concept_id,language_code,type_id,term,case_significance_id )(
+		<foreach collection="list" item="element" index="index" separator="union all">
+			(select #{element.id},#{element.effectiveTime},#{element.activeIndCode},#{element.moduleId},#{element.conceptId},#{element.languageCode},#{element.typeId},#{element.term},#{element.caseSignificanceId} from dual)
+    	</foreach>
+    	)
+    </insert>
+    
+    <insert id="insertRefsetLang" parameterType="java.util.List">
+       insert into sct_md_stg.snomed_refset_lang_file(id,effective_time,active_ind_code,module_id,refset_id,referenced_component_id,acceptability_id)(
+		<foreach collection="list" item="element" index="index" separator="union all">
+			(select #{element.id},#{element.effectiveTime},#{element.activeIndCode},#{element.moduleId},#{element.refsetId},#{element.referencedComponentId},#{element.acceptabilityId} from dual)
+    	</foreach>
+    	)
+    </insert>
+    
+    <insert id="insertRelationship" parameterType="java.util.List">
+       insert into sct_md_stg.snomed_relationship_file(id,effective_time,active_ind_code,module_id,source_id,destination_id,relationship_group,type_id,characteristic_type_id,modifier_id)(
+		<foreach collection="list" item="element" index="index" separator="union all">
+			(select #{element.id},#{element.effectiveTime},#{element.activeIndCode},#{element.moduleId},#{element.sourceId},#{element.destinationId},#{element.relationshipGroup},#{element.typeId},#{element.characteristicTypeId},#{element.modifierId} from dual)
+    	</foreach>
+    	)
+    </insert>
+    
+    <select id="getLatestETLLog" resultMap="LogMessage">
+		  select * from (
+				select l.id,
+					   l.run_id,			   
+					   to_char(l.message_date, 'YYYY/MM/DD HH24:MI:SS') as message_date,
+					   l.message,
+					   l.sct_version_code
+				from LOG l
+				order by l.message_date desc, l.id desc
+			)
+     		where rownum=1	      	
+   	</select>
+    
+    
+</mapper>

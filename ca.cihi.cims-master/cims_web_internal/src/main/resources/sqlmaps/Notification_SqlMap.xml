@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.NotificationMapper" >
+
+ <resultMap id="NotificationMap" type="ca.cihi.cims.model.notification.NotificationDTO" >
+   
+    <id column="NOTIFICATION_ID" property="notificationId"  />
+    <result column="NOTIFICATION_TYPE_CODE" property="notificationTypeCode" jdbcType="VARCHAR"  />
+    <result column="SUBJECT" property="subject" jdbcType="VARCHAR" />
+    <result column="MESSAGE" property="message" jdbcType="VARCHAR" />
+    <result column="SENDER_ID" property="senderId"  />
+    <result column="CHANGE_REQUEST_ID" property="changeRequestId"  />
+    <result column="REVIEWER_QUESTION_ID" property="questionForReviewerId"  />
+    <result column="ADVICE_ID" property="adviceId"  />
+    <result column="COMPLETION_REQUIRED_IND_CODE" property="completionRequiredInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+    <result column="COMPLETION_IND_CODE" property="completionInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+    <result column="ORIGINAL_NOTIFICATION_ID" property="originalNotificationId" />
+    <result column="CREATED_DATE" property="createdDate" />
+    <result column="FISCAL_YEAR" property="fiscalYear" />
+    <result column="LAST_UPDATE_DATE" property="lastUpdatedTime" />
+    <association property="sender"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="sd_"/>
+    <association property="recipient"  javaType="ca.cihi.cims.model.User" resultMap="ca.cihi.cims.data.mapper.AdminMapper.UserMap" columnPrefix="re_" />
+    <association property="changeRequest"  javaType="ca.cihi.cims.model.changerequest.ChangeRequest" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ChangeRequestMap" columnPrefix="cr_" />
+    <collection property="dlRecipients" ofType="ca.cihi.cims.model.Distribution" resultMap="ca.cihi.cims.data.mapper.AdminMapper.DistributionMap" columnPrefix="dl_"/>
+   
+  </resultMap>
+  
+  
+  <resultMap id="NotificationTypeMetaMap" type="ca.cihi.cims.model.meta.NotificationTypeMeta" >
+     <result column="NOTIFICATION_TYPE_CODE" property="notificationTypeCode" jdbcType="VARCHAR" />
+     <result column="SUBJECT" property="defaultSubject" jdbcType="VARCHAR" />
+     <result column="MESSAGE" property="defaultMessage" jdbcType="VARCHAR" />
+     <result column="COMPLETION_REQUIRED_IND_CODE" property="completionRequiredInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+     <result column="BULK_DELETE_INDICATOR_CODE" property="bulkDeleteInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+     <result column="DISTRIBUTION_LIST_ID" property="predefinedRecipientDLId" />
+  </resultMap>
+  
+  
+  
+
+   <select id="findNotificationByPrimaryKey" resultMap="NotificationMap" parameterType="java.lang.Long" >
+     select n.NOTIFICATION_ID, n.NOTIFICATION_TYPE_CODE,n.SUBJECT,n.MESSAGE,n.SENDER_ID,n.CHANGE_REQUEST_ID,n.REVIEWER_QUESTION_ID,
+              n.COMPLETION_REQUIRED_IND_CODE, n.COMPLETION_IND_CODE,n.ORIGINAL_NOTIFICATION_ID,n.CREATED_DATE,n.FISCAL_YEAR,
+              re_u.user_profile_id as re_user_profile_id,
+              re_u.user_type_code as re_user_type_code,
+              re_u.user_name as re_user_name,
+              sd_u.user_profile_id as sd_user_profile_id,
+              sd_u.user_type_code as sd_user_type_code,
+              sd_u.user_name as sd_user_name,
+              dl.distribution_list_id as dl_distribution_list_id,
+              dl.distribution_list_code as dl_distribution_list_code,
+              dl.distribution_list_name as dl_distribution_list_name,
+              dl.distribution_list_desc as dl_distribution_list_desc
+              
+       from NOTIFICATION_USER_PROFILE nu,  USER_PROFILE re_u , USER_PROFILE sd_u ,NOTIFICATION n 
+       left outer join NOTIFICATION_DISTRIBUTION_LIST ndl on n.NOTIFICATION_ID= ndl.NOTIFICATION_ID
+       left outer join DISTRIBUTION_LIST dl on ndl.DISTRIBUTION_LIST_ID= dl.DISTRIBUTION_LIST_ID
+       
+       where  nu.USER_PROFILE_ID=re_u.USER_PROFILE_ID and
+              n.SENDER_ID = sd_u.USER_PROFILE_ID and 
+              n.NOTIFICATION_ID = nu.NOTIFICATION_ID and
+              n.NOTIFICATION_ID = #{notificationId}     
+   </select>
+   
+   <select id="findNotificationsByUserId" resultMap="NotificationMap" parameterType="java.lang.Long" >
+     select n.NOTIFICATION_ID, n.NOTIFICATION_TYPE_CODE,n.SUBJECT,n.MESSAGE,n.SENDER_ID,n.CHANGE_REQUEST_ID,n.REVIEWER_QUESTION_ID,
+            n.ADVICE_ID,n.COMPLETION_REQUIRED_IND_CODE, n.COMPLETION_IND_CODE,n.ORIGINAL_NOTIFICATION_ID,n.CREATED_DATE,n.FISCAL_YEAR,
+              re_u.user_profile_id as re_user_profile_id,
+              re_u.user_type_code as re_user_type_code,
+              re_u.user_name as re_user_name,
+              sd_u.user_profile_id as sd_user_profile_id,
+              sd_u.user_type_code as sd_user_type_code,
+              sd_u.user_name as sd_user_name,
+              dl.distribution_list_id as dl_distribution_list_id,
+              dl.distribution_list_code as dl_distribution_list_code,
+              dl.distribution_list_name as dl_distribution_list_name,
+              dl.distribution_list_desc as dl_distribution_list_desc
+              
+       from NOTIFICATION_USER_PROFILE nu,  USER_PROFILE re_u , USER_PROFILE sd_u ,NOTIFICATION n 
+       left outer join NOTIFICATION_DISTRIBUTION_LIST ndl on n.NOTIFICATION_ID= ndl.NOTIFICATION_ID
+       left outer join DISTRIBUTION_LIST dl on ndl.DISTRIBUTION_LIST_ID= dl.DISTRIBUTION_LIST_ID
+       
+       where  nu.USER_PROFILE_ID=re_u.USER_PROFILE_ID and
+              n.SENDER_ID = sd_u.USER_PROFILE_ID and 
+              n.NOTIFICATION_ID = nu.NOTIFICATION_ID and
+              nu.NOTIFICATION_USER_STATUS_CODE='ACTIVE' and
+              re_u.USER_PROFILE_ID= #{userId} 
+              order by  n.CREATED_DATE desc   
+   </select>
+   
+   
+    <select id="findNotificationsByUserSearchCriteria" resultMap="NotificationMap" parameterType="ca.cihi.cims.model.UserSearchCriteria" >
+      SELECT nt.*
+       FROM (SELECT ROWNUM rn, inner.*
+             FROM (
+               select n.NOTIFICATION_ID, n.NOTIFICATION_TYPE_CODE,n.SUBJECT,n.MESSAGE,n.SENDER_ID,n.CHANGE_REQUEST_ID,n.REVIEWER_QUESTION_ID,
+                      n.ADVICE_ID,n.COMPLETION_REQUIRED_IND_CODE, n.COMPLETION_IND_CODE,n.ORIGINAL_NOTIFICATION_ID,n.CREATED_DATE,n.FISCAL_YEAR,
+                      re_u.user_profile_id as re_user_profile_id,
+                      re_u.user_type_code as re_user_type_code,
+                      re_u.user_name as re_user_name,
+                      sd_u.user_profile_id as sd_user_profile_id,
+                      sd_u.user_type_code as sd_user_type_code,
+                      sd_u.user_name as sd_user_name,
+                      cr.CHANGE_REQUEST_NAME as cr_CHANGE_REQUEST_NAME,
+                      dl.distribution_list_id as dl_distribution_list_id,
+                      dl.distribution_list_code as dl_distribution_list_code,
+                      dl.distribution_list_name as dl_distribution_list_name,
+                      dl.distribution_list_desc as dl_distribution_list_desc
+                from NOTIFICATION_USER_PROFILE nu,  USER_PROFILE re_u , USER_PROFILE sd_u ,NOTIFICATION n 
+                     left outer join CHANGE_REQUEST cr on n.CHANGE_REQUEST_ID= cr.CHANGE_REQUEST_ID
+                     left outer join NOTIFICATION_DISTRIBUTION_LIST ndl on n.NOTIFICATION_ID= ndl.NOTIFICATION_ID
+                     left outer join DISTRIBUTION_LIST dl on ndl.DISTRIBUTION_LIST_ID= dl.DISTRIBUTION_LIST_ID
+                where  nu.USER_PROFILE_ID=re_u.USER_PROFILE_ID and
+                       n.SENDER_ID = sd_u.USER_PROFILE_ID and 
+                       n.NOTIFICATION_ID = nu.NOTIFICATION_ID and
+                       nu.NOTIFICATION_USER_STATUS_CODE='ACTIVE' and
+                       re_u.USER_PROFILE_ID= #{userId} 
+                       order by 
+                      <choose>
+                         <when test="sortBy == 'notificationId'">
+                            NOTIFICATION_ID
+		                 </when>
+		                 <when test="sortBy == 'changeRequestId'">
+                            CHANGE_REQUEST_ID
+		                 </when>
+		                 <when test="sortBy == 'fiscalYear'">
+                           FISCAL_YEAR
+		                 </when>
+		                 <when test="sortBy == 'subject'">
+                            SUBJECT
+		                 </when>
+		                 <when test="sortBy == 'sender'">
+                            sd_user_name
+		                 </when> 
+		                 <when test="sortBy == 'createDate'">
+                            CREATED_DATE
+		                 </when>
+		                 <when test="sortBy == 'changeRequestName'">
+                            replace(cr.CHANGE_REQUEST_NAME,'^','') 
+		                 </when>
+		                 <otherwise>
+                            NOTIFICATION_ID
+                         </otherwise>
+		              </choose>
+		              
+		              <if test="not ascending">
+		                 DESC
+		              </if>
+					<!-- All NOTIFICATION search results have a second  sort column , CREATED_DATE  DESC    -->
+                       , n.CREATED_DATE  DESC 
+              
+               ) inner) nt
+           WHERE nt.rn &gt;=#{startRow} AND nt.rn &lt;= #{endRow}
+   </select>
+   
+   
+   <select id="findNumOfMyNotifications" resultType="java.lang.Integer">
+      select count(*)
+      from NOTIFICATION_USER_PROFILE nu
+      where   nu.NOTIFICATION_USER_STATUS_CODE='ACTIVE' 
+              and  nu.USER_PROFILE_ID =#{userId}
+   </select>
+   
+   
+   
+   
+   
+   
+   
+    <select id="findAllNotificationTypeMeta" resultMap="NotificationTypeMetaMap"  >
+       select NOTIFICATION_TYPE_CODE, SUBJECT, MESSAGE, 
+              COMPLETION_REQUIRED_IND_CODE, BULK_DELETE_INDICATOR_CODE,DISTRIBUTION_LIST_ID
+       from NOTIFICATION_TYPE       
+   </select>
+   
+   
+   <update id="disableMyNotification" parameterType="java.util.Map">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where USER_PROFILE_ID = #{userId} and
+               NOTIFICATION_ID = #{notificationId}
+     </update>
+   
+    
+     <update id="disableMyNotifications" >
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where USER_PROFILE_ID = #{currentUser.userId} and
+               NOTIFICATION_ID in
+               <foreach item="notificationId" index="index" collection="notificationIds"
+                 open="(" separator="," close=")">
+                    #{notificationId}
+               </foreach>
+
+     </update>
+    
+     <update id="disableNotification" parameterType="java.lang.Long">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where NOTIFICATION_ID = #{notificationId}
+     </update>
+     
+    
+     <update id="disableAllNotificationsForYear" parameterType="java.lang.String">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where NOTIFICATION_ID in
+              (select n.NOTIFICATION_ID  
+               from  NOTIFICATION n
+               where n.FISCAL_YEAR =#{fiscalYear} 
+              )
+     </update>
+     
+     
+     <update id="disablePickupNewNotification" parameterType="java.lang.Long">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where NOTIFICATION_ID in
+              (select n.NOTIFICATION_ID  
+               from  NOTIFICATION n
+               where n.CHANGE_REQUEST_ID =#{changeRequestId} and
+                     n.NOTIFICATION_TYPE_CODE='PUN' 
+              )
+     </update>
+     
+     <update id="disableChangeRequestPickupNotification" parameterType="java.lang.Long">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where NOTIFICATION_ID in
+              (select n.NOTIFICATION_ID  
+               from  NOTIFICATION n
+               where n.CHANGE_REQUEST_ID =#{changeRequestId} and
+                     n.NOTIFICATION_TYPE_CODE in ('PUN','CRP','PUA','PUR','PUV','PUT','PUQA','PAPPROVAL') 
+              )
+     </update>
+     
+     <update id="disablePickupAcceptanceNotification" parameterType="java.lang.Long">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where NOTIFICATION_ID in
+              (select n.NOTIFICATION_ID  
+               from  NOTIFICATION n
+               where n.CHANGE_REQUEST_ID =#{changeRequestId} and
+                     n.NOTIFICATION_TYPE_CODE='PUA' 
+              )
+     </update>
+     
+     <update id="disableWrapupWorkNotification" parameterType="ca.cihi.cims.model.notification.NotificationTypeCode">
+         update NOTIFICATION_USER_PROFILE 
+         set  NOTIFICATION_USER_STATUS_CODE ='DISABLED'
+         where  NOTIFICATION_ID in
+              (select n.NOTIFICATION_ID  
+               from  NOTIFICATION n
+               where n.NOTIFICATION_TYPE_CODE= #{notificationTypeCode,typeHandler=org.apache.ibatis.type.EnumTypeHandler} 
+              )
+          
+     </update>
+     
+     
+
+   <insert id="insertNotification" parameterType="ca.cihi.cims.model.notification.Notification" >
+   
+      <selectKey resultType="java.lang.Long" keyProperty="notificationId" order="BEFORE" >
+         SELECT NOTIFICATION_ID_SEQ.NEXTVAL FROM DUAL
+       </selectKey>
+       insert into NOTIFICATION (NOTIFICATION_ID, NOTIFICATION_TYPE_CODE, 
+                                 SUBJECT, MESSAGE, SENDER_ID, 
+                                 CHANGE_REQUEST_ID, REVIEWER_QUESTION_ID, 
+                                 COMPLETION_REQUIRED_IND_CODE, COMPLETION_IND_CODE, ORIGINAL_NOTIFICATION_ID, 
+                                 CREATED_DATE,FISCAL_YEAR,ADVICE_ID,LAST_UPDATE_DATE)
+          values (#{notificationId}, #{notificationTypeCode}, 
+                  #{subject}, #{message}, #{senderId}, 
+                  #{changeRequestId}, #{questionForReviewerId}, 
+                  #{completionRequiredInd, typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+                  #{completionInd,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler}, 
+                  #{originalNotificationId}, 
+                  CURRENT_DATE,
+                  #{fiscalYear},
+                  #{adviceId},
+                  CURRENT_DATE)
+    </insert>
+  
+    <insert id="insertNotificationUserProfile" parameterType="ca.cihi.cims.model.notification.NotificationUserProfile" >
+   
+      <selectKey resultType="java.lang.Long" keyProperty="notificationUserProfileId" order="BEFORE" >
+         SELECT NOTIF_USER_PROFILE_ID_SEQ.NEXTVAL FROM DUAL
+       </selectKey>
+       insert into NOTIFICATION_USER_PROFILE (NOTIFICATION_USER_PROFILE_ID,NOTIFICATION_ID, USER_PROFILE_ID,NOTIFICATION_USER_STATUS_CODE)
+          values (#{notificationUserProfileId}, 
+                  #{notificationId},
+                  #{userProfileId},
+                  'ACTIVE' )
+    </insert>
+  
+    <insert id="insertNotificationDistributionList" parameterType="ca.cihi.cims.model.notification.NotificationDistributionList" >
+       <selectKey resultType="java.lang.Long" keyProperty="notificationDistribListId" order="BEFORE" >
+         SELECT NOTIF_DISTRIB_LIST_ID_SEQ.NEXTVAL FROM DUAL
+       </selectKey>
+       insert into NOTIFICATION_DISTRIBUTION_LIST (NOTIFICATION_DISTRIB_LIST_ID,NOTIFICATION_ID, DISTRIBUTION_LIST_ID)
+          values (#{notificationDistribListId}, 
+                  #{notificationId},
+                  #{distributionListId})
+    </insert>
+
+
+
+
+
+    <update id="updateNotification" parameterType="ca.cihi.cims.model.notification.Notification" >
+       update NOTIFICATION  set 
+              NOTIFICATION_TYPE_CODE = #{notificationTypeCode} ,
+              SUBJECT = #{subject},
+              MESSAGE = #{message},
+              SENDER_ID = #{senderId},
+              CHANGE_REQUEST_ID = #{changeRequestId},
+              REVIEWER_QUESTION_ID = #{questionForReviewerId},
+              ADVICE_ID =#{adviceId},
+              COMPLETION_REQUIRED_IND_CODE = #{completionRequiredInd,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+              COMPLETION_IND_CODE = #{completionInd,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+              ORIGINAL_NOTIFICATION_ID = #{originalNotificationId},
+              FISCAL_YEAR =#{fiscalYear},
+              LAST_UPDATE_DATE = CURRENT_DATE
+        where  NOTIFICATION_ID = #{notificationId}     
+    </update>
+
+
+
+</mapper>

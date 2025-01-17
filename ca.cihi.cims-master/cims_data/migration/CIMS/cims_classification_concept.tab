@@ -1,0 +1,11 @@
+create table CIMS_CLASSIFICATION_CONCEPT
+(
+  CLASSIFICATION_CODE VARCHAR2(20) not null,
+  VERSION_CODE        VARCHAR2(4) not null,
+  CONCEPT_ID          NUMBER not null
+)
+;
+alter table CIMS_CLASSIFICATION_CONCEPT
+  add constraint FK_CLASSIFICATION_CONCEPT_ID foreign key (CONCEPT_ID)
+  references CIMS_CONCEPT (CONCEPT_ID) on delete cascade;
+

@@ -1,0 +1,23 @@
+create table CIMS_DESC
+(
+  VERSION_CODE  VARCHAR2(4) not null,
+  CONCEPT_ID    NUMBER not null,
+  LANGUAGE_CODE VARCHAR2(3) not null,
+  SHORT_DESC    VARCHAR2(60),
+  LONG_DESC     VARCHAR2(255),
+  USER_DESC     VARCHAR2(255),
+  TEXT_DESC     CLOB
+)
+;
+alter table CIMS_DESC
+  add constraint PK_DESC primary key (VERSION_CODE, CONCEPT_ID, LANGUAGE_CODE);
+alter table CIMS_DESC
+  add constraint FK_DESC_CONCEPT_ID foreign key (CONCEPT_ID)
+  references CIMS_CONCEPT (CONCEPT_ID) on delete cascade;
+alter table CIMS_DESC
+  add constraint FK_DESC_LANGUAGE_CODE foreign key (LANGUAGE_CODE)
+  references CIMS_LANGUAGE (LANGUAGE_CODE);
+alter table CIMS_DESC
+  add constraint FK_DESC_VERSION_CODE foreign key (VERSION_CODE)
+  references CIMS_VERSION (VERSION_CODE);
+

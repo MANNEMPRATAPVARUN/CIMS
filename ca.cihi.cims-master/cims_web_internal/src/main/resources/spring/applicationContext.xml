@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:security="http://www.springframework.org/schema/security" 
+	    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	    					http://www.springframework.org/schema/beans/spring-beans.xsd 
+	    					http://www.springframework.org/schema/jee 
+	    					http://www.springframework.org/schema/jee/spring-jee.xsd
+	    					http://www.springframework.org/schema/lang
+	    					http://www.springframework.org/schema/lang/spring-lang.xsd 
+	    					http://www.springframework.org/schema/security
+	    					http://www.springframework.org/schema/security/spring-security.xsd">
+	    					
+  <import resource="applicationContext-config.xml" />
+  <import resource="applicationContextWebInternal-beans.xml" />
+  <import resource="applicationContext-security.xml" />
+  <import resource="cims-datasource.xml" /> 
+  <import resource="applicationContextSCT-beans.xml" />
+  
+</beans>

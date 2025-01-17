@@ -1,0 +1,37 @@
+<!--                           QUALIFIER LIST   - Exclude                              -->
+<!-- Notes: (2001/01/04)
+     Content Model for CCI: (exclude)+
+     Content Model for ICD: (exclude)+
+  -->
+  
+  <!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ELEMENT qualifierlist (exclude | table)+ >
+<!ATTLIST qualifierlist
+	type (excludes) #REQUIRED
+	codeval CDATA #IMPLIED
+>
+
+
+<!--                           EXCLUDE                                        -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref|ulist|table|brace)*
+  -->
+<!ELEMENT exclude (label |  ulist |  brace)>
+<!ATTLIST exclude
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+

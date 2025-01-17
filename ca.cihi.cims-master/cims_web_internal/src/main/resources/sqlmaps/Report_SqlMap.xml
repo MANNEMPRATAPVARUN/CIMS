@@ -1,0 +1,1364 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ReportMapper" >
+
+   <resultMap id="ConceptModificationMap" type="ca.cihi.cims.model.changerequest.ConceptModification">
+   	   <id property="structureId" column="structureid"/>
+   	   <id property="elementId" column="domainelementid"/>
+   	   <id property="changeRequestId" column="changerequestid"/>   	   
+       <result property="code"  column="codevalue" />
+       <result property="indexTerm"  column="indexterm" />
+       <result property="indexPath"  column="indexpath" />
+       <result property="versionCode"  column="versioncode" />
+       <result property="validationId" column="validationId "/>
+   </resultMap>
+   
+   <resultMap id="ChangeRequestSendBackMap" type="ca.cihi.cims.model.reports.ChangeRequestSendBack" >
+       <result column="CHANGE_REQUEST_ID" property="changeRequestId"  />
+       <result column="sendBackDate" property="sendBackDate"  />
+       <result column="classification" property="classification" />
+       <result column="language" property="language" />
+	   <result column="sendBackReason" property="sendBackReason"/>
+	   <result column="owner" property="owner"/>
+	   <result column="fromStatus" property="fromStatus"/>
+  </resultMap>
+  
+  <resultMap id="QASummaryMetricsMap" type="ca.cihi.cims.model.reports.QASummaryMetricsModel" >
+       <result column="CHANGE_REQUEST_ID" property="changeRequestId"  />
+       <result column="valid" property="valid"  />
+       <result column="accepted" property="accepted" />
+       <result column="validationdone" property="validationDone" />
+       <result column="translationdone" property="translationDone" />
+	   <result column="realized" property="realized"/>
+	   <result column="qadone" property="qaDone"/>
+  </resultMap>
+   
+   <resultMap id="MissingValidationMap" type="ca.cihi.cims.model.reports.MissingValidationHierarchy">
+   	   <id property="elementId" column="domainelementid"/>   	   
+       <result property="code"  column="code" />
+       <result property="elementIdPath"  column="elementidpath" />
+   </resultMap>
+   
+   <resultMap id="CodeValueChangeRequest" type="ca.cihi.cims.model.reports.CodeValueChangeRequest">
+   	   <result property="codeValue" column="codeValue"/>   	   
+       <result property="changeRequestId"  column="changeRequestId" />
+       <result property="changeRequestName"  column="changeRequestName" />
+   </resultMap>
+   
+   <resultMap id="ModifiedValidationMap" type="ca.cihi.cims.model.reports.ModifiedValidationsModel">
+   	   <result property="codeValue" column="code"/>
+   	   <result property="currentYear" column="cyear"/>
+   	   <result property="priorYear" column="pyear"/>   	   
+       <result property="dataHoldingCode"  column="dhcode" />
+       <result property="currentXml"  column="currentxml" />
+       <result property="priorXml"  column="priorxml" />
+       <result property="currentStatus"  column="cstatus" />
+       <result property="priorStatus" column="pstatus"/>
+   </resultMap>
+   
+   <resultMap id="ModifiedValidCodeMap" type="ca.cihi.cims.model.reports.ModifiedValidCodeModel">
+   	   <result property="codeValue" column="code"/>
+   	   <result property="currentFlag" column="cValidCode"/>
+   	   <result property="priorFlag" column="pValidCode"/>
+   </resultMap>
+   
+  <select id="getDataHoldingByDHCode" resultType="java.lang.String"  parameterType="java.util.Map">
+      select tpv.text 
+		from textpropertyversion tpv, textpropertyversion tpv1, element e 
+		where tpv.classid=#{dvdClassId} 
+		and tpv.languagecode=#{language} and tpv.domainelementid=tpv1.domainelementid
+		and tpv1.text=#{dhCode} and tpv1.classid=#{dvcClassId}
+		and tpv1.domainelementid = e.elementid and e.classid=#{facilityTypeClassId}
+  </select>
+
+<select id="findClassificationChangeTabularList" resultMap="ConceptModificationMap" parameterType="java.util.Map">
+select * from (
+with strelementversion as ( 
+         select /*+ USE_NL(sev s) */ sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id is not null and s.status&lt;&gt;'DELETED' and s.basestructureid in (select structureid from structureversion where basestructureid is null and contextstatus='OPEN')
+      )   
+      , changedElement as( 
+      select  /*+ RESULT_CACHE*/ distinct structureid, domainelementid, validationId
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid, 0  as validationId 
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and pv.classid not in (select classid from class c where className in('LongPresentation', 
+                                                                                  'ShortPresentation',
+                                                                                   'SexValidationIndicator', 
+                                                                                   'ValidationMRDiag', 
+                                                                                   'ValidationDiagType1Flag',
+                                                                                   'ValidationDiagType2Flag',
+                                                                                   'ValidationDiagType3Flag',
+                                                                                   'ValidationDiagType4Flag',
+                                                                                   'ValidationDiagType6Flag',
+                                                                                   'ValidationDiagType9Flag',
+                                                                                   'ValidationDiagTypeWFlag',
+                                                                                   'ValidationDiagTypeXFlag',
+                                                                                   'ValidationDiagTypeYFlag',
+                                                                                   'ValidationNewbornFlag',
+                                                                                   'ValidationICDCPV',
+                                                                                   'ValidationCCICPV',
+                                                                                   'ValidationFacility',
+                                                                                   'ValidationDefinition',
+                                                                                   'AgeMinimum',
+                                                                                   'AgeMaximum') and baseclassificationname=#{classification})  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid, 0 as validationId 
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid not in (select classid from class c where className in( 'SexValidation', 
+                                                                       'ValidationICD', 
+                                                                       'ValidationCCI',
+                                                                       'Validation'
+                                                                       ) and baseclassificationname=#{classification})
+                                                                       
+            union all
+            select sev.structureid, cims_util.getValidationRuleTabularId(structureid, xpv.domainelementid) as domainelementid, 
+                   xpv.domainelementid as validationId
+            from xmlpropertyversion xpv, strelementversion sev 
+                  where sev.elementversionid = xpv.xmlpropertyid
+                  and xpv.classid in (select classid from class c where className ='ValidationDefinition' and baseclassificationname=#{classification})
+                  
+            union all 
+            select sev.structureid, cims_util.getValidationRuleTabularId(structureid, cv.elementid) as domainelementid, 
+                 cv.elementid as validationId
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid in (select classid from class c where className in ('ValidationICD', 'ValidationCCI' ) and baseclassificationname=#{classification})
+         )           
+      ) 
+      select ce.structureid, ce.domainelementid, ce.validationId, cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'Code', language => null, strid => ce.structureid) as codevalue, sv.change_request_id as changerequestid, ev.versioncode
+      from changedElement ce, structureversion sv, elementversion ev, element e
+      where ce.domainelementid is not null and ce.structureid=sv.structureid and sv.basestructureid=ev.elementversionid and ce.domainelementid=e.elementid and e.classid in (select classid from class where classname in ('Category', 'Rubric', 'CCICODE') and baseclassificationname=#{classification})
+) where codevalue between #{codeFrom} and #{codeTo} order by replace(codevalue,'^',''), structureid
+</select>
+
+<select id="findClassificationChangeIndexList" resultMap="ConceptModificationMap" parameterType="java.util.Map">
+select * from (
+with strelementversion as ( 
+         select /*+ USE_NL(sev s) */ sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id is not null and s.status&lt;&gt;'DELETED' and s.basestructureid in (select structureid from structureversion where basestructureid is null and isVersionYear='Y' and contextstatus='OPEN')
+      )   
+      , changedElement as( 
+      select  /*+ RESULT_CACHE*/ distinct structureid, domainelementid, validationId
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid, 0  as validationId 
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and exists (select 1 from class c where classid=pv.classid and className in ('IndexCode', 
+                                                                                  'IndexDesc',
+                                                                                   'IndexNoteDesc', 
+                                                                                   'IndexReference', 
+                                                                                   'IndexReferredTo',
+                                                                                   'IndexRefDefinition') and baseclassificationname=#{classification})  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid, 0 as validationId 
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and exists (select 1 from class c where classid=cv.classid and className in( 'LetterIndex', 
+                                                                       'BookIndex', 
+                                                                       'Index',
+                                                                       'ReferenceIndex',
+                                                                       'AlphabeticIndex',
+                                                                       'ExternalInjuryIndex',
+                                                                       'NeoplasmIndex',
+                                                                       'DrugsAndChemicalsIndex'
+                                                                       ) and baseclassificationname=#{classification})
+         )           
+      )
+      , conceptIds as (
+      		select conceptelementid from (
+		    select distinct cpv.rangeelementid parentconceptelementid , cv.elementid conceptelementid
+		    from conceptpropertyversion cpv, textpropertyversion tpv, conceptversion cv
+		    where tpv.domainelementid = cpv.domainelementid
+		    and tpv.classid = CIMS_UTIL.getClassIDForClassName(#{classification}, 'IndexDesc')
+		    and cv.elementid = tpv.domainelementid
+		    and cv.status = 'ACTIVE'
+		    and cpv.classid=CIMS_UTIL.getClassIDForClassName(#{classification}, 'Narrower')
+		    )
+		    start with conceptelementid=#{leadTermElementId}
+		    connect by prior conceptelementid=parentconceptelementid
+      )
+      select ce.structureid, ce.domainelementid, ce.validationId, nvl(cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'IndexDesc', language => null, strid => #{contextId}),cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'IndexDesc', language => null, strid => ce.structureid)) as indexterm, nvl(CIMS_UTIL.getIndexPath(ce.domainelementid, #{contextId}),CIMS_UTIL.getIndexPath(ce.domainelementid, ce.structureid)) as indexpath, sv.change_request_id as changerequestid, ev.versioncode
+      from changedElement ce, structureversion sv, elementversion ev, conceptIds cid
+      where ce.domainelementid = cid.conceptelementid and ce.structureid=sv.structureid and sv.basestructureid=ev.elementversionid 
+)  order by indexpath, indexterm, structureid 
+</select>
+
+<select id="getHasActiveValidationRuleDH" resultType="java.lang.String" parameterType="java.util.Map">
+	select cims_util.hasActiveValidationRuleForDH(#{contextId}, #{conceptId}, #{dhCode}) from dual
+</select>
+
+<select id="getICDMissingValidationCodes" resultMap="MissingValidationMap" parameterType="java.util.Map">
+        with validElms as (
+          SELECT cv1.elementid from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{contextId} and sev1.structureid=#{contextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cv.status = 'ACTIVE'
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cims_util.hasActiveChildren(#{contextId}, cv1.elementid)='N'
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid = #{catRubricClassId}
+        and cv1.status='ACTIVE'
+        and sev2.structureid=#{contextId}
+        and sev3.structureid=#{contextId}
+        and sev4.structureid=#{contextId}
+        and sev5.structureid=#{contextId}
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+        and dhcode.text=#{dhCode}
+     )
+     select domainelementid, code,listagg(root, ',') within group (order by root desc) elementidpath from  (
+     select connect_by_root(domainelementid) root, domainelementid, text as code from (
+      select tpv.text, tpv.domainelementid, cpv.rangeelementid parentelementid  from conceptpropertyversion cpv, conceptversion cv, structureelementversion sev, structureelementversion sev2, textpropertyversion tpv, structureelementversion sev1
+           where cv.conceptid=sev.elementversionid and sev.structureid=#{contextId} and sev2.structureid=#{contextId} and tpv.domainelementid=cv.elementid 
+           and tpv.classid=#{codeClassId} and tpv.textpropertyid=sev1.elementversionid
+           and sev1.structureid=#{contextId} and cpv.conceptpropertyid=sev2.elementversionid
+           and tpv.domainelementid=cpv.domainelementid and cpv.classid=#{narrowClassId}
+           and cv.classid = #{catRubricClassId} and cv.status='ACTIVE'
+           and tpv.text between #{codeFrom} and #{codeTo}
+           ) 
+           where connect_by_isleaf=1
+      connect by nocycle prior domainelementid=parentelementid
+      ) leafs
+      where not exists (select 1 from validElms where elementid=leafs.domainelementid) 
+      group by domainelementid, code
+      order by code
+</select>
+
+<select id="findCCINewTableCodesWithCodingDirectives" resultMap="CodeValueChangeRequest" parameterType="java.util.Map">
+select * from (
+with strelementversion as ( 
+          select structureid, elementversionid, elementid from structureelementversion where structureid=#{contextId}
+        UNION  ALL 
+        select sev.structureid, elementversionid, sev.elementid  from structureelementversion sev, structureversion sv where sv.basestructureid=#{contextId} and sev.structureid=sv.structureid
+        and not exists ( 
+        select elementid from structureelementversion cv where cv.structureid=#{contextId} 
+        and cv.elementid = sev.elementid 
+        )
+      )
+      ,baseelementversion as (
+         select sev.* from structureelementversion sev, structureversion s , element e
+         where s.structureid = sev.structureid and sev.elementid=e.elementid and e.classid=#{cciCodeClassId}
+         and  s.structureid=#{baseContextId}
+      ) ,tablerubric as(
+        select cv.elementid from conceptversion cv, strelementversion sev, htmlpropertyversion hpv, strelementversion sev1
+         where cv.conceptid = sev.elementversionid and cv.classid=#{catRubricClassId} and hpv.domainelementid=cv.elementid and hpv.classid=#{tablePresentationClassId} and hpv.htmlpropertyid=sev1.elementversionid
+      )
+      , newccicode as( 
+         Select distinct cv.elementid, sev.structureid from conceptversion cv, strelementversion sev, strelementversion sev1, xmlpropertyversion xpv, tablerubric tr, conceptpropertyversion cpv
+         where cv.conceptid = sev.elementversionid and cv.classid=#{cciCodeClassId} and not exists (select 1 from baseelementversion where elementversionid=cv.conceptid)
+         and xpv.domainelementid=cv.elementid and xpv.xmlpropertyid=sev1.elementversionid and xpv.classid in (#{includePresentationClassId},#{excludePresentationClassId},#{codeAlsoPresentationClassId},#{notePresentationClassId},#{omitCodePresentationClassId}) and cpv.classid=#{narrowClassId} and cpv.domainelementid=cv.elementid and cpv.rangeelementid=tr.elementid
+         
+      ) 
+      select c.change_request_name as changeRequestName, cims_util.getTextProperty(elemId => ce.elementid, classnme => 'Code', language => null, strid => ce.structureid) as codevalue, sv.change_request_id as changerequestid
+      from newccicode ce, structureversion sv, change_request c
+      where  ce.structureid=sv.structureid and sv.change_request_id=c.change_request_id 
+) order by codevalue
+</select>
+
+<select id="getCCIMissingValidationCodes" resultMap="MissingValidationMap" parameterType="java.util.Map">
+		        with validElms as (
+          SELECT cv1.elementid from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{contextId} and sev1.structureid=#{contextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cv.status = 'ACTIVE'
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid in (#{catRubricClassId}, #{cciCodeClassId})
+        and cv1.status='ACTIVE'
+        and sev2.structureid=#{contextId}
+        and sev3.structureid=#{contextId}
+        and sev4.structureid=#{contextId}
+        and sev5.structureid=#{contextId}
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+        and dhcode.text=#{dhCode}
+     ),
+     rubrics as(
+	     select domainelementid, code, listagg(root, ',') within group (order by root desc) elementidpath from  (
+	     select connect_by_root(domainelementid) root, domainelementid, text as code from (
+	      select tpv.text, tpv.domainelementid, cpv.rangeelementid parentelementid  from conceptpropertyversion cpv, 
+	      conceptversion cv, structureelementversion sev, structureelementversion sev2, textpropertyversion tpv, structureelementversion sev1
+	           where cv.conceptid=sev.elementversionid and sev.structureid=#{contextId} and sev2.structureid=#{contextId} and tpv.domainelementid=cv.elementid 
+	           and tpv.classid=#{codeClassId} and tpv.textpropertyid=sev1.elementversionid
+	           and sev1.structureid=#{contextId} and cpv.conceptpropertyid=sev2.elementversionid
+	           and tpv.domainelementid=cpv.domainelementid and cpv.classid=#{narrowClassId}
+	           and cv.classid = #{catRubricClassId} and cv.status='ACTIVE'
+	           and tpv.text between #{codeFrom} and #{codeTo}
+	           ) 
+	           where connect_by_isleaf=1
+	      connect by nocycle prior domainelementid=parentelementid
+	      ) leafs
+	      where not exists (select 1 from validElms where elementid=leafs.domainelementid) 
+	      group by domainelementid, code
+      )
+      select tpv.text as code, tpv.domainelementid  
+      from conceptpropertyversion cpv, conceptversion cv, structureelementversion sev, structureelementversion sev2, textpropertyversion tpv, structureelementversion sev1, rubrics
+           where cv.conceptid=sev.elementversionid and sev.structureid=#{contextId} and sev2.structureid=#{contextId} and tpv.domainelementid=cv.elementid 
+           and tpv.classid=${codeClassId} and tpv.textpropertyid=sev1.elementversionid
+           and sev1.structureid=#{contextId} and cpv.conceptpropertyid=sev2.elementversionid
+           and tpv.domainelementid=cpv.domainelementid and cpv.classid=#{narrowClassId}
+           and cv.classid = #{cciCodeClassId} and cv.status='ACTIVE'
+           and cpv.rangeelementid=rubrics.domainelementid
+           and not exists (select 1 from validElms where elementid=cpv.domainelementid)
+     order by tpv.text
+</select>
+
+<select id="findICDModifiedValidations" resultMap="ModifiedValidationMap" parameterType="java.util.Map">
+        with currentYear as (
+          SELECT /*+ RESULT_CACHE*/ cv1.elementid, #{currentYear} as cyear, cv.status, dhcode.text, validationrule.xmltext, tpv.text as code, validationrule.xmlpropertyid from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5, structureelementversion sev6,xmlpropertyversion validationrule,
+           structureelementversion sev7,textpropertyversion tpv
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{currentContextId} and sev1.structureid=#{currentContextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid = #{catRubricClassId}
+        and sev2.structureid=#{currentContextId}
+        and sev3.structureid=#{currentContextId}
+        and sev4.structureid=#{currentContextId}
+        and sev5.structureid=#{currentContextId}
+        and sev6.structureid=#{currentContextId}
+        and sev7.structureid=#{currentContextId}
+        and tpv.textpropertyid=sev7.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv1.elementid
+        and validationrule.xmlpropertyid=sev6.elementversionid
+        and validationrule.domainelementid=cv.elementid
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+       ),
+       priorYear as (
+         SELECT /*+ RESULT_CACHE*/ cv1.elementid, #{priorYear} as pyear, cv.status, dhcode.text, validationrule.xmltext, tpv.text as code, validationrule.xmlpropertyid from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5, structureelementversion sev6,xmlpropertyversion validationrule,
+           structureelementversion sev7,textpropertyversion tpv
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{priorContextId} and sev1.structureid=#{priorContextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid = #{catRubricClassId}
+        and sev2.structureid=#{priorContextId}
+        and sev3.structureid=#{priorContextId}
+        and sev4.structureid=#{priorContextId}
+        and sev5.structureid=#{priorContextId}
+        and sev6.structureid=#{priorContextId}
+        and sev7.structureid=#{priorContextId}
+        and tpv.textpropertyid=sev7.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv1.elementid
+        and validationrule.xmlpropertyid=sev6.elementversionid
+        and validationrule.domainelementid=cv.elementid
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+       )
+       select c.code, c.cyear, c.text as dhcode, c.xmltext as currentXml, c.status as cstatus, p.pyear, p.xmlText as priorXml, p.status as pstatus
+       from CurrentYear c, PriorYear p
+       where c.code=p.code and c.text=p.text and ((c.xmlpropertyid&lt;&gt;p.xmlpropertyid and dbms_lob.compare(nvl(c.xmltext,'Null'),nvl(p.xmltext,'Null'))&lt;&gt;0) or c.status&lt;&gt;p.status )
+       order by c.code, c.text
+</select>
+
+<select id="findCCIModifiedValidations" resultMap="ModifiedValidationMap" parameterType="java.util.Map">
+        with currentYear as (
+          SELECT /*+ RESULT_CACHE*/ cv1.elementid, #{currentYear} as cyear, cv.status, dhcode.text, validationrule.xmltext, tpv.text as code, validationrule.xmlpropertyid 
+          from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5, structureelementversion sev6,xmlpropertyversion validationrule,
+           structureelementversion sev7,textpropertyversion tpv
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{currentContextId} and sev1.structureid=#{currentContextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid in (#{catRubricClassId}, #{cciCodeClassId})
+        and sev2.structureid=#{currentContextId}
+        and sev3.structureid=#{currentContextId}
+        and sev4.structureid=#{currentContextId}
+        and sev5.structureid=#{currentContextId}
+        and sev6.structureid=#{currentContextId}
+        and sev7.structureid=#{currentContextId}
+        and tpv.textpropertyid=sev7.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv1.elementid
+        and validationrule.xmlpropertyid=sev6.elementversionid
+        and validationrule.domainelementid=cv.elementid
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+       ),
+       priorYear as (
+         SELECT /*+ RESULT_CACHE*/ cv1.elementid, #{priorYear} as pyear, cv.status, dhcode.text, validationrule.xmltext, tpv.text as code, validationrule.xmlpropertyid 
+         from conceptpropertyversion cpv, conceptversion cv, conceptversion cv1, structureelementversion sev2
+        , structureelementversion sev, structureelementversion sev1,conceptpropertyversion dhcpv, conceptversion dh, textpropertyversion dhcode,
+           structureelementversion sev4, structureelementversion sev3, structureelementversion sev5, structureelementversion sev6,xmlpropertyversion validationrule,
+           structureelementversion sev7,textpropertyversion tpv
+        where cpv.rangeelementid = cv1.elementid and sev.structureid=#{priorContextId} and sev1.structureid=#{priorContextId}
+        and cpv.classid = #{validationCPVClassId}
+        and cv.classid = #{validationClassId}
+        and cpv.domainelementid = cv.elementid
+        and cpv.conceptpropertyid = sev.elementversionid
+        and cv.conceptid = sev1.elementversionid
+        and cv1.conceptid=sev2.elementversionid
+        and cv1.classid in (#{catRubricClassId}, #{cciCodeClassId})
+        and sev2.structureid=#{priorContextId}
+        and sev3.structureid=#{priorContextId}
+        and sev4.structureid=#{priorContextId}
+        and sev5.structureid=#{priorContextId}
+        and sev6.structureid=#{priorContextId}
+        and sev7.structureid=#{priorContextId}
+        and tpv.textpropertyid=sev7.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv1.elementid
+        and validationrule.xmlpropertyid=sev6.elementversionid
+        and validationrule.domainelementid=cv.elementid
+        and dhcpv.rangeelementid=dh.elementid
+        and dhcpv.domainelementid=cv.elementid
+        and dhcode.domainelementid=dh.elementid
+        and dhcpv.conceptpropertyid=sev3.elementversionid
+        and dh.conceptid=sev4.elementversionid
+        and dhcode.textpropertyid=sev5.elementversionid
+        and dhcpv.classid=#{validationFacilityClassId}
+        and dh.classid=#{facilityTypeClassId}
+        and dhcode.classid=#{domainValueCodeClassId}
+       )
+       select c.code, c.cyear, c.text as dhcode, c.xmltext as currentXml, c.status as cstatus, p.pyear, p.xmlText as priorXml, p.status as pstatus
+       from CurrentYear c, PriorYear p
+       where c.code=p.code and c.text=p.text and ((c.xmlpropertyid&lt;&gt;p.xmlpropertyid and dbms_lob.compare(nvl(c.xmltext,'Null'),nvl(p.xmltext,'Null'))&lt;&gt;0) or c.status&lt;&gt;p.status )
+       order by c.code, c.text
+</select>
+
+<select id="findICDModifiedValidCodes" resultMap="ModifiedValidCodeMap" parameterType="java.util.Map">
+        with currentYear as (
+          SELECT tpv.text as code, decode(CIMS_UTIL.hasActiveChildren(#{currentContextId},cv.elementid),'Y','N','N','Y','') as validCode
+          from conceptversion cv, structureelementversion sev, structureelementversion sev1,textpropertyversion tpv
+        where sev.structureid=#{currentContextId} and sev1.structureid=#{currentContextId}
+        and cv.classid = #{catRubricClassId}
+        and cv.conceptid = sev.elementversionid
+        and tpv.textpropertyid=sev1.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv.elementid
+        and cv.status='ACTIVE'
+       ),
+       priorYear as (
+         SELECT tpv.text as code, decode(CIMS_UTIL.hasActiveChildren(#{priorContextId},cv.elementid),'Y','N','N','Y','') as validCode
+         from conceptversion cv, structureelementversion sev, structureelementversion sev1,textpropertyversion tpv
+        where sev.structureid=#{priorContextId} and sev1.structureid=#{priorContextId}
+        and cv.classid = #{catRubricClassId}
+        and cv.conceptid = sev.elementversionid
+        and tpv.textpropertyid=sev1.elementversionid
+        and tpv.classid=#{codeClassId}
+        and tpv.domainelementid=cv.elementid
+        and cv.status='ACTIVE'
+       )
+       select c.code, c.ValidCode as cValidCode, p.ValidCode as pValidCode
+       from CurrentYear c, PriorYear p
+       where c.code=p.code and c.validCode&lt;&gt;p.ValidCode
+       order by c.code
+</select>
+
+<!--
+<select id="findReviewGroupOutboundQuestionsTabularList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.QuestionForReviewerMap">
+-->
+<!--
+<select id="findReviewGroupOutboundQuestionsTabularList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t2.CHANGE_REQUEST_ID, 
+      t3.CHANGE_REQUEST_NAME, 
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from 
+(
+with strelementversion as ( 
+         select /*+ USE_NL(sev s) */ sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id is not null and s.ContextStatus='OPEN' and s.basestructureid in (select structureid from structureversion where basestructureid is null and contextstatus='OPEN')
+      )   
+      , changedElement as( 
+      select  /*+ RESULT_CACHE*/ distinct structureid, domainelementid, validationId
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid, 0  as validationId 
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and pv.classid not in (select classid from class c where className in('LongPresentation', 
+                                                                                  'ShortPresentation',
+                                                                                   'SexValidationIndicator', 
+                                                                                   'ValidationMRDiag', 
+                                                                                   'ValidationDiagType1Flag',
+                                                                                   'ValidationDiagType2Flag',
+                                                                                   'ValidationDiagType3Flag',
+                                                                                   'ValidationDiagType4Flag',
+                                                                                   'ValidationDiagType6Flag',
+                                                                                   'ValidationDiagType9Flag',
+                                                                                   'ValidationDiagTypeWFlag',
+                                                                                   'ValidationDiagTypeXFlag',
+                                                                                   'ValidationDiagTypeYFlag',
+                                                                                   'ValidationNewbornFlag',
+                                                                                   'ValidationICDCPV',
+                                                                                   'ValidationCCICPV',
+                                                                                   'ValidationFacility',
+                                                                                   'ValidationDefinition',
+                                                                                   'AgeMinimum',
+                                                                                   'AgeMaximum') and baseclassificationname=#{classification})  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid, 0 as validationId 
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid not in (select classid from class c where className in( 'SexValidation', 
+                                                                       'ValidationICD', 
+                                                                       'ValidationCCI',
+                                                                       'Validation'
+                                                                       ) and baseclassificationname=#{classification})
+                                                                       
+            union all
+            select sev.structureid, cims_util.getValidationRuleTabularId(structureid, xpv.domainelementid) as domainelementid, 
+                   xpv.domainelementid as validationId
+            from xmlpropertyversion xpv, strelementversion sev 
+                  where sev.elementversionid = xpv.xmlpropertyid
+                  and xpv.classid in (select classid from class c where className ='ValidationDefinition' and baseclassificationname=#{classification})
+                  
+            union all 
+            select sev.structureid, cims_util.getValidationRuleTabularId(structureid, cv.elementid) as domainelementid, 
+                 cv.elementid as validationId
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid in (select classid from class c where className in ('ValidationICD', 'ValidationCCI' ) and baseclassificationname=#{classification})
+         )           
+      ) 
+      select ce.structureid, ce.domainelementid, ce.validationId, 
+             cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'Code', language => null, strid => ce.structureid) as codevalue, 
+             sv.change_request_id as changerequestid, 
+             ev.versioncode
+      from changedElement ce, structureversion sv, elementversion ev, element e
+      where ce.domainelementid is not null and ce.structureid=sv.structureid and sv.basestructureid=ev.elementversionid and ce.domainelementid=e.elementid and e.classid in (select classid from class where classname in ('Category', 'Rubric', 'CCICODE') and baseclassificationname=#{classification})
+)  t1,
+(
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+) t2,
+change_request t3
+where t1.changerequestid = t2.change_request_id and t2.change_request_id = t3.change_request_id
+and t1.versioncode = #{year} and t2.distribution_list_id = #{reviewGroup} 
+and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+and codevalue between #{codeFrom} and #{codeTo}
+and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t2.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+</select>
+-->
+<select id="findReviewGroupOutboundQuestionsTabularList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t3.CHANGE_REQUEST_ID, 
+      t3.CHANGE_REQUEST_NAME, 
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from 
+(
+with strelementversion as ( 
+         select /*+ USE_NL(sev s) */ sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id is not null and s.ContextStatus='OPEN' and s.basestructureid in (select structureid from structureversion where basestructureid is null and contextstatus='OPEN')
+      )   
+      , changedElement as( 
+      select  /*+ RESULT_CACHE*/ distinct structureid, domainelementid, validationId
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid, 0  as validationId 
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and pv.classid not in (select classid from class c where className in('LongPresentation', 
+                                                                                  'ShortPresentation',
+                                                                                   'SexValidationIndicator', 
+                                                                                   'ValidationMRDiag', 
+                                                                                   'ValidationDiagType1Flag',
+                                                                                   'ValidationDiagType2Flag',
+                                                                                   'ValidationDiagType3Flag',
+                                                                                   'ValidationDiagType4Flag',
+                                                                                   'ValidationDiagType6Flag',
+                                                                                   'ValidationDiagType9Flag',
+                                                                                   'ValidationDiagTypeWFlag',
+                                                                                   'ValidationDiagTypeXFlag',
+                                                                                   'ValidationDiagTypeYFlag',
+                                                                                   'ValidationNewbornFlag',
+                                                                                   'ValidationICDCPV',
+                                                                                   'ValidationCCICPV',
+                                                                                   'ValidationFacility',
+                                                                                   'ValidationDefinition',
+                                                                                   'AgeMinimum',
+                                                                                   'AgeMaximum') and baseclassificationname=#{classification})  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid, 0 as validationId 
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid not in (select classid from class c where className in( 'SexValidation', 
+                                                                       'ValidationICD', 
+                                                                       'ValidationCCI',
+                                                                       'Validation'
+                                                                       ) and baseclassificationname=#{classification})
+                                                                       
+            union all
+            select sev.structureid, cims_util.getValidationRuleTabularId(structureid, xpv.domainelementid) as domainelementid, 
+                   xpv.domainelementid as validationId
+            from xmlpropertyversion xpv, strelementversion sev 
+                  where sev.elementversionid = xpv.xmlpropertyid
+                  and xpv.classid in (select classid from class c where className ='ValidationDefinition' and baseclassificationname=#{classification})
+                  
+            union all 
+            select sev.structureid, cims_util.getValidationRuleTabularId(structureid, cv.elementid) as domainelementid, 
+                 cv.elementid as validationId
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid in (select classid from class c where className in ('ValidationICD', 'ValidationCCI' ) and baseclassificationname=#{classification})
+         )           
+      ) 
+      select ce.structureid, ce.domainelementid, ce.validationId, 
+             cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'Code', language => null, strid => ce.structureid) as codevalue, 
+             sv.change_request_id as changerequestid, 
+             ev.versioncode
+      from changedElement ce, structureversion sv, elementversion ev, element e
+      where ce.domainelementid is not null and ce.structureid=sv.structureid and sv.basestructureid=ev.elementversionid and ce.domainelementid=e.elementid and e.classid in (select classid from class where classname in ('Category', 'Rubric', 'CCICODE') and baseclassificationname=#{classification})
+)  t1,
+(
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+      where rq.DISTRIBUTION_LIST_ID = #{reviewGroup}
+) t2,
+(
+select cr.change_request_id, cr.change_request_name, cr.change_request_language_code, cr.pattern_topic
+from change_request cr, change_request_review_group crrg
+where cr.change_request_id = crrg.change_request_id
+  and crrg.distribution_list_id = #{reviewGroup}
+) t3
+where t1.changerequestid = t3.change_request_id
+and t3.change_request_id = t2.change_request_id(+)
+and t1.versioncode = #{year}
+and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+and codevalue between #{codeFrom} and #{codeTo}
+and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t3.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+</select>
+
+<!--
+<select id="findReviewGroupOutboundQuestionsWithoutCodeValueTabularList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t2.CHANGE_REQUEST_ID, 
+      t3.CHANGE_REQUEST_NAME, 
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from 
+(
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+) t2,
+(
+select cr.change_request_id, cr.change_request_name, cr.change_request_language_code, cr.pattern_topic
+from change_request cr, elementversion ev, class c
+where cr.base_context_id = ev.elementversionid
+  and cr.change_request_category_code = 'T'
+  and ev.versioncode = #{year}
+  and ev.classid= c.classid
+  and c.baseclassificationname = #{classification}
+  and c.classname = #{classification}
+) t3
+where t2.change_request_id = t3.change_request_id
+and t2.distribution_list_id = #{reviewGroup} 
+and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t2.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+</select>
+-->
+<select id="findReviewGroupOutboundQuestionsWithoutCodeValueTabularList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t3.CHANGE_REQUEST_ID, 
+      t3.CHANGE_REQUEST_NAME, 
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from 
+(
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+      where rq.DISTRIBUTION_LIST_ID = #{reviewGroup}
+) t2,
+(
+select cr.change_request_id, cr.change_request_name, cr.change_request_language_code, cr.pattern_topic
+from change_request cr, change_request_review_group crrg, elementversion ev, class c
+where cr.change_request_id = crrg.change_request_id
+  and crrg.distribution_list_id = #{reviewGroup}
+  and cr.base_context_id = ev.elementversionid
+  and cr.change_request_category_code = 'T'
+  and ev.versioncode = #{year}
+  and ev.classid= c.classid
+  and c.baseclassificationname = #{classification}
+  and c.classname = #{classification}
+) t3
+where t3.change_request_id = t2.change_request_id(+)
+and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t3.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+</select>
+
+<!--
+<select id="findReviewGroupOutboundQuestionsIndexList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t2.CHANGE_REQUEST_ID, 
+      t3.CHANGE_REQUEST_NAME,
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from (
+with strelementversion as ( 
+         select /*+ USE_NL(sev s) */ sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id is not null and s.ContextStatus='OPEN' and s.basestructureid in (select structureid from structureversion where basestructureid is null and contextstatus='OPEN')
+      )   
+      , changedElement as( 
+      select  /*+ RESULT_CACHE*/ distinct structureid, domainelementid, validationId
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid, 0  as validationId 
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and exists (select 1 from class c where classid=pv.classid and className in ('IndexCode', 
+                                                                                  'IndexDesc',
+                                                                                   'IndexNoteDesc', 
+                                                                                   'IndexReference', 
+                                                                                   'IndexReferredTo',
+                                                                                   'IndexRefDefinition') and baseclassificationname=#{classification})  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid, 0 as validationId 
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and exists (select 1 from class c where classid=cv.classid and className in( 'LetterIndex', 
+                                                                       'BookIndex', 
+                                                                       'Index',
+                                                                       'ReferenceIndex',
+                                                                       'AlphabeticIndex',
+                                                                       'ExternalInjuryIndex',
+                                                                       'NeoplasmIndex',
+                                                                       'DrugsAndChemicalsIndex'
+                                                                       ) and baseclassificationname=#{classification})
+         )           
+      )
+      , conceptIds as (
+          select conceptelementid from (
+        select distinct cpv.rangeelementid parentconceptelementid , cv.elementid conceptelementid
+        from conceptpropertyversion cpv, textpropertyversion tpv, conceptversion cv
+        where tpv.domainelementid = cpv.domainelementid
+        and tpv.classid = CIMS_UTIL.getClassIDForClassName(#{classification}, 'IndexDesc')
+        and cv.elementid = tpv.domainelementid
+        and cv.status = 'ACTIVE'
+        and cpv.classid=CIMS_UTIL.getClassIDForClassName(#{classification}, 'Narrower')
+        )
+        start with conceptelementid=#{leadTermElementId}
+        connect by prior conceptelementid=parentconceptelementid
+      )
+      select cid.conceptelementid,
+             ce.structureid, ce.domainelementid, ce.validationId, 
+      nvl(cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'IndexDesc', language => null, strid => #{contextId}),
+      cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'IndexDesc', language => null, strid => ce.structureid)) as indexterm, 
+      nvl(CIMS_UTIL.getIndexPath(ce.domainelementid, #{contextId}), CIMS_UTIL.getIndexPath(ce.domainelementid, ce.structureid)) as indexpath, 
+      sv.change_request_id as changerequestid, ev.versioncode
+
+      from changedElement ce, structureversion sv, elementversion ev, conceptIds cid
+      where ce.domainelementid = cid.conceptelementid and ce.structureid=sv.structureid and sv.basestructureid=ev.elementversionid 
+)  t1,
+(
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+) t2,
+change_request t3
+where t1.changerequestid = t2.change_request_id and t2.change_request_id = t3.change_request_id
+  and t1.versioncode = #{year} and t2.distribution_list_id = #{reviewGroup} 
+  and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+  and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+  and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t2.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+
+</select>
+-->
+<select id="findReviewGroupOutboundQuestionsIndexList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t3.CHANGE_REQUEST_ID, 
+      t3.CHANGE_REQUEST_NAME,
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from (
+with strelementversion as ( 
+         select /*+ USE_NL(sev s) */ sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id is not null and s.ContextStatus='OPEN' and s.basestructureid in (select structureid from structureversion where basestructureid is null and contextstatus='OPEN')
+      )   
+      , changedElement as( 
+      select  /*+ RESULT_CACHE*/ distinct structureid, domainelementid, validationId
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid, 0  as validationId 
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and exists (select 1 from class c where classid=pv.classid and className in ('IndexCode', 
+                                                                                  'IndexDesc',
+                                                                                   'IndexNoteDesc', 
+                                                                                   'IndexReference', 
+                                                                                   'IndexReferredTo',
+                                                                                   'IndexRefDefinition') and baseclassificationname=#{classification})  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid, 0 as validationId 
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and exists (select 1 from class c where classid=cv.classid and className in( 'LetterIndex', 
+                                                                       'BookIndex', 
+                                                                       'Index',
+                                                                       'ReferenceIndex',
+                                                                       'AlphabeticIndex',
+                                                                       'ExternalInjuryIndex',
+                                                                       'NeoplasmIndex',
+                                                                       'DrugsAndChemicalsIndex'
+                                                                       ) and baseclassificationname=#{classification})
+         )           
+      )
+      , conceptIds as (
+          select conceptelementid from (
+        select distinct cpv.rangeelementid parentconceptelementid , cv.elementid conceptelementid
+        from conceptpropertyversion cpv, textpropertyversion tpv, conceptversion cv
+        where tpv.domainelementid = cpv.domainelementid
+        and tpv.classid = CIMS_UTIL.getClassIDForClassName(#{classification}, 'IndexDesc')
+        and cv.elementid = tpv.domainelementid
+        and cv.status = 'ACTIVE'
+        and cpv.classid=CIMS_UTIL.getClassIDForClassName(#{classification}, 'Narrower')
+        )
+        start with conceptelementid=#{leadTermElementId}
+        connect by prior conceptelementid=parentconceptelementid
+      )
+      select cid.conceptelementid,
+             ce.structureid, ce.domainelementid, ce.validationId, 
+      nvl(cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'IndexDesc', language => null, strid => #{contextId}),
+      cims_util.getTextProperty(elemId => ce.domainelementid, classnme => 'IndexDesc', language => null, strid => ce.structureid)) as indexterm, 
+      nvl(CIMS_UTIL.getIndexPath(ce.domainelementid, #{contextId}), CIMS_UTIL.getIndexPath(ce.domainelementid, ce.structureid)) as indexpath, 
+      sv.change_request_id as changerequestid, ev.versioncode
+
+      from changedElement ce, structureversion sv, elementversion ev, conceptIds cid
+      where ce.domainelementid = cid.conceptelementid and ce.structureid=sv.structureid and sv.basestructureid=ev.elementversionid 
+)  t1,
+(
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+      where rq.DISTRIBUTION_LIST_ID = #{reviewGroup}
+) t2,
+(
+select cr.change_request_id, cr.change_request_name, cr.change_request_language_code, cr.pattern_topic
+from change_request cr, change_request_review_group crrg
+where cr.change_request_id = crrg.change_request_id
+  and crrg.distribution_list_id = #{reviewGroup}
+) t3
+where t1.changerequestid = t3.change_request_id
+and t3.change_request_id = t2.change_request_id(+)
+  and t1.versioncode = #{year}
+  and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+  and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+  and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t2.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+
+</select>
+
+
+<!--
+<select id="findReviewGroupOutboundQuestionsWithoutLeadTermIndexList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t2.CHANGE_REQUEST_ID,
+      t3.CHANGE_REQUEST_NAME,
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from (
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+) t2,
+(
+select cr.change_request_id, cr.change_request_name, cr.change_request_language_code, cr.pattern_topic
+from change_request cr, elementversion ev, class c
+where cr.base_context_id = ev.elementversionid
+  and cr.change_request_category_code = 'I'
+  and ev.versioncode = #{year}
+  and ev.classid= c.classid
+  and c.baseclassificationname = #{classification}
+  and c.classname = #{classification}
+) t3
+where t2.change_request_id = t3.change_request_id
+  and t2.distribution_list_id = #{reviewGroup} 
+  and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+  and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+  and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t2.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+</select>
+-->
+<select id="findReviewGroupOutboundQuestionsWithoutLeadTermIndexList" resultMap="ca.cihi.cims.data.mapper.ChangeRequestMapper.ReviewGroupOutboundQuestionForReviewerMap">
+select 
+      t2.REVIEWER_QUESTION_ID, 
+      t3.CHANGE_REQUEST_ID,
+      t3.CHANGE_REQUEST_NAME,
+      t2.QUESTION_NUM, 
+      t2.DISTRIBUTION_LIST_ID,
+      t2.REVIEWER_QUESTION_TEXT,
+      t2.cmt_USER_COMMENT_ID,
+      t2.cmt_USER_COMMENT_TEXT, 
+      t2.cmt_LAST_UPDATE_DATE, 
+      t2.cmt_CHANGE_REQUEST_ID, 
+      t2.cmt_USER_PROFILE_ID, 
+      t2.cmt_REVIEWER_QUESTION_ID, 
+      t2.cmt_USER_COMMENT_TYPE_CODE,
+      t2.cmt_cmtusr_USER_NAME,
+      t2.nt_NOTIFICATION_ID,
+      t2.nt_SUBJECT,
+      t2.re_DISTRIBUTION_LIST_ID,
+      t2.re_distribution_list_name
+from (
+      select rq.REVIEWER_QUESTION_ID, rq.CHANGE_REQUEST_ID, rq.QUESTION_NUM, rq.DISTRIBUTION_LIST_ID,rq.REVIEWER_QUESTION_TEXT,
+      uc.USER_COMMENT_ID as cmt_USER_COMMENT_ID,
+      uc.USER_COMMENT_TEXT as cmt_USER_COMMENT_TEXT, 
+      uc.LAST_UPDATE_DATE as cmt_LAST_UPDATE_DATE, 
+      uc.CHANGE_REQUEST_ID as cmt_CHANGE_REQUEST_ID, 
+      uc.USER_PROFILE_ID as cmt_USER_PROFILE_ID, 
+      uc.REVIEWER_QUESTION_ID as cmt_REVIEWER_QUESTION_ID, 
+      uc.USER_COMMENT_TYPE_CODE as cmt_USER_COMMENT_TYPE_CODE,
+      usrpfl.USER_NAME as cmt_cmtusr_USER_NAME,
+      nt.NOTIFICATION_ID as nt_NOTIFICATION_ID,
+      nt.SUBJECT as nt_SUBJECT,
+      dl.DISTRIBUTION_LIST_ID as re_DISTRIBUTION_LIST_ID,
+      dl.distribution_list_name as re_distribution_list_name
+      from REVIEWER_QUESTION rq left join USER_COMMENT uc on rq.REVIEWER_QUESTION_ID= uc.REVIEWER_QUESTION_ID
+                                left join USER_PROFILE usrpfl on uc.USER_PROFILE_ID = usrpfl.USER_PROFILE_ID
+                                left join NOTIFICATION nt on (nt.NOTIFICATION_TYPE_CODE='RR' and nt.REVIEWER_QUESTION_ID=rq.REVIEWER_QUESTION_ID)
+                                left join DISTRIBUTION_LIST dl on rq.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID
+      where rq.DISTRIBUTION_LIST_ID = #{reviewGroup}
+) t2,
+(
+select cr.change_request_id, cr.change_request_name, cr.change_request_language_code, cr.pattern_topic
+from change_request cr, change_request_review_group crrg, elementversion ev, class c
+where cr.change_request_id = crrg.change_request_id
+  and crrg.distribution_list_id = #{reviewGroup}
+  and cr.base_context_id = ev.elementversionid
+  and cr.change_request_category_code = 'I'
+  and ev.versioncode = #{year}
+  and ev.classid= c.classid
+  and c.baseclassificationname = #{classification}
+  and c.classname = #{classification}
+) t3
+where t3.change_request_id = t2.change_request_id(+)
+  and t3.change_request_language_code||' ' = nvl(#{language}, t3.change_request_language_code)||' '
+  and t3.pattern_topic||' ' =  nvl(#{patternTopic}, t3.pattern_topic)||' '
+  and rownum &lt;= 1001
+order by t3.CHANGE_REQUEST_NAME, t3.CHANGE_REQUEST_ID, t2.REVIEWER_QUESTION_ID, t2.cmt_USER_COMMENT_ID
+</select>
+
+  <select id="findChangeRequestStatusChangeHistories" resultMap="ChangeRequestSendBackMap">
+      with uniquestructureversion as (
+		     select unique s.basestructureid, s.classid, cr1.change_request_id from change_request cr1, structureversion s
+		     where s.change_request_id=cr1.change_request_id and cr1.change_request_status_id &lt;&gt; 8
+		)
+		select c.baseclassificationname as classification, crl.change_req_lang_description as language,  crh.CHANGE_REQUEST_ID, crh.change_request_history_id,
+	             crh.MODIFIED_BY_USER_NAME, crh.CREATION_DATE as sendbackDate,
+	             crhi.ITEM as sendBackReason,
+	             CIMS_UTIL.getChangeRequestFromStatus(crh.change_request_history_id, crh.change_request_id) as fromStatus,
+	             CIMS_UTIL.getChangeRequestHistoryOwner(crh.change_request_history_id, crh.change_request_id) as owner
+	      from class c, uniquestructureversion sv, elementversion ev, change_request cr , change_request_language crl , CHANGE_REQUEST_HISTORY crh,  CHANGE_REQUEST_HISTORY_ITEM crhi
+	      where crhi.label_code='RationalForIncomp' and ev.versioncode=#{year} and c.classid=sv.classid and sv.basestructureid=ev.elementversionid
+	      and sv.change_request_id=cr.change_request_id and cr.change_request_language_code=crl.change_request_language_code(+)
+	      and crh.CHANGE_REQUEST_HISTORY_ID = crhi.CHANGE_REQUEST_HISTORY_ID and cr.change_request_status_id &lt;&gt; 8
+	      and cr.change_request_id=crh.change_request_id 
+      <if test='classification != NULL'>
+      	 and c.baseclassificationname = #{classification} 
+      </if>
+      <if test='languageCode != NULL'>
+      	 and crl.change_req_lang_description = #{languageCode} 
+      </if>
+      <if test='fromDate != NULL'>
+      	 and crh.creation_date &gt;= #{fromDate,javaType=java.util.Date,jdbcType=DATE}
+      </if>
+      
+      <if test='owner != NULL'>
+      	 and to_char(CIMS_UTIL.getChangeRequestHistoryOwner(crh.change_request_history_id, crh.change_request_id)) = #{owner}
+      </if>
+      
+      <if test='fromStatus != NULL'>
+      	 and to_char(CIMS_UTIL.getChangeRequestFromStatus(crh.change_request_history_id, crh.change_request_id)) = #{fromStatus}
+      </if>
+      
+      <if test='toDate != NULL'>
+      	 and crh.creation_date &lt; #{toDate,javaType=java.util.Date,jdbcType=DATE}+1
+      </if>
+      order by crh.change_request_id, crh.CHANGE_REQUEST_HISTORY_ID
+  </select>
+  
+  <select id="findTotalChangeRequests" resultType="java.lang.Integer">
+  	select  count(unique crh.CHANGE_REQUEST_ID)
+      from class c, structureversion sv, elementversion ev, change_request cr , change_request_language crl , CHANGE_REQUEST_HISTORY crh
+      where ev.versioncode=#{year} and c.classid=sv.classid and sv.basestructureid=ev.elementversionid
+      and sv.change_request_id=cr.change_request_id and cr.change_request_language_code=crl.change_request_language_code(+)
+      and cr.change_request_id=crh.change_request_id and cr.change_request_status_id &lt;&gt; 8
+      <if test='classification != NULL'>
+      	 and c.baseclassificationname = #{classification} 
+      </if>
+      <if test='languageCode != NULL'>
+      	 and crl.change_req_lang_description = #{languageCode} 
+      </if>
+      <if test='fromDate != NULL'>
+      	 and crh.creation_date &gt;= #{fromDate,javaType=java.util.Date,jdbcType=DATE}
+      </if>
+      <if test='toDate != NULL'>
+      	 and crh.creation_date &lt; #{toDate,javaType=java.util.Date,jdbcType=DATE}+1
+      </if>
+  </select>
+  
+  <select id="findQASummaryMetrics" resultMap="QASummaryMetricsMap">
+      with uniquestructureversion as (
+		     select unique s.basestructureid, s.classid, cr1.change_request_id from change_request cr1, structureversion s
+		     where s.change_request_id=cr1.change_request_id and cr1.change_request_status_id &lt;&gt; 8
+		)
+		select change_request_id, decode(dbms_lob.substr(fromStatus,4000,1),'Valid',1,'Valid Incomplete',1,0) as valid, decode(dbms_lob.substr(fromStatus,4000,1),'Validation Done',1,0) as validationDone, decode(dbms_lob.substr(fromStatus,4000,1),'Accepted',1,'Accepted Incomplete',1  ,0) as accepted
+		, decode(dbms_lob.substr(fromStatus,4000,1),'Translation Done',1,0) as translationDone, decode(dbms_lob.substr(fromStatus,4000,1),'Realized',1,0) as realized
+		, decode(dbms_lob.substr(fromStatus,4000,1),'Iterative QA Done',1,0) as qadone
+		from (
+		select  crh.CHANGE_REQUEST_ID, 
+             CIMS_UTIL.getChangeRequestFromStatus(crh.change_request_history_id, crh.change_request_id) as fromStatus
+	      from class c, uniquestructureversion sv, elementversion ev, change_request cr , change_request_language crl , CHANGE_REQUEST_HISTORY crh,  CHANGE_REQUEST_HISTORY_ITEM crhi
+	      where crhi.label_code='RationalForIncomp' and ev.versioncode=#{year} and c.classid=sv.classid and sv.basestructureid=ev.elementversionid
+	      and sv.change_request_id=cr.change_request_id and cr.change_request_language_code=crl.change_request_language_code(+)
+	      and crh.CHANGE_REQUEST_HISTORY_ID = crhi.CHANGE_REQUEST_HISTORY_ID and cr.change_request_status_id &lt;&gt; 8
+	      and cr.change_request_id=crh.change_request_id
+      <if test='classification != NULL'>
+      	 and c.baseclassificationname = #{classification} 
+      </if>
+      <if test='languageCode != NULL'>
+      	 and crl.change_req_lang_description = #{languageCode} 
+      </if>
+      <if test='fromDate != NULL'>
+      	 and crh.creation_date &gt;= #{fromDate,javaType=java.util.Date,jdbcType=DATE}
+      </if>
+      
+      <if test='owner != NULL'>
+      	 and to_char(CIMS_UTIL.getChangeRequestHistoryOwner(crh.change_request_history_id, crh.change_request_id)) = #{owner}
+      </if>
+      
+      <if test='fromStatus != NULL'>
+      	 and to_char(CIMS_UTIL.getChangeRequestFromStatus(crh.change_request_history_id, crh.change_request_id)) = #{fromStatus}
+      </if>
+      
+      <if test='toDate != NULL'>
+      	 and crh.creation_date &lt; #{toDate,javaType=java.util.Date,jdbcType=DATE}+1
+      </if>
+      order by crh.change_request_id, crh.CHANGE_REQUEST_HISTORY_ID
+      )
+  </select>
+  
+  <select id="findChangeRequestSendBacks" resultMap="ChangeRequestSendBackMap">
+  select to_char(changerequest_id) as change_request_id, classification, language, sendBackDate, owner, fromStatus, sendBackReason
+  from 
+  (
+  select t1.change_request_id as changerequest_id,
+         t2.change_request_history_id as change_request_history_id,
+         t1.classification, 
+         t1.language, 
+         t2.creation_date as sendBackDate, 
+         dbms_lob.substr(cims_util.getChangeRequestHistoryOwner(t2.change_request_history_id, t1.change_request_id), 4000, 1 ) as owner,
+         dbms_lob.substr(cims_util.getChangeRequestFromStatus(t2.change_request_history_id, t1.change_request_id), 4000, 1 ) as fromStatus,
+         dbms_lob.substr(t3.item, 4000, 1 ) as sendBackReason
+  from 
+    (
+    select cr.change_request_id, crl.change_req_lang_description as language,
+           c.baseclassificationname as classification, cr.owner_id
+    from change_request cr, elementversion ev, class c, change_request_language crl
+    where cr.base_context_id = ev.elementversionid
+      and cr.change_request_language_code = crl.change_request_language_code
+      and cr.change_request_language_code||' ' = nvl(#{language}, cr.change_request_language_code)||' '
+      and ev.versioncode = #{year}
+      and ev.classid= c.classid
+      and c.baseclassificationname||' ' = nvl(#{classification}, c.baseclassificationname)||' '
+      and c.classname||' ' = nvl(#{classification}, c.classname)||' '
+      and cr.change_request_status_id &lt;&gt; 8
+    ) t1,
+    CHANGE_REQUEST_HISTORY t2, 
+    CHANGE_REQUEST_HISTORY_ITEM t3
+    where t1.change_request_id = t2.change_request_id 
+      and t2.change_request_history_id = t3.change_request_history_id
+      and t3.label_code = 'RationalForIncomp'
+      and exists (select 1 from CHANGE_REQUEST_HISTORY_ITEM t4 
+                  where t4.change_request_history_id = t3.change_request_history_id
+                    and t4.label_code = 'RequestStatus'
+                    and dbms_lob.substr(t4.item, 4000, 1) in ('Accepted Incomplete', 'Valid Incomplete'))
+  )
+  where fromStatus in ('Accepted', 'Valid', 'Translation Done', 'Validation Done', 'Realized', 'Iterative QA Done')
+    and fromStatus = nvl(#{statusFrom}, fromStatus)
+    and TRIM(owner)||' ' = nvl(#{owner}, TRIM(owner))||' '
+    <if test="dateFrom != null">
+      	 and TRUNC(sendBackDate) &gt;= #{dateFrom,javaType=java.util.Date,jdbcType=DATE}
+    </if>
+    <if test="dateTo != null">
+      	 and TRUNC(sendBackDate) &lt;= #{dateTo,javaType=java.util.Date,jdbcType=DATE}
+    </if>
+  order by changerequest_id, change_request_history_id
+  </select>
+
+</mapper>

@@ -1,0 +1,10 @@
+create table CIMS_CONCEPT_TYPE
+(
+  CONCEPT_TYPE_CODE    VARCHAR2(10) not null,
+  CONCEPT_TYPE_DESC    VARCHAR2(60),
+  CONCEPT_TYPE_SEQ_NUM NUMBER(2)
+)
+;
+alter table CIMS_CONCEPT_TYPE
+  add constraint PK_CONCEPT_TYPE primary key (CONCEPT_TYPE_CODE);
+

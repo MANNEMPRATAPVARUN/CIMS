@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cims_report.xsd">
+	<worksheet name="CIMS Report">
+		<header>
+			<parameter>
+				<paraName>year</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>classification</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>language</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>6</row_number>
+			</parameter>
+			<parameter>
+				<paraName>requestCategory</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>7</row_number>
+			</parameter>
+			<parameter>
+				<paraName>reviewGroup</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+				<row_number>8</row_number>
+			</parameter>
+			<parameter>
+				<paraName>valueFrom</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>valueTo</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>patternTopic</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+				<row_number>8</row_number>
+			</parameter>
+		</header>
+		<detail startRowNumber="12" name="detail1">
+			<parameter>
+				<paraName>changeRequestId</paraName>
+				<!-- B -->
+				<column_number>2</column_number>
+			</parameter>
+			<parameter>
+				<paraName>questionForReviewerId</paraName>
+				<!-- C -->
+				<column_number>3</column_number>
+			</parameter>
+			<parameter>
+				<paraName>questionForReviewerTxt</paraName>
+				<!-- D -->
+				<column_number>4</column_number>
+			</parameter>
+			<parameter>
+				<paraName>responseId</paraName>
+				<!-- E -->
+				<column_number>5</column_number>
+			</parameter>
+			<parameter>
+				<paraName>response</paraName>
+				<!-- F -->
+				<column_number>6</column_number>
+			</parameter>
+		</detail>
+	</worksheet>
+</workbook>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.framework.mapper.ElementMapper">
+
+	<resultMap id="elementDTOMap" type="ca.cihi.cims.framework.dto.ElementDTO">
+		<id column="el_elementid" />
+		<result property="elementUUID" column="elementuuid" />
+		<result property="changedFromVersionId" column="changedfromversionid" />
+		<result property="originatingContextId" column="originatingcontextid" />
+		<result property="versionCode" column="versioncode" />
+		<result property="versionTimestamp" column="versiontimestamp" />
+		<result property="elementStatus" column="elementstatus" />
+		<association property="classs"  javaType="ca.cihi.cims.framework.dto.ClasssDTO" resultMap="ca.cihi.cims.framework.mapper.ClasssMapper.classsDTOMap" columnPrefix="cls_"/>
+		<association property="elementIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="el_"/>
+	</resultMap>
+	
+	<resultMap id="elementIdentifierMap" type = "ca.cihi.cims.framework.ElementIdentifier">
+		<result property="elementId" column="elementid" />
+		<result property="elementVersionId" column="elementversionid" />
+	</resultMap>
+		
+	<select id="createElement" parameterType="java.util.Map" statementType="CALLABLE" flushCache="true">
+		<![CDATA[ 
+          	call cims_framework.createElement
+          	(
+				#{classsId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{key, jdbcType=VARCHAR, javaType=java.lang.String, mode=IN}, 
+				#{elementId, mode=OUT, jdbcType=BIGINT, javaType=java.lang.Long}
+			) 
+        ]]>
+ 	</select>
+ 	
+ 	<select id="findElementInContext" parameterType="java.util.Map" resultMap="elementDTOMap">
+ 	
+ 		select 
+ 			e.elementuuid, ev.changedFromVersionId, ev.originatingcontextid, ev.versioncode, ev.versiontimestamp, ev.status elementstatus,
+ 			c.classid as cls_classid, c.tablename as cls_tablename, c.baseclassificationname as cls_baseclassificationname, c.classname as cls_classname, c.friendlyname as cls_friendlyname,
+ 			e.elementid as el_elementid, ev.elementversionid as el_elementversionid
+ 		from element e, structureelementversion sev, elementversion ev,  class c
+ 		where e.classid=c.classid and sev.elementid=e.elementid and sev.elementversionid=ev.elementversionid and e.elementid=#{elementId} and sev.structureid=#{contextId} and ev.status='ACTIVE'
+ 	
+ 	</select>
+ 	
+ 	<select id="countSv" resultType="java.lang.Integer" >
+ 		select count(1) as count 
+ 		from  elementversion ev, structureversion sv
+	   where ev.elementversionid=#{elementVersionId} and sv.structureid=ev.elementversionid
+ 	</select>
+ 	
+ 	<select id="countInContext" resultType="java.lang.Integer" >
+ 		select count(1) as count 
+ 		from  element e,
+	     structureelementversion sev
+	   where sev.structureid = #{contextId}
+	    and sev.elementid = e.elementid
+	   and e.elementuuid = #{businessKey}
+ 	</select>
+ 	
+ 	<insert id="createContextVersion"  parameterType="java.util.Map" flushCache="true">
+       <selectKey resultType="java.lang.Long" keyProperty="contextId" order="BEFORE">  
+		        select ELEMENTVERSIONID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into ELEMENTVERSION(
+                 ELEMENTVERSIONID,
+                 ELEMENTID,
+                 VERSIONCODE,
+                 VERSIONTIMESTAMP,
+                 STATUS,
+                 NOTES,
+                 CLASSID,
+                 CHANGEDFROMVERSIONID,
+                 ORIGINATINGCONTEXTID )
+        values ( #{contextId},
+                 #{elementId},
+                 #{versionCode},
+                 SYSDATE,
+                 'ACTIVE',
+                 null,
+                 #{classsId},
+                 null,
+                 null
+        		)
+ 	</insert>
+ 	
+ 	<select id="createElementVersionInContext"  parameterType="java.util.Map" statementType="CALLABLE" flushCache="true">
+       <![CDATA[ 
+          	call cims_framework.createElementVersionInContext
+          	(
+				#{contextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{elementId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN},  
+				#{changedFromVersionId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN},  
+				#{elementVersionId, mode=OUT, jdbcType=BIGINT, javaType=java.lang.Long}
+			) 
+        ]]>
+ 	</select>
+ 	
+ 	<update id="updateVersionTimestamp">
+ 		update elementversion set versiontimestamp=SYSDATE where elementversionid=#{elementVersionId} 	
+ 	</update>
+ 	
+</mapper>

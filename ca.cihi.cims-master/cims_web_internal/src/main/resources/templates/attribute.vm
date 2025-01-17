@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="${LANGUAGE}">
+<head>
+	<meta http-equiv="Content-Type" content="${CONTENT_TYPE}">
+	<link href="css/print.css" rel="stylesheet" />
+	<link href="css/main.css" rel="stylesheet" />
+	<link href="css/cims.css" rel="stylesheet" />
+	<title>${title}</title>
+</head>
+<body>	   
+
+	<div class="content">
+		<table width="100%" border="0">  
+            <tr>  
+                 <th width="10%"></th>  
+                 <th width="90%"></th>   
+            </tr>  
+               #if ($viewBean.refNote)
+			    	 <tr>
+			    		<td valign="top">
+			    			 <b>
+									 	Note:
+			    			 </b>	
+			    		</td>
+			    		<td>
+			    			$viewBean.refNote
+			    		</td>
+			    	</tr>
+		    	#end
+		    	
+		    	<tr/>
+		    	#foreach($attribute in $viewBean.attributes)
+		    		<tr>
+			    		<td valign="top">$attribute.code</td>
+			    		<td>$attribute.description </td>	
+		    		</tr>
+		    		 #if ($attribute.note)
+		    		    <tr>
+			    		    <td/>
+				    		<td>$attribute.note </td>	
+		    		    </tr>
+		    		 #end
+		    	#end	 
+		    </table>		   
+	</div>
+	
+</body>
+</html>

@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.LookupMapper" >
+
+   <resultMap id="ChangeRequestAssignmentMap" type="ca.cihi.cims.model.meta.ChangeRequestAssignment" >
+     <result column="CHANGE_REQUEST_STATUS_ID" property="status" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler"/>
+     <result column="CHANGE_REQUEST_LANGUAGE_CODE" property="language" jdbcType="VARCHAR" />
+     <result column="DISTRIBUTION_LIST_ID" property="assignToDL" />
+     <result column="ASSIGNMENT_TYPE_CODE" property="assigneeType" />
+     <result column="DEFAULT_IND_CODE" property="defaultInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+   </resultMap>
+ 
+   <resultMap id="NotificationTypeMetaMap" type="ca.cihi.cims.model.meta.NotificationTypeMeta" >
+     <result column="NOTIFICATION_TYPE_CODE" property="notificationTypeCode" jdbcType="VARCHAR" />
+     <result column="SUBJECT" property="defaultSubject" jdbcType="VARCHAR" />
+     <result column="MESSAGE" property="defaultMessage" jdbcType="VARCHAR" />
+     <result column="COMPLETION_REQUIRED_IND_CODE" property="completionRequiredInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+     <result column="BULK_DELETE_INDICATOR_CODE" property="bulkDeleteInd" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+     <result column="DISTRIBUTION_LIST_ID" property="predefinedRecipientDLId" />
+   </resultMap>
+
+    <resultMap id="ChangeRequestLanguageMap" type="ca.cihi.cims.model.changerequest.ChangeRequestLanguageDTO" >
+      <result property="languageCode" column="change_request_language_code" />
+      <result property="languageDesc" column="change_req_lang_description" />
+    </resultMap>
+
+    <resultMap id="UserProfileMap" type="ca.cihi.cims.model.UserProfile" >
+      <result property="userProfileId" column="user_profile_id" />
+      <result property="userName" column="user_name" />
+      <result property="title" column="title" />
+      <result property="firstName" column="first_name" />
+      <result property="lastName" column="last_name" />
+      <result property="department" column="department" />
+      <result property="email" column="email" />
+      <result property="userTypeCode" column="user_type_code" />
+      <result property="preferredLanguageCode" column="preferred_language_code" />
+      <result property="userStatusCode" column="user_status_code" />
+      <result property="lastUpdateDate" column="last_update_date" />
+    </resultMap>
+
+
+    <select id="findAllNotificationTypeMeta" resultMap="NotificationTypeMetaMap"  >
+       select NOTIFICATION_TYPE_CODE, SUBJECT, MESSAGE, 
+              COMPLETION_REQUIRED_IND_CODE, BULK_DELETE_INDICATOR_CODE,DISTRIBUTION_LIST_ID
+       from NOTIFICATION_TYPE       
+   </select>
+   
+    <select id="findAllChangeRequestAssignmentMetaData" resultMap="ChangeRequestAssignmentMap"  >
+       select CHANGE_REQUEST_STATUS_ID, CHANGE_REQUEST_LANGUAGE_CODE, DISTRIBUTION_LIST_ID,
+              ASSIGNMENT_TYPE_CODE, DEFAULT_IND_CODE
+       from CHANGE_REQUEST_ASSIGNMENT
+       order by  DISTRIBUTION_LIST_ID desc     
+   </select>
+   
+   
+   <select id="findChangeRequestLanguageDescByCode" resultType="java.lang.String">
+      SELECT crl.CHANGE_REQ_LANG_DESCRIPTION 
+      FROM CHANGE_REQUEST_LANGUAGE crl
+      where upper(crl.CHANGE_REQUEST_LANGUAGE_CODE) = upper(#{languageCode})
+   </select>
+ 
+  <select id="findAuxTableValueById" resultType="java.lang.String">
+      SELECT atv.AUX_TABLE_VALUE_LABEL_DESC 
+      FROM AUX_TABLE_VALUE atv
+      where atv.AUX_TABLE_VALUE_ID = #{auxTableValueId}
+  </select>
+
+  <select id="findUserNameByUserId" resultType="java.lang.String">
+      SELECT up.USER_NAME
+      FROM USER_PROFILE up
+      where up.USER_PROFILE_ID = #{userId}
+  </select>
+
+  <select id="findUserProfiles" resultMap="UserProfileMap">
+      SELECT user_profile_id, user_name, title, first_name, last_name, department, email, user_type_code, preferred_language_code, user_status_code, last_update_date
+      FROM USER_PROFILE
+      ORDER BY user_profile_id
+  </select>
+
+
+ <select id="findDistributionNameById" resultType="java.lang.String">
+      SELECT dl.DISTRIBUTION_LIST_NAME
+      FROM DISTRIBUTION_LIST dl
+      where dl.DISTRIBUTION_LIST_ID = #{distributionId}
+  </select>
+  
+ <select id="findBaseClassifications" resultType="java.lang.String">
+     select distinct baseclassificationname from class where baseclassificationname in ('CCI', 'ICD-10-CA')
+  </select>
+  
+   <select id="findOpenContextByChangeRquestId" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.lang.Long">
+      select sv.STRUCTUREID, 
+             sv.BASESTRUCTUREID, 
+             sv.CONTEXTSTATUS, 
+             sv.CONTEXTSTATUSDATE, 
+             sv.ISVERSIONYEAR,
+             sv.FREEZING_STATUS_ID,
+             c.CLASSNAME, 
+             ev.VERSIONCODE,
+             sv.CHANGE_REQUEST_ID
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where  sv.CLASSID = c.CLASSID  and 
+             sv.STRUCTUREID = ev.ELEMENTVERSIONID and 
+             sv.CONTEXTSTATUS = 'OPEN' and
+             sv.CHANGE_REQUEST_ID=#{changeRequestId}
+  </select>
+  
+
+  <select id="findContextIdentificationById" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.lang.Long">
+      select sv.STRUCTUREID, 
+             sv.BASESTRUCTUREID, 
+             sv.CONTEXTSTATUS, 
+             sv.CONTEXTSTATUSDATE, 
+             sv.ISVERSIONYEAR,
+             sv.FREEZING_STATUS_ID,
+             sv.CHANGE_REQUEST_ID,
+             c.CLASSNAME, 
+             ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID and sv.STRUCTUREID = #{baseContextId}
+  </select>
+  
+  <select id="findBaseContextIdentifiers" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.lang.String">
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification} 
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+      order by sv.CONTEXTSTATUS desc, sv.ISVERSIONYEAR desc ,ev.VERSIONCODE
+  </select>
+  
+   <select id="findNonClosedBaseContextIdentifiersReport" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap">
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{classification} 
+        and c.BaseClassificationName=#{classification}
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+        <if test='isVersionYear == "Y"'>
+        	and sv.isVersionYear='Y'
+        </if>
+      order by ev.VERSIONCODE
+  </select>
+  
+  <select id="findClosedBaseContextIdentifiersReport" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap">
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{classification} 
+        and c.BaseClassificationName=#{classification}
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'CLOSED'
+        <if test='isVersionYear == "Y"'>
+        	and sv.isVersionYear='Y'
+        </if>
+      order by ev.VERSIONCODE desc
+  </select>
+  
+  <select id="findNonClosedBaseContextIdentifiers" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.lang.String">
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification} 
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+      order by sv.isVersionYear DESC, ev.VERSIONCODE
+  </select>
+
+  <select id="findNonClosedBaseContextIdentifiersIndex" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.lang.String">
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification} 
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+        and sv.ISVERSIONYEAR='Y'
+      order by sv.isVersionYear DESC, ev.VERSIONCODE
+  </select>
+  
+  <select id="findPriorBaseContextIdentifiers" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.util.Map">
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification} 
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+        and ev.VERSIONCODE &lt; #{currentYear}
+      order by sv.ISVERSIONYEAR desc, ev.VERSIONCODE
+  </select>
+  
+  
+    <select id="findBaseContextIdentifierByClassificationAndYear" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" >
+      select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification} 
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+        and  ev.VERSIONCODE = #{versionCode}
+      order by sv.ISVERSIONYEAR desc, ev.VERSIONCODE
+  </select>
+  
+  
+  
+  
+ <select id="findCCICurrentOpenYear" resultType="java.lang.Long" parameterType="java.lang.String">
+      select   min(ev.VERSIONCODE)
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName='CCI'
+        and c.BaseClassificationName='CCI'
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+      order by sv.ISVERSIONYEAR desc, ev.VERSIONCODE
+  </select>
+
+ <select id="findICDCurrentOpenYear" resultType="java.lang.Long" parameterType="java.lang.String">
+      select   min(ev.VERSIONCODE)
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName='ICD-10-CA'
+        and c.BaseClassificationName='ICD-10-CA'
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+      order by sv.ISVERSIONYEAR desc, ev.VERSIONCODE
+  </select>
+  
+  <select id="findLargestVersionOpenYear" resultType="java.lang.Long">
+      select   max(ev.VERSIONCODE)
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName='ICD-10-CA'
+        and c.BaseClassificationName='ICD-10-CA'
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+        and sv.ISVERSIONYEAR='Y'
+  </select>
+  
+   <select id="findLargestOpenVersionContextIdentifier" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" >
+    select    sv.STRUCTUREID, 
+                sv.BASESTRUCTUREID, 
+                sv.CONTEXTSTATUS, 
+                sv.CONTEXTSTATUSDATE, 
+                sv.ISVERSIONYEAR,
+                sv.FREEZING_STATUS_ID,
+                sv.CHANGE_REQUEST_ID,
+                c.CLASSNAME, 
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification} 
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+        and  ev.VERSIONCODE = ( select   max(ev.VERSIONCODE)
+                 from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+                 where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+                  and c.ClassName=#{baseClassification}
+                  and c.BaseClassificationName=#{baseClassification}
+                  and sv.basestructureid is null
+                  and sv.CONTEXTSTATUS = 'OPEN'
+                  and sv.ISVERSIONYEAR='Y')
+        
+  </select>
+  
+  
+  
+   <select id="findAvailableOpenYears" resultType="java.lang.Long">
+      select  ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName='ICD-10-CA'
+        and c.BaseClassificationName='ICD-10-CA'
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+       order by ev.VERSIONCODE
+   </select>
+   
+  
+  <select id="findCurrentOpenContextByClassification" resultType="java.lang.Long" parameterType="java.lang.String">
+      select * from (select  sv.STRUCTUREID
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName= #{0}
+        and c.BaseClassificationName= #{0}
+        and sv.basestructureid is null
+        and sv.CONTEXTSTATUS = 'OPEN'
+      order by sv.ISVERSIONYEAR desc, ev.VERSIONCODE)
+      where rownum = 1
+  </select>
+  
+  <select id="findClassIdByClassificationAndClassName" resultType="java.lang.Long" >
+      select   c.classid from class c 
+      where c.baseclassificationname = #{baseClassification}
+        and c.classname=#{className}
+     
+  </select>
+
+<!--  
+  <select id="findChangeRequestLanguages" resultType="java.util.HashMap" >
+      select change_request_language_code as languageCode, change_req_lang_description as languageDesc
+      from change_request_language 
+  </select>
+-->
+  <select id="findChangeRequestLanguages" resultMap="ChangeRequestLanguageMap" >
+      select change_request_language_code, change_req_lang_description
+      from change_request_language 
+  </select>
+
+  <select id="getSearchPatternTopics" resultType="java.lang.String" parameterType="java.util.Map">
+  select *
+  from (
+    select distinct cr.pattern_topic
+    from change_request cr, STRUCTUREVERSION sv, CLASS c
+    where cr.change_request_id = sv.change_request_id 
+      and sv.classid = c.classid
+      and c.ClassName= #{classification} 
+      and c.BaseClassificationName= #{classification}
+      and sv.CONTEXTSTATUS = 'OPEN'
+      and cr.pattern_topic is not null
+      and upper(cr.pattern_topic) like upper(#{searchString})
+    order by 1
+  ) where rownum &lt;=#{maxResults}
+  </select>
+
+  <select id="getSearchPatternTopics2" resultType="java.lang.String" parameterType="java.util.Map">
+  select *
+  from (
+    select distinct cr.pattern_topic
+from change_request cr, elementversion ev, class c
+where cr.base_context_id = ev.elementversionid
+  and ev.classid= c.classid
+  and c.baseclassificationname = #{classification}
+  and c.classname = #{classification}
+      and cr.pattern_topic is not null
+      and upper(cr.pattern_topic) like upper(#{searchString})
+    order by 1
+  ) where rownum &lt;=#{maxResults}  
+  </select>
+
+  <select id="findBaseContextYears" resultType="java.lang.String" parameterType="java.lang.String">
+    select VERSIONCODE
+    from (
+      select    distinct     
+                sv.contextstatus,
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName= nvl(#{baseClassification}, c.ClassName) 
+        and c.BaseClassificationName= nvl(#{baseClassification}, c.BaseClassificationName) 
+        and sv.basestructureid is null
+      order by sv.contextstatus DESC, ev.VERSIONCODE
+    )
+  </select>
+  
+  <select id="findBaseContextYearsReport" resultType="java.lang.String" parameterType="java.lang.String">
+    select VERSIONCODE
+    from (
+      select    distinct     
+                sv.contextstatus,
+                ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName= nvl(#{baseClassification}, c.ClassName) 
+        and c.BaseClassificationName= nvl(#{baseClassification}, c.BaseClassificationName) 
+        and sv.basestructureid is null
+        and upper(ev.VERSIONCODE) not like 'V%'
+      order by sv.contextstatus desc, ev.VERSIONCODE
+    )
+  </select>
+    
+   <select id="findVersionYears" resultType="java.lang.String" parameterType="java.lang.String">
+    select VERSIONCODE
+    from (
+      select    distinct ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName= nvl(#{baseClassification}, c.ClassName) 
+        and c.BaseClassificationName= nvl(#{baseClassification}, c.BaseClassificationName) 
+        and sv.basestructureid is null and sv.isversionyear='Y'
+      order by ev.VERSIONCODE
+    )
+  </select>
+  
+  <select id="findOpenVersionYears" resultType="java.lang.String" parameterType="java.lang.String">
+    select VERSIONCODE
+    from (
+      select    distinct ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName= nvl(#{baseClassification}, c.ClassName) 
+        and c.BaseClassificationName= nvl(#{baseClassification}, c.BaseClassificationName) 
+        and sv.basestructureid is null and sv.isversionyear='Y' and sv.contextstatus='OPEN'
+      order by ev.VERSIONCODE
+    )
+  </select>
+  
+    <select id="findPriorBaseContextIdentifiersByClassificationAndContext" resultMap="ca.cihi.cims.data.mapper.ContextMapper.ContextIdentificationMap" parameterType="java.util.Map">
+      select sv.STRUCTUREID, 
+          sv.BASESTRUCTUREID, 
+          sv.CONTEXTSTATUS, 
+          sv.CONTEXTSTATUSDATE, 
+          sv.ISVERSIONYEAR,
+          sv.FREEZING_STATUS_ID,
+          sv.CHANGE_REQUEST_ID,
+          c.CLASSNAME, 
+          ev.VERSIONCODE
+      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+        and c.ClassName=#{baseClassification}
+        and c.BaseClassificationName=#{baseClassification}
+        and sv.basestructureid is null
+        <if test="versionYearsOnly == true">
+        and sv.ISVERSIONYEAR = 'Y'
+        </if>
+        and ev.VERSIONCODE &lt; (select ev1.versioncode from elementversion ev1, structureversion sv1, class c1 
+        where sv1.classid = c1.classid and sv1.structureid = ev1.elementversionid
+        and c1.classname = #{baseClassification} and c1.baseclassificationname = #{baseClassification} 
+        and sv1.basestructureid is null and sv1.structureid = #{contextId}) 
+      order by ev.VERSIONCODE desc
+  </select>
+  
+  <select id="findPriorContextId" resultType="java.lang.Long" parameterType="java.util.Map">
+      <if test="changeRequest == true">
+  		select sv.STRUCTUREID
+	      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+	      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+	        and c.ClassName=#{baseClassification}
+	        and c.BaseClassificationName=#{baseClassification}
+	        and sv.basestructureid is null
+	        and ev.VERSIONCODE = (select ev1.versioncode-1 from elementversion ev1, structureversion sv1, class c1 
+	        where sv1.classid = c1.classid and sv1.basestructureid = ev1.elementversionid
+	        and c1.classname = #{baseClassification} and c1.baseclassificationname = #{baseClassification}
+	        and sv1.structureid = #{contextId}) 
+	      order by ev.VERSIONCODE desc
+	  </if>
+	  <if test="changeRequest==false">
+	  	  select sv.STRUCTUREID
+	      from STRUCTUREVERSION sv, CLASS c, ELEMENTVERSION ev
+	      where sv.CLASSID = c.CLASSID and sv.STRUCTUREID = ev.ELEMENTVERSIONID
+	        and c.ClassName=#{baseClassification}
+	        and c.BaseClassificationName=#{baseClassification}
+	        and sv.basestructureid is null
+	        and ev.VERSIONCODE = (select ev1.versioncode-1 from elementversion ev1, structureversion sv1, class c1 
+	        where sv1.classid = c1.classid and sv1.structureid = ev1.elementversionid
+	        and c1.classname = #{baseClassification} and c1.baseclassificationname = #{baseClassification}
+	        and sv1.structureid = #{contextId}) 
+	      order by ev.VERSIONCODE desc
+	  </if>
+  </select>
+
+</mapper>

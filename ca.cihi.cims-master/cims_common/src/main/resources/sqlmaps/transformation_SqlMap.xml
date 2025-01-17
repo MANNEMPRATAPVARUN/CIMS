@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.dao.mapper.TransformationErrorMapper">
+
+	<resultMap id="TransformationErrorMap" type="ca.cihi.cims.model.TransformationError">
+	    <result property="errorId" column="error_id" />
+		<result property="classification" column="classification" />
+		<result property="version" column="version_code" />
+		<result property="conceptCode" column="concept_code" />
+		<result property="conceptTypeCode" column="concept_type_code" />
+		<result property="errorMessage" column="error_message" />
+		<result property="xmlString" column="xml_string" />
+		<result property="createDate" column="create_date" />
+		<result property="runId" column="run_id" />
+	</resultMap>
+	
+		<select id="getRunId" resultType="java.lang.Long">
+			select Transformation_Run_seq.nextval from dual
+		</select>
+ 
+
+		<select id="checkRunStatus" parameterType="java.util.Map" resultType="java.lang.Long">
+		    select count(error_id) 
+    		from transformation_error
+     		where run_id = (
+	      						select max(run_id)
+	      						from transformation_error
+	      						where classification =  #{classification}
+	      						and version_code = #{fiscalYear}
+	      						and concept_code is null
+                    			and concept_type_code is null
+	      						and run_id != -1
+    						)
+    		and (error_message = 'END TRANSFORMATION' or error_message = 'START TRANSFORMATION')
+		</select>
+		
+		<select id="checkSupplementRunStatus" parameterType="java.util.Map" resultType="java.lang.Long">
+		    select count(error_id) 
+    		from transformation_error
+     		where run_id = (
+	      						select max(run_id)
+	      						from transformation_error
+	      						where classification =  #{classification}
+	      						and version_code = #{fiscalYear}
+	      						and concept_code = #{conceptCode}
+                    			and concept_type_code is null
+	      						and run_id != -1
+    						)
+    		and (error_message = 'END SUPPLEMENT TRANSFORMATION' or error_message = 'START SUPPLEMENT TRANSFORMATION')
+		</select>
+		
+		<select id="checkCCIComponentRunStatus" parameterType="java.util.Map" resultType="java.lang.Long">
+		    select count(error_id) 
+    		from transformation_error
+     		where run_id = (
+	      						select max(run_id)
+	      						from transformation_error
+	      						where classification =  #{classification}
+	      						and version_code = #{fiscalYear}
+	      						and concept_code = #{conceptCode}
+                    			and concept_type_code is null
+	      						and run_id != -1
+    						)
+    		and (error_message = 'END CCICOMPONENT TRANSFORMATION' or error_message = 'START CCICOMPONENT TRANSFORMATION')
+		</select>
+		
+		<select id="checkIndexRunStatus" parameterType="java.util.Map" resultType="java.lang.Long">
+		    select count(error_id) 
+    		from transformation_error
+     		where run_id = (
+	      						select max(run_id)
+	      						from transformation_error
+	      						where classification =  #{classification}
+	      						and version_code = #{fiscalYear}
+	      						and concept_code = #{bookIndexType}
+	      						and concept_type_code = #{language}
+	      						and run_id != -1
+    						)
+    		and (error_message = 'END INDEX TRANSFORMATION' or error_message = 'START INDEX TRANSFORMATION')
+		</select>
+
+		<insert id="insertError" parameterType="ca.cihi.cims.model.TransformationError" useGeneratedKeys="true" keyProperty="errorId">
+		
+		    <selectKey resultType="java.lang.Long" keyProperty="errorId" order="BEFORE">  
+		        select transformation_error_seq.nextval from dual 
+		     </selectKey>  
+		
+			insert into Transformation_Error (Error_id, 
+											 classification, 
+											 version_code, 
+											 concept_code, 
+											 concept_type_code, 
+											 error_message, 
+											 xml_String,
+											 create_Date,
+											 run_Id)
+			values (#{errorId},
+				    #{classification},
+				    #{version},
+				    #{conceptCode},
+				    #{conceptTypeCode},
+				    #{errorMessage},
+				    #{xmlString},
+				    sysdate,
+				    #{runId})
+		</insert>
+		
+		
+		<select id="getAllErrors" resultMap="TransformationErrorMap">
+			select error_id,
+				   classification, 
+				   version_code, 
+				   concept_code, 
+				   concept_type_code, 
+				   error_message, 
+				   xml_String,
+				   create_Date,
+				   run_Id
+		   from transformation_error
+		   where run_id = (
+							select max(run_id)
+							from transformation_error
+							where classification = #{classification}
+							and version_code = #{fiscalYear}
+							and concept_code is null
+                    		and concept_type_code is null
+							and error_message = 'START TRANSFORMATION'
+							and run_id != -1)
+			order by error_id
+		</select>
+		
+		<select id="getAllSupplementErrors" resultMap="TransformationErrorMap">
+			select error_id,
+				   classification, 
+				   version_code, 
+				   concept_code, 
+				   concept_type_code, 
+				   error_message, 
+				   xml_String,
+				   create_Date,
+				   run_Id
+		   from transformation_error
+		   where run_id = (
+							select max(run_id)
+							from transformation_error
+							where classification = #{classification}
+							and version_code = #{fiscalYear}
+							and concept_code = #{conceptCode}
+							and error_message = 'START SUPPLEMENT TRANSFORMATION'
+							and run_id != -1)
+			order by error_id
+		</select>
+		
+		<select id="getAllCCIComponentErrors" resultMap="TransformationErrorMap">
+			select error_id,
+				   classification, 
+				   version_code, 
+				   concept_code, 
+				   concept_type_code, 
+				   error_message, 
+				   xml_String,
+				   create_Date,
+				   run_Id
+		   from transformation_error
+		   where run_id = (
+							select max(run_id)
+							from transformation_error
+							where classification = #{classification}
+							and version_code = #{fiscalYear}
+							and concept_code = #{conceptCode}
+							and error_message = 'START CCICOMPONENT TRANSFORMATION'
+							and run_id != -1)
+			order by error_id
+		</select>
+		
+		<select id="getAllIndexErrors" resultMap="TransformationErrorMap">
+			select error_id,
+				   classification, 
+				   version_code, 
+				   concept_code, 
+				   concept_type_code, 
+				   error_message, 
+				   xml_String,
+				   create_Date,
+				   run_Id
+		   from transformation_error
+		   where run_id = (
+							select max(run_id)
+							from transformation_error
+							where classification = #{classification}
+							and version_code = #{fiscalYear}
+	      					and concept_code = #{bookIndexType}
+	      					and concept_type_code = #{language}
+	      					and error_message = 'START INDEX TRANSFORMATION')
+			order by error_id
+		</select>
+		
+	   <select id="getAllErrorsByRunId" resultMap="TransformationErrorMap">
+			select error_id,
+				   classification, 
+				   version_code, 
+				   concept_code, 
+				   concept_type_code, 
+				   error_message, 
+				   xml_String,
+				   create_Date,
+				   run_Id
+		   from transformation_error
+		   where run_id = #{runId}
+		   order by error_id
+		</select>
+</mapper>

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.data.mapper.CciAuxMapper">
+
+	<resultMap id="CompRefMap" type="ca.cihi.cims.model.CciComponentRefLink">
+		<result property="componentCode" column="componentcode" />
+		<result property="code" column="codevalue" />
+		<result property="shortDescriptionEng" column="steng" />
+		<result property="shortDescriptionFra" column="stfra" />
+	</resultMap>
+
+	<resultMap id="SimpleMap" type="ca.cihi.cims.model.SimpleMap">
+		<result property="key" column="columnOne" />
+		<result property="value" column="columnTwo" />
+	</resultMap>
+
+	<resultMap id="InContextMap" type="ca.cihi.cims.model.CciAttributeReferenceInContextModel">
+		<result property="attributeElementId" column="attributeElementId" />
+		<result property="genericAttributeCode" column="genericAttributeCode" />
+		<result property="descriptionEng" column="descriptionEng" />
+		<result property="descriptionFra" column="descriptionFra" />
+	</resultMap>	
+	
+	<resultMap id="GenAttrRefMap" type="ca.cihi.cims.model.CciAttributeGenericRefLink">
+		<result property="genericAttributeCode" column="genCode" />
+		<result property="referenceAttributeCode" column="refCode" />
+		<result property="descriptionEng" column="refDescEng" />
+		<result property="inContextDescriptionEng" column="INCONTEXTDESCENG" />
+		<result property="status" column="RefStatus" />
+	</resultMap>		
+	
+	<resultMap id="RefAttrRefMap" type="ca.cihi.cims.model.CciAttributeReferenceRefLink">
+		<result property="referenceAttributeCode" column="refCode" />
+		<result property="tabularCode" column="tabularCode" />
+		<result property="descriptionEng" column="ShortTitleENG" />
+		<result property="status" column="tabularStatus" />
+	</resultMap>
+	
+	<resultMap id="GenAttrMap" type="ca.cihi.cims.model.CciAttributeGenericModel">
+		<result property="descriptionEng" column="descEng" />
+		<result property="descriptionFra" column="descFra" />
+		<result property="status" column="status" />
+		<result property="code" column="code" />
+		<result property="elementId" column="elementId" />
+		<result property="isNewlyCreated" column="isNewlyCreated" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+	</resultMap>		
+	
+	<resultMap id="RefAttrMap" type="ca.cihi.cims.model.CciAttributeReferenceModel">
+		<result property="descriptionEng" column="descEng" />
+		<result property="descriptionFra" column="descFra" />
+		<result property="status" column="status" />
+		<result property="code" column="code" />
+		<result property="elementId" column="elementId" />
+		<result property="mandatory" column="mandatory" />
+		<result property="isNewlyCreated" column="isNewlyCreated" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+	</resultMap>
+
+	<resultMap id="ComponentMap" type="ca.cihi.cims.model.CciComponentModel">
+		<result property="shortDescriptionEng" column="shortDescEng" />
+		<result property="shortDescriptionFra" column="shortDescFra" />
+		<result property="longDescriptionEng" column="longDescEng" />
+		<result property="longDescriptionFra" column="longDescFra" />
+		<result property="status" column="status" />
+		<result property="code" column="code" />
+		<result property="elementId" column="elementId" />
+		<result property="isNewlyCreated" column="isNewlyCreated" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+	</resultMap>		
+
+	<select id="getReferenceAttributeReferences" resultMap="RefAttrRefMap">
+		select #{attributeCode} refCode, t4.text tabularCode, t3.text ShortTitleENG, ev2.status tabularStatus
+		from 
+		    (
+		    select distinct cpv1.rangeelementid
+		    from xmlpropertyversion x
+		    join STRUCTUREELEMENTVERSION sev on x.xmlpropertyid = sev.elementversionid and sev.structureid = #{contextId}
+		    -- Joining to CPV
+		    join conceptpropertyversion cpv1 on x.domainelementid = cpv1.domainelementid 
+		        and cpv1.classid = CIMS_CCI.getCCIClassID('ConceptPropertyVersion', 'ValidationCCICPV')
+		    join STRUCTUREELEMENTVERSION sev1 on cpv1.conceptpropertyid = sev1.elementversionid and sev1.structureid = #{contextId}
+		    where x.classid = CIMS_CCI.getCCIClassID('XMLPropertyVersion', 'ValidationDefinition')
+		    and x.xmltext like #{attributeCodeXML}
+		    ) tmp
+		-- Element Status
+		join elementversion ev2 on tmp.rangeelementid = ev2.elementid
+		join STRUCTUREELEMENTVERSION sev2 on ev2.elementversionid = sev2.elementversionid and sev2.structureid = #{contextId}
+		-- Short Title Eng
+		LEFT OUTER JOIN textpropertyversion t3 on t3.domainelementid = tmp.rangeelementid 
+		    and t3.classid = CIMS_CCI.getCCIClassID('TextPropertyVersion', 'ShortTitle') and t3.languagecode = 'ENG'
+		join STRUCTUREELEMENTVERSION sev3 on t3.textpropertyid = sev3.elementversionid and sev3.structureid = #{contextId}
+		-- Code
+		LEFT OUTER JOIN textpropertyversion t4 on t4.domainelementid = tmp.rangeelementid 
+		    and t4.classid = CIMS_CCI.getCCIClassID('TextPropertyVersion', 'Code')
+		join STRUCTUREELEMENTVERSION sev4 on t4.textpropertyid = sev4.elementversionid and sev4.structureid = #{contextId}
+	</select>
+
+	<select id="getComponentReferences" resultMap="CompRefMap">
+		select t1.text componentcode, t2.text codevalue, t3.text steng, t4.text stfra
+		from conceptpropertyversion cpv
+		join structureelementversion sev on cpv.conceptpropertyid = sev.elementversionid and sev.structureid = #{contextId}
+		        
+		join textpropertyversion t1 on cpv.rangeelementid = t1.domainelementid 
+		JOIN class c1 on t1.classid = c1.classid and c1.baseclassificationname = 'CCI' and c1.classname = 'ComponentCode'
+		join structureelementversion sev1 on t1.textpropertyid = sev1.elementversionid and sev1.structureid = #{contextId}
+		        
+		join textpropertyversion t2 on cpv.domainelementid = t2.domainelementid
+		JOIN class c2 on t2.classid = c2.classid and c2.baseclassificationname = 'CCI' and c2.classname = 'Code'
+		join structureelementversion sev2 on t2.textpropertyid = sev2.elementversionid and sev2.structureid = #{contextId}
+		        
+		join textpropertyversion t3 on cpv.domainelementid = t3.domainelementid and t3.languagecode = 'ENG'
+		JOIN class c3 on t3.classid = c3.classid and c3.baseclassificationname = 'CCI' and c3.classname = 'ShortTitle'
+		join structureelementversion sev3 on t3.textpropertyid = sev3.elementversionid and sev3.structureid = #{contextId}
+
+		join textpropertyversion t4 on cpv.domainelementid = t4.domainelementid and t4.languagecode = 'FRA'
+		JOIN class c4 on t4.classid = c4.classid and c4.baseclassificationname = 'CCI' and c4.classname = 'ShortTitle'
+		join structureelementversion sev4 on t4.textpropertyid = sev4.elementversionid and sev4.structureid = #{contextId}
+		        
+		where cpv.rangeelementid = #{componentId}
+	</select>
+	
+	<select id="getCCISections" resultMap="SimpleMap">
+		select t1.text columnOne, t2.text columnTwo
+		from element e
+		LEFT OUTER JOIN textpropertyversion t1 on t1.domainelementid = e.elementid 
+		JOIN class c1 on t1.classid = c1.classid and c1.baseclassificationname = 'CCI' and c1.classname = 'Code'
+		LEFT OUTER JOIN structureelementversion sev1 on t1.textpropertyid = sev1.elementversionid and sev1.structureid = #{contextId}
+		LEFT OUTER JOIN textpropertyversion t2 on e.elementid = t2.domainelementid and t2.languagecode = 'ENG'
+		JOIN class c2 on t2.classid = c2.classid and c2.baseclassificationname = 'CCI' and c2.classname = 'ShortTitle'
+		LEFT OUTER JOIN structureelementversion sev2 on t2.textpropertyid = sev2.elementversionid and sev2.structureid = #{contextId}
+		JOIN class c on e.classid = c.classid and c.classname = 'Section'
+        JOIN elementversion ev on e.elementid = ev.elementid
+        JOIN structureelementversion sev3 on ev.elementversionid = sev3.elementversionid and sev3.structureid = #{contextId}		
+		order by t1.text    			
+	</select>	
+
+    <select id="getGenericAttributeReferences" parameterType="java.util.Map" statementType="CALLABLE">
+        <![CDATA[ 
+          	call cims_api.retrieveGenAttributeRefPROC
+          	(
+				#{genAttrElementId}, 
+				#{contextId}, 
+				#{myData, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=GenAttrRefMap}
+			) 
+        ]]>
+    </select>
+
+    <select id="getGenericAttributes" parameterType="java.util.Map" statementType="CALLABLE">
+        <![CDATA[ 
+          	call cims_api.retrieveGenAttributes
+          	(
+          		#{attributeType},
+				#{contextId}, 
+				#{myData, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=GenAttrMap}
+			) 
+        ]]>
+    </select>
+    
+    <select id="getReferenceAttributes" parameterType="java.util.Map" statementType="CALLABLE">
+        <![CDATA[ 
+          	call cims_api.retrieveRefAttributes
+          	(
+          		#{attributeType},
+				#{contextId}, 
+				#{myData, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=RefAttrMap}
+			) 
+        ]]>
+    </select>    
+    
+    <select id="getComponents" parameterType="java.util.Map" statementType="CALLABLE">
+        <![CDATA[ 
+          	call cims_api.retrieveComponents
+          	(
+          		#{sectionCode},
+          		#{componentRefLink},
+          		#{clazz},
+				#{contextId}, 
+				#{myData, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=ComponentMap}
+			) 
+        ]]>
+    </select>  
+    
+    <select id="getReferenceAttributesInContext" parameterType="java.util.Map" resultMap="InContextMap">
+		select genAttrCpv.domainelementid attributeElementId,
+		cims_util.getTextProperty(genAttrCpv.rangeelementid,'AttributeCode',refAttrCpvSev.structureid,null) genericAttributeCode,
+		cims_util.getTextProperty(refAttrCpv.domainelementid,'AttributeDescription',refAttrCpvSev.structureid,'ENG') descriptionEng, 
+		cims_util.getTextProperty(refAttrCpv.domainelementid,'AttributeDescription',refAttrCpvSev.structureid,'FRA') descriptionFra 
+		from conceptpropertyversion refAttrCpv, structureelementversion refAttrCpvSev,
+		conceptpropertyversion genAttrCpv, structureelementversion genAttrCpvSev
+		where refAttrCpv.classid = cims_util.getClassIDForClassName('CCI','ReferenceAttributeCPV')
+		and refAttrCpv.elementid = refAttrCpvSev.elementid
+		and refAttrCpv.conceptpropertyid = refAttrCpvSev.elementversionid
+		and refAttrCpvSev.structureid = #{contextId}
+		and refAttrCpv.rangeelementid = #{referenceAttributeId}
+		and genAttrCpv.classid = cims_util.getClassIDForClassName('CCI','GenericAttributeCPV')
+		and genAttrCpv.domainelementid = refAttrCpv.domainelementid
+		and genAttrCpv.elementid = genAttrCpvSev.elementid
+		and genAttrCpv.conceptpropertyid = genAttrCpvSev.elementversionid
+		and genAttrCpvSev.structureid = refAttrCpvSev.structureid
+    </select>
+    
+    <select id="getReferenceAttributeType" parameterType="java.util.Map" resultType="java.lang.String">
+    	select cims_util.getDomainPropertyCode(cpv.domainelementid,'AttributeType',sev.structureid) 
+		from conceptpropertyversion cpv, structureelementversion sev
+		where cpv.classid = cims_util.getClassIDForClassName('CCI','AttributeTypeIndicator')
+		and cpv.elementid = sev.elementid
+		and cpv.conceptpropertyid = sev.elementversionid
+		and cpv.domainelementid = #{referenceAttributeId}
+		and sev.structureid = #{contextId}
+    </select>
+    
+    <select id="getReferenceAttribute" parameterType="java.util.Map" resultMap="RefAttrMap">
+    	select cv.elementid, cv.status,
+    	cims_util.getTextProperty(#{referenceAttributeId},'AttributeCode',#{contextId},null) code,
+		cims_util.getTextProperty(#{referenceAttributeId},'AttributeDescription',#{contextId},'ENG') descEng, 
+		cims_util.getTextProperty(#{referenceAttributeId},'AttributeDescription',#{contextId},'FRA') descFra,
+		cims_util.getBooleanProperty(#{referenceAttributeId}, 'AttributeMandatoryIndicator', #{contextId}) mandatory
+		from conceptversion cv, structureelementversion sev
+		where cv.elementid = sev.elementid
+		and cv.conceptid = sev.elementversionid
+		and cv.elementid = #{referenceAttributeId}
+		and sev.structureid = #{contextId}
+    </select>
+    
+    <select id="getGenericAttribute" parameterType="java.util.Map" resultMap="GenAttrMap">
+	    select cpv.elementid, cpv.status,
+	    cims_util.getTextProperty(cpv.rangeelementid,'AttributeCode',sev.structureid,null) code,
+		cims_util.getTextProperty(cpv.domainelementid,'AttributeDescription',sev.structureid,'ENG') descEng, 
+		cims_util.getTextProperty(cpv.domainelementid,'AttributeDescription',sev.structureid,'FRA') descFra
+		from conceptpropertyversion cpv, structureelementversion sev
+		where cpv.elementid = sev.elementid
+		and cpv.conceptpropertyid = sev.elementversionid
+		and cpv.domainelementid = #{attributeId}
+		and cpv.classid = cims_util.getClassIDForClassName('CCI','GenericAttributeCPV')
+		and sev.structureid = #{contextId}
+    </select>
+    
+    <select id="getAttributeNote" parameterType="java.util.Map" resultType="java.lang.String">
+    	select cims_util.getTextProperty(#{attributeId},'AttributeNote',#{contextId},#{language}) from dual
+    </select>
+
+    <select id="getReferenceAttributeNoteDescription" parameterType="java.util.Map" resultType="java.lang.String">
+    	select cims_util.getXMLProperty(#{referenceAttributeId},'AttributeNoteDescription',#{contextId},#{language}) from dual
+    </select>        	
+</mapper>

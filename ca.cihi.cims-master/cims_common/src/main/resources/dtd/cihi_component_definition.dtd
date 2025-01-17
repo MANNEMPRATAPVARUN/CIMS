@@ -1,0 +1,26 @@
+<!--                           Component   - definition                              -->
+  
+  <!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ELEMENT cciComponent ((block | section)*) >
+
+<!ATTLIST cciComponent
+    id CDATA #IMPLIED
+	language CDATA #IMPLIED
+	classification CDATA #IMPLIED
+>
+
+<!ELEMENT block (#PCDATA | clause | sub-clause | para | olist | ulist | table | graphic | quote | footnote | address | symbol)* >
+
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+

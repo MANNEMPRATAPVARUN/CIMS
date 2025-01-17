@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+	<definition name="cr-base" template="/WEB-INF/jsp/common/manage-cr-layout.jsp">
+		<put-attribute name="changerequest-header"
+			value="/WEB-INF/jsp/requestmanagement/changeRequest-headerAndTabs.jsp" />
+	</definition>
+
+    <definition name="createRequest" extends="cr-base">
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/createRequest-body.jsp" />
+    </definition>
+	
+	<definition name="managechangerequest" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/tab-manageChangeRequest.jsp" />
+	</definition>
+
+	<definition name="managechangerequest_notfound" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/tab-manageChangeRequest-notfound.jsp" />
+	</definition>
+
+     <definition name="changerequesthistory" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/changeRequestHistory.jsp" />
+	</definition>
+
+	<definition name="manageclassification" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/tabManageClassification.jsp" />
+	</definition>
+
+	<definition name="tabularChangeSummary" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/changeSummary/tabularChangeSummary.jsp" />
+	</definition>
+	
+	<definition name="indexChangeSummary" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/changeSummary/indexChangeSummary.jsp" />
+	</definition>
+	
+	<definition name="supplementChangeSummary" extends="cr-base">
+		<put-attribute name="body"
+			value="/WEB-INF/jsp/requestmanagement/changeSummary/supplementChangeSummary.jsp" />
+	</definition>
+
+</tiles-definitions>

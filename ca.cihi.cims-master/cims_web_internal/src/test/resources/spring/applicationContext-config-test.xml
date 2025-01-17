@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="PropertyPlaceholderConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="properties" ref="configurationFactoryBean" />
+		<property name="locations">
+			<list>
+				<value>classpath:sqlmaps/View_Sql.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="configurationFactoryBean"
+		class="ca.cihi.blueprint.core.common.config.ConfigurationFactoryBean">
+		<constructor-arg ref="configuration" />
+	</bean>
+
+	<bean id="configuration" class="org.apache.commons.configuration.CompositeConfiguration">
+		<constructor-arg>
+			<list>
+
+				<bean
+					class="ca.cihi.blueprint.core.common.config.EnvSpecificFileConfiguration">
+					<constructor-arg type="java.lang.String"
+						value="cims_web_internal.properties" />
+				</bean>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean
+		class="ca.cihi.blueprint.core.common.config.ApplicationPropertiesProvider" />
+
+	<bean id="cimsConfiguration" class="ca.cihi.cims.util.CimsConfiguration">
+		<constructor-arg ref="configuration" />
+	</bean>
+
+	<!-- Overriding cache manager definition bean (from cims-common) to provide a shared singleton version during tests -->
+	<bean id="cacheManager"
+		class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation" value="classpath:ehcache.xml" />
+		<property name="shared" value="true"/>
+		<property name="cacheManagerName" value="cimsCacheManager"/>
+	</bean>
+	
+	
+	<bean id="changeRequestBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.CRBeanValueInjector"/>
+	<bean id="tabularChangesBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.TabularChangesBeanValueInjector"/>
+	<bean id="cciTabularChangesBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.CCITabularChangesBeanValueInjector"/>
+	<bean id="icdTabularChangesBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.ICDTabularChangesBeanValueInjector"/>
+	<bean id="indexChangesBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.IndexChangesBeanValueInjector"/>
+	<bean id="cciTabularComparativeBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.CCITabularComparativeBeanValueInjector"/>
+	<bean id="icdTabularComparativeBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.ICDTabularComparativeBeanValueInjector"/>
+	<bean id="cciReferenceValueComparativeBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.CCIReferenceValueComparativeBeanValueInjector"/>
+	<bean id="cciTabularSimpleBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.CCITabularSimpleBeanValueInjector"/>
+	<bean id="icdTabularSimpleBeanValueInjector" class="ca.cihi.cims.converter.search.injector.impl.ICDTabularSimpleBeanValueInjector"/>
+	<bean id="beanValueInjector" class="ca.cihi.cims.converter.search.injector.SearchCriteriaBeanValueInjector">
+		<property name="injectors">
+			<map>
+				<entry key="ca.cihi.cims.web.bean.search.ChangeRequestPropetiesBean" value-ref="changeRequestBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.TabularChangesBean" value-ref="tabularChangesBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.CCITabularChangesBean" value-ref="cciTabularChangesBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.ICDTabularChangesBean" value-ref="icdTabularChangesBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.IndexChangesBean" value-ref="indexChangesBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.ICDTabularComparativeBean" value-ref="icdTabularComparativeBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.CCITabularComparativeBean" value-ref="cciTabularComparativeBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.CCIReferenceValueComparativeBean" value-ref="cciReferenceValueComparativeBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.ICDTabularSimpleBean" value-ref="icdTabularSimpleBeanValueInjector"/>
+				<entry key="ca.cihi.cims.web.bean.search.CCITabularSimpleBean" value-ref="cciTabularSimpleBeanValueInjector"/>
+			</map>
+		</property>
+	</bean>
+
+</beans>

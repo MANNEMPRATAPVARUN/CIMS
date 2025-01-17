@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+  version="2.0">
+  
+  <display-name>Custom Functions</display-name>    
+    <tlib-version>1.1</tlib-version>
+    <short-name>customFunctions</short-name>
+
+    <function>
+        <name>hasReadAccess</name>
+        <function-class>ca.cihi.cims.web.customfunction.ResourceAccessFunctions</function-class>
+        <function-signature>boolean hasReadAccess(ca.cihi.cims.model.User, java.lang.String)</function-signature>
+    </function>
+     
+    <function>
+        <name>hasWriteAccess</name>
+        <function-class>ca.cihi.cims.web.customfunction.ResourceAccessFunctions</function-class>
+        <function-signature>boolean hasWriteAccess(ca.cihi.cims.model.User, java.lang.String)</function-signature>
+    </function>
+    
+     <function>
+        <name>hasExecuteAccess</name>
+        <function-class>ca.cihi.cims.web.customfunction.ResourceAccessFunctions</function-class>
+        <function-signature>boolean hasExecuteAccess(ca.cihi.cims.model.User, java.lang.String)</function-signature>
+    </function>
+    
+    <function>
+        <name>isUserAdviceRecipient</name>
+        <function-class>ca.cihi.cims.web.customfunction.ResourceAccessFunctions</function-class>
+        <function-signature>boolean isUserAdviceRecipient(ca.cihi.cims.model.User, ca.cihi.cims.model.changerequest.Advice)</function-signature>
+    </function>
+    
+    <function>
+        <name>isUserQuestionRecipient</name>
+        <function-class>ca.cihi.cims.web.customfunction.ResourceAccessFunctions</function-class>
+        <function-signature>boolean isUserQuestionRecipient(ca.cihi.cims.model.User, ca.cihi.cims.model.changerequest.QuestionForReviewer)</function-signature>
+    </function>
+    
+    <function>
+        <name>isUserInGroup</name>
+        <function-class>ca.cihi.cims.web.customfunction.ResourceAccessFunctions</function-class>
+        <function-signature>boolean isUserInGroup(ca.cihi.cims.model.User, java.lang.Long)</function-signature>
+    </function>
+    
+</taglib>

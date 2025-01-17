@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.SearchMapper">
+	<!-- SEARCH -->
+	<resultMap id="searchMap" type="ca.cihi.cims.model.search.Search">
+		<constructor>
+			<idArg column="SEARCH_ID" javaType="_long"/>
+			<arg column="SEARCH_TYPE_ID" javaType="ca.cihi.cims.model.search.SearchType"
+                 select="getSearchTypeById"/>
+		</constructor>
+		<result column="SEARCH_NAME" property="name" />
+		<result column="LAST_UPDATE_DATE" property="updated" />
+		<result column="IS_SHARED_IND_CODE" property="isShared"
+			typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+		<result column="OWNER" property="ownerId" />
+		<result column="CREATION_DATE" property="created" />
+		<result column="BASE_CLASSIFICATION_NAME" property="classificationName" />
+		<collection property="criteria" ofType="ca.cihi.cims.model.search.Criterion" column="SEARCH_ID" select="getCriteriaBySearchId"/>
+		<collection property="columns" ofType="ca.cihi.cims.model.search.Column" column="SEARCH_ID" select="getColumnsBySearchId"/>
+	</resultMap>
+	
+	<insert id="insertSearch" parameterType="ca.cihi.cims.model.search.Search">
+		<selectKey resultType="long" keyProperty="id"
+			order="BEFORE">
+			SELECT SEARCH_ID_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		insert into
+		SEARCH(SEARCH_ID,SEARCH_NAME,LAST_UPDATE_DATE,IS_SHARED_IND_CODE,SQL_QUERY,SEARCH_TYPE_ID,OWNER,CREATION_DATE,BASE_CLASSIFICATION_NAME)
+		values(#{id},#{name},systimestamp,#{isShared,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},null,#{type.id},#{ownerId},systimestamp,#{classificationName})
+	</insert>
+	<update id="updateSearch" parameterType="ca.cihi.cims.model.search.Search">
+		update SEARCH set SEARCH_NAME = #{name}, IS_SHARED_IND_CODE = #{isShared,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler},
+		LAST_UPDATE_DATE = systimestamp
+		where SEARCH_ID = #{id}
+	</update>
+	<delete id="deleteSearch" parameterType="long" statementType="CALLABLE">
+        declare
+        begin
+			delete from SEARCH_PARAM_BOOLEAN
+			where search_param_boolean_id in (select search_param_id from search_param where search_id = #{id});
+			delete from SEARCH_PARAM_NUMERIC
+			where search_param_numeric_id in (select search_param_id from search_param where search_id = #{id});
+			delete from SEARCH_PARAM_DATETIME
+			where search_param_datetime_id in (select search_param_id from search_param where search_id = #{id});
+			delete from SEARCH_PARAM_TEXT
+			where search_param_text_id in (select search_param_id from search_param where search_id = #{id});
+			delete from SEARCH_PARAM where search_id = #{id};
+			delete from SEARCH_COLUMN where search_id = #{id};
+			delete from SEARCH where search_id = #{id};
+        end;
+	</delete>
+	<select id="findSearchById" parameterType="long" resultMap="searchMap">
+		select * from SEARCH where SEARCH_ID = #{id}	
+	</select>
+	<select id="getSearchesByUserAndType" parameterType="map" resultMap="searchMap">
+		select * from SEARCH where (OWNER = #{userId} or IS_SHARED_IND_CODE = 'Y') and SEARCH_TYPE_ID = #{searchTypeId}
+		order by IS_SHARED_IND_CODE, SEARCH_NAME
+	</select>
+	<select id="getSearchesByUserTypeAndClassification" parameterType="map" resultMap="searchMap">
+		select * from SEARCH where (OWNER = #{userId} or IS_SHARED_IND_CODE = 'Y') and SEARCH_TYPE_ID = #{searchTypeId}
+		and BASE_CLASSIFICATION_NAME = #{classificationName}
+		order by IS_SHARED_IND_CODE, SEARCH_NAME
+	</select>
+	<select id="findSearchTypeById" parameterType="long" resultMap="searchTypeMap">
+		select * from SEARCH_TYPE where SEARCH_TYPE_ID = #{id}	
+	</select>
+	<select id="getSearchCountByNameAndType" parameterType="map" resultType="_long">
+		 <![CDATA[
+			select count(1) from SEARCH 
+			where SEARCH_NAME = #{name}
+			and SEARCH_ID <> #{searchId} 
+			and SEARCH_TYPE_ID = #{searchTypeId} 
+			and BASE_CLASSIFICATION_NAME = #{classificationName}
+			and (IS_SHARED_IND_CODE = 'Y' or OWNER = #{userId}) 
+		]]>
+	</select>
+	<select id="getSearchOwnerId" parameterType="long" resultType="java.lang.Long">
+		select OWNER from SEARCH where SEARCH_ID = #{id}
+	</select>
+	
+	<!-- CRITERION TYPE -->
+	<resultMap id="criterionTypeMap" type="ca.cihi.cims.model.search.CriterionType">
+		<constructor>
+			<idArg column="SEARCH_TYPE_PARAM_ID" javaType="_long"/>
+		</constructor>
+		<result column="SCREEN_NAME" property="displayName"/>
+		<result column="MODEL_NAME" property="modelName"/>
+		<result column="CARDINALITY_MIN" property="cardinalityMin"/>
+		<result column="CARDINALITY_MAX" property="cardinalityMax"/>
+		<result column="CLASS_NAME" property="className"/>
+	</resultMap>
+	<insert id="insertCriterionType" parameterType="map">
+		insert into SEARCH_TYPE_PARAM values(#{id},#{searchTypeId},#{displayName},#{modelName})
+	</insert>
+	<update id="updateCriterionType" parameterType="map">
+		update SEARCH_TYPE_PARAM set SCREEN_NAME = #{displayName}, MODEL_NAME = #{modelName}
+		where SEARCH_TYPE_PARAM_ID = #{id}
+	</update>
+	<delete id="deleteCriterionType" parameterType="long">
+		delete SEARCH_TYPE_PARAM where SEARCH_TYPE_PARAM_ID = #{id}
+	</delete>
+	<select id="getCriterionTypeById" parameterType="long" resultMap="criterionTypeMap">
+		select * from SEARCH_TYPE_PARAM where SEARCH_TYPE_PARAM_ID = #{0}
+	</select>
+	<select id="getCriterionTypes" parameterType="long" resultMap="criterionTypeMap">
+		select * from SEARCH_TYPE_PARAM where SEARCH_TYPE_ID = #{searchTypeId}
+	</select>
+	
+	<!-- CRITERION -->
+	<resultMap id="StringCriterion" type="ca.cihi.cims.model.search.Criterion" extends="criterionMap">
+		<result property="value" column="TEXT_VALUE" javaType="java.lang.String"/>
+	</resultMap>
+	<resultMap id="NumericCriterion" type="ca.cihi.cims.model.search.Criterion" extends="criterionMap">
+		<result property="value" column="NUMERIC_VALUE" javaType="java.lang.Long"/>
+	</resultMap>
+	<resultMap id="DateCriterion" type="ca.cihi.cims.model.search.Criterion" extends="criterionMap">
+		<result property="value" column="DATETIME_VALUE" javaType="java.util.Date"/>
+	</resultMap>
+	<resultMap id="BooleanCriterion" type="ca.cihi.cims.model.search.Criterion" extends="criterionMap">
+		<result property="value" column="BOOLEAN_VALUE" javaType="java.lang.Boolean" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler"/>
+	</resultMap>
+	<resultMap id="criterionMap" type="ca.cihi.cims.model.search.Criterion">
+		<constructor>
+			<idArg column="SEARCH_PARAM_ID" javaType="_long"/>
+			<arg column="SEARCH_TYPE_PARAM_ID" javaType="ca.cihi.cims.model.search.CriterionType"
+                 select="getCriterionTypeById"/>
+		</constructor>
+		<discriminator column="CLASS_NAME" javaType="string">
+			<case value="java.lang.String" resultMap="StringCriterion"/>
+			<case value="java.lang.Number" resultMap="NumericCriterion"/>
+			<case value="java.util.Date" resultMap="DateCriterion"/>
+			<case value="java.lang.Boolean" resultMap="BooleanCriterion"/>
+		</discriminator>
+	</resultMap>
+	<insert id="insertCriterion" parameterType="map">
+		<selectKey resultType="long" keyProperty="criterion.id"
+			order="BEFORE">
+			SELECT SEARCH_PARAM_ID_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		insert into SEARCH_PARAM values(#{criterion.id},#{criterion.type.id},#{searchId})
+	</insert>
+	<insert id="insertCriterionValue" parameterType="map">
+		<choose>
+ 			<when test="value instanceof java.util.Date">
+				insert into SEARCH_PARAM_DATETIME values(#{id},#{value,javaType=java.util.Date,jdbcType=DATE,typeHandler=org.apache.ibatis.type.DateTypeHandler})
+			</when>
+			<when test="value instanceof java.lang.Boolean">
+				insert into SEARCH_PARAM_BOOLEAN values(#{id},#{value,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler})
+			</when>
+			<when test="value instanceof java.lang.Number">
+				insert into SEARCH_PARAM_NUMERIC values(#{id},#{value,javaType=long,jdbcType=NUMERIC})
+			</when>
+ 			<when test="value instanceof java.lang.String">
+				insert into SEARCH_PARAM_TEXT values(#{id},#{value,javaType=String,jdbcType=VARCHAR})
+			</when>
+		</choose>
+	</insert>
+	<update id="updateCriterionValue" parameterType="ca.cihi.cims.model.search.Criterion">
+		<choose>
+			<when test="value instanceof java.util.Date">
+				update SEARCH_PARAM_DATETIME set DATETIME_VALUE = #{value,javaType=java.util.Date,jdbcType=DATE,typeHandler=org.apache.ibatis.type.DateTypeHandler} where SEARCH_PARAM_DATETIME_ID = #{id}
+			</when>
+			<when test="value instanceof java.lang.Boolean">
+				update SEARCH_PARAM_BOOLEAN set BOOLEAN_VALUE = #{value,javaType=boolean,jdbcType=VARCHAR,typeHandler=ca.cihi.cims.data.mapper.StringBooleanTypeHandler} where SEARCH_PARAM_BOOLEAN_ID = #{id}
+			</when>
+			<when test="value instanceof java.lang.Number">
+				update SEARCH_PARAM_NUMERIC set NUMERIC_VALUE = #{value,javaType=long,jdbcType=NUMERIC} where SEARCH_PARAM_NUMERIC_ID = #{id}
+			</when>
+			<when test="value instanceof java.lang.String">
+				update SEARCH_PARAM_TEXT set TEXT_VALUE = #{value,javaType=String,jdbcType=VARCHAR} where SEARCH_PARAM_TEXT_ID = #{id}
+			</when>
+		</choose>
+	</update>
+	<delete id="deleteCriterion" parameterType="long" statementType="CALLABLE">
+		declare
+        begin
+			delete from SEARCH_PARAM_BOOLEAN
+			where search_param_boolean_id = #{id};
+			delete from SEARCH_PARAM_NUMERIC
+			where search_param_numeric_id = #{id};
+			delete from SEARCH_PARAM_DATETIME
+			where search_param_datetime_id = #{id};
+			delete from SEARCH_PARAM_TEXT
+			where search_param_text_id = #{id};
+			delete from SEARCH_PARAM where search_param_id = #{id};
+        end;
+	</delete>
+	<select id="getCriteriaBySearchId" parameterType="long" resultMap="criterionMap">
+		select search_param.*, class_name, text_value, numeric_value, datetime_value, boolean_value
+		from search_param
+		join search_type_param on search_type_param.search_type_param_id = search_param.search_type_param_id
+		left join search_param_text on search_param_id = search_param_text_id
+		left join search_param_numeric on search_param_id = search_param_numeric_id
+		left join search_param_datetime on search_param_id = search_param_datetime_id
+		left join search_param_boolean on search_param_id = search_param_boolean_id
+		where search_id = #{0}
+	</select>
+		
+	<!-- SEARCH TYPES -->
+	<resultMap id="searchTypeMap" type="ca.cihi.cims.model.search.SearchType">
+		<constructor>
+			<idArg column="SEARCH_TYPE_ID" javaType="_long"/>
+			<arg column="SEARCH_TYPE_NAME" javaType="String"/>
+		</constructor>
+	</resultMap>
+	<select id="getSearchTypes" resultMap="searchTypeMap">
+		select * from SEARCH_TYPE
+	</select>
+	<select id="getSearchTypeByName" parameterType="string" resultMap="searchTypeMap">
+		select * from SEARCH_TYPE where SEARCH_TYPE_NAME = #{0}
+	</select>
+	<select id="getSearchTypeById" parameterType="long" resultMap="searchTypeMap">
+		select * from SEARCH_TYPE where SEARCH_TYPE_ID = #{0}
+	</select>
+	
+	<!-- COLUMNS -->
+	<resultMap id="columnTypeMap" type="ca.cihi.cims.model.search.ColumnType">
+		<result property="id" column="SEARCH_TYPE_COLUMN_ID"/>
+		<result property="modelName" column="MODEL_NAME"/>
+		<result property="displayName" column="SCREEN_NAME"/>
+		<result property="isDefault" column="IS_DEFAULT_IND_CODE" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler"/>
+		<result property="order" column="ORDER_NUMBER"/>
+	</resultMap>
+	<resultMap id="columnMap" type="ca.cihi.cims.model.search.Column">
+		<constructor>
+			<idArg column="SEARCH_COLUMN_ID" javaType="_long"/>
+			<arg column="SEARCH_TYPE_COLUMN_ID" javaType="ca.cihi.cims.model.search.ColumnType"
+                 select="getColumnTypeById"/>
+		</constructor>
+		<result property="order" column="ORDER_NUMBER"/>
+	</resultMap>
+	<select id="getColumnTypeById" parameterType="long" resultMap="columnTypeMap">
+		select * from SEARCH_TYPE_COLUMN where SEARCH_TYPE_COLUMN_ID = #{0}
+	</select>
+	<select id="getColumnTypesBySearchType" parameterType="long" resultMap="columnTypeMap">
+		select * from SEARCH_TYPE_COLUMN where SEARCH_TYPE_ID = #{0} order by ORDER_NUMBER
+	</select>
+	<select id="getColumnById" parameterType="long" resultMap="columnMap">
+		select * from SEARCH_COLUMN where SEARCH_COLUMN_ID = #{0}
+	</select>
+	<select id="getColumnsBySearchId" parameterType="long" resultMap="columnMap">
+		select * from SEARCH_COLUMN where SEARCH_ID = #{0} order by ORDER_NUMBER
+	</select>
+	<insert id="insertColumn" parameterType="map">
+		<selectKey resultType="long" keyProperty="column.id"
+			order="BEFORE">
+			SELECT SEARCH_COLUMN_ID_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		insert into SEARCH_COLUMN(SEARCH_COLUMN_ID,SEARCH_ID,SEARCH_TYPE_COLUMN_ID,ORDER_NUMBER)
+		values(#{column.id},#{searchId},#{column.type.id},#{column.order})
+	</insert>
+	<update id="updateColumn" parameterType="ca.cihi.cims.model.search.Column">
+		update SEARCH_COLUMN set ORDER_NUMBER = #{order} where SEARCH_COLUMN_ID = #{id}
+	</update>
+	<delete id="deleteColumn" parameterType="long">
+		delete SEARCH_COLUMN where SEARCH_COLUMN_ID = #{0}
+	</delete>
+	
+	<select id="findDisabledICD10Codes" parameterType="map" resultType="String" useCache="false">
+		with 
+		class_ids as ( 
+		     select /*+ RESULT_CACHE*/  
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ICD-10-CA') classificationId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Chapter') chapterId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Block') blockId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Category') categoryId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Code') codeId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ShortTitle') shortTitleId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'LongTitle') longTitleId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'UserTitle') userTitleId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'CaEnhancementIndicator') caEnhancementId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DaggerAsterisk') daggerAsteriskId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DaggerAsteriskIndicator') daggerAsteriskIndId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'DomainValueCode') domainValueCodeId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'LongPresentation') longPresentationId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'ShortPresentation') shortPresentationId, 
+		     cims_util.getClassIDForClassName('ICD-10-CA', 'Narrower') narrowerId 
+		     from dual 
+		)  
+		, context as ( 
+		   select  
+		   sev.structureid, sev.elementversionid, sev.elementid 
+		   from structureelementversion sev, class_ids 
+		   where sev.structureid in 
+		         (select   
+		           structureid 
+		            from structureversion  
+		           where basestructureid is null 
+		             and structureid = #{CONTEXT_ID} 
+		             and classid = class_ids.classificationId)) 
+		, element_filter as ( 
+			     select elementid  
+			     from element e 
+			     where e.elementuuid between 'ICD-10-CA:ConceptVersion:Category:' || '8000' and 'ICD-10-CA:ConceptVersion:Category:' || 'Z99' || '.9999' 	
+		)
+		, context_filtered as (	 
+			select ctx.* 
+		    from context ctx, element_filter ef 
+		    where ctx.elementid = ef.elementid 
+		 ) 
+		, change_types_new as ( 
+			select distinct ctxNew.*  
+				from conceptversion cv, context_filtered ctxNew, class_ids where cv.elementid = ctxNew.elementid and cv.conceptid = ctxNew.elementversionid  
+				and cv.status = 'ACTIVE' and cv.classid in (class_ids.chapterId, class_ids.blockId, class_ids.categoryId, class_ids.codeId) and (  
+				exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid 
+				and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid 
+				and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cvOld.status != cv.status) 
+				or not exists (select 1 from structureelementversion sevOld where sevOld.elementid = cv.elementid and sevOld.structureid = #{PRIOR_CONTEXT_ID}) 
+				or exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld, structureelementversion cvSevNew 
+                where cvOld.elementid = cv.elementid 
+                and cvOld.classid = cv.classid 
+                and cvOld.conceptid = cvSevOld.elementversionid 
+                and cvOld.elementid = cvSevOld.elementid 
+                and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} 
+                and cv.conceptid = cvSevNew.Elementversionid  
+                and cv.elementid = cvSevNew.Elementid 
+                and cvSevNew.structureid = #{CONTEXT_ID}     
+                and cims_util.hasActiveValidationRule(#{PRIOR_CONTEXT_ID},cvOld.elementid)='N' 
+                and cims_util.hasActiveValidationRule(#{CONTEXT_ID},cv.elementid)='Y') 
+				) 
+		) 
+		, change_types_old as ( 
+	         select distinct ctxOld.*  
+		        from conceptversion cv, context_filtered ctxOld, class_ids  
+		        where cv.elementid = ctxOld.elementid and cv.conceptid = ctxOld.elementversionid 
+		        and cv.classid in (class_ids.chapterId, class_ids.blockId, class_ids.categoryId, class_ids.codeId) 
+		        and (exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid 
+		        and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid 
+		        and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cv.status = 'DISABLED' and cvOld.status != cv.status) 
+		        or exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld, structureelementversion cvSevNew 
+                where cvOld.elementid = cv.elementid 
+                and cvOld.classid = cv.classid 
+                and cvOld.conceptid = cvSevOld.elementversionid 
+                and cvOld.elementid = cvSevOld.elementid 
+                and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} 
+                and cv.conceptid = cvSevNew.Elementversionid 
+                and cv.elementid = cvSevNew.Elementid 
+                and cvSevNew.structureid = #{CONTEXT_ID}    
+                and cims_util.hasActiveChildren(#{PRIOR_CONTEXT_ID},cvOld.elementid)='N' 
+                and cims_util.hasActiveChildren(#{CONTEXT_ID},cv.elementid)='Y') 
+		        ) 
+		) 
+		, changes as ( select * from change_types_old )
+		select distinct cims_util.getTextProperty(chg.elementid, 'Code', chg.structureid, null) code 
+		from  
+		changes chg
+		order by code
+	</select>
+
+
+	<select id="findDisabledCCICodes" parameterType="map" resultType="String" useCache="false">
+		with
+		class_ids as (
+		     select /*+ RESULT_CACHE*/
+		     cims_util.getClassIDForClassName('CCI', 'CCI') classificationId,
+		     cims_util.getClassIDForClassName('CCI', 'Section') sectionId,
+		     cims_util.getClassIDForClassName('CCI', 'Block') blockId,
+		     cims_util.getClassIDForClassName('CCI', 'Group') groupId,
+		     cims_util.getClassIDForClassName('CCI', 'Rubric') rubricId,
+		     cims_util.getClassIDForClassName('CCI', 'CCICODE') codeId,
+		     cims_util.getClassIDForClassName('CCI', 'ShortTitle') shortTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'LongTitle') longTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'UserTitle') userTitleId,
+		     cims_util.getClassIDForClassName('CCI', 'DomainValueCode') domainValueCodeId,
+		     cims_util.getClassIDForClassName('CCI', 'LongPresentation') longPresentationId,
+		     cims_util.getClassIDForClassName('CCI', 'ShortPresentation') shortPresentationId,
+		     cims_util.getClassIDForClassName('CCI', 'Narrower') narrowerId
+		     from dual
+		) 
+		, context as
+			 (select 
+			   sev.structureid, sev.elementversionid, sev.elementid
+			    from structureelementversion sev, class_ids
+			   where sev.structureid in
+			         (select 
+			           structureid
+			            from structureversion
+			           where basestructureid is null
+			             and structureid = #{CONTEXT_ID}
+			             and classid = class_ids.classificationId))
+		, element_filter as (
+		 		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.rubricId
+		     		and e.elementuuid between 'CCI:ConceptVersion:Rubric:'||'1.AA.00' and 'CCI:ConceptVersion:Rubric:'||'9.ZZ.99'||'.^^'
+		     		UNION ALL
+		     		select /*+ RESULT_CACHE*/ elementid from element e, class_ids where e.classid=class_ids.codeId
+		     		and e.elementuuid between 'CCI:ConceptVersion:CCICODE:'||'1.AA.00' and 'CCI:ConceptVersion:CCICODE:'||'9.ZZ.99'||'.ZZ-ZZ-ZZ'
+				
+		)
+		, context_filtered as (	
+			select ctx.*
+		    from context ctx, element_filter ef
+		    where ctx.elementid = ef.elementid
+		 )
+		, change_types_new as (
+			select distinct ctxNew.* 
+				from conceptversion cv, context_filtered ctxNew, class_ids where cv.elementid = ctxNew.elementid and cv.conceptid = ctxNew.elementversionid
+				and cv.status = 'ACTIVE' and cv.classid in (class_ids.sectionId, class_ids.blockId, class_ids.rubricId, class_ids.codeId)
+				and ( exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid
+				and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid
+				and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cvOld.status != cv.status)
+				or not exists (select 1 from structureelementversion sevOld where sevOld.elementid = cv.elementid and sevOld.structureid = #{PRIOR_CONTEXT_ID}))
+		)
+		, change_types_old as (
+			select distinct ctxOld.* 
+				from conceptversion cv, context_filtered ctxOld, class_ids where cv.elementid = ctxOld.elementid
+				and cv.conceptid = ctxOld.elementversionid and cv.status = 'DISABLED' and cv.classid in (class_ids.sectionId, class_ids.blockId, class_ids.rubricId, class_ids.codeId)
+				and exists(select 1 from conceptversion cvOld, structureelementversion cvSevOld where cvOld.elementid = cv.elementid
+				and cvOld.classid = cv.classid and cvOld.conceptid = cvSevOld.elementversionid and cvOld.elementid = cvSevOld.elementid
+				and cvSevOld.structureid = #{PRIOR_CONTEXT_ID} and cvOld.status != cv.status)
+		)
+		, changes as (select * from change_types_old)
+		select distinct cims_util.getTextProperty(chg.elementid, 'Code', chg.structureid, null) code
+		from 
+		changes chg 
+	</select>
+</mapper>

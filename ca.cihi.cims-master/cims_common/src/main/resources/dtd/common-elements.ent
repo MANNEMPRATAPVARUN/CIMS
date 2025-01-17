@@ -1,0 +1,250 @@
+<!-- Common Elements for the CCI and ICD10-CA products.
+  Description:
+  This DTD module declares elements that are common to all of the
+  major structures in the CCI and ICD10-CA. These major structures
+  are: "frontmatter", "index", "tabular", and "appendix".
+
+  Public Identifier:
+  "-//CIHI//ELEMENTS Common Elements 1.0//EN"
+  -->
+
+<!-- RS: Converted to XML DTD for 2002 print version ("CIHI_Print-2.0"        -->
+<!-- FrameMaker application). -->
+
+<!--                            ORDERED LIST                                  -->
+<!ELEMENT olist (label?, (listitem | ulist | olist)+)>
+<!--                            UNORDERED LIST                                -->
+<!ELEMENT ulist (label?, (listitem | ulist | olist | brace)*)>
+<!ATTLIST ulist
+	mark (bullet | none) "bullet"
+>
+<!--                            LIST ITEM                                     -->
+<!ELEMENT listitem (#PCDATA | phrase | xref | ulist | olist | table | para)*>
+<!--                            PARAGRAPH                                     -->
+<!-- 2001/01/08 derek
+     Removed other "block" elements from content model of para.
+     Content model was previously
+   para (#PCDATA | phrase | olist | ulist | table |
+         graphic | quote | footnote | xref)*>
+  -->
+<!-- 02/12 AV: Added record attribute. conforming to Thiet's conversion -->
+<!ELEMENT para (#PCDATA | phrase | xref | ulist)*>
+<!ATTLIST para
+	record CDATA #IMPLIED
+>
+
+<!--                           QUOTE                                          -->
+<!ELEMENT quote (#PCDATA | xref | phrase)*>
+<!ATTLIST quote
+	record CDATA #IMPLIED
+>
+<!--                           ADDRESS                                        -->
+<!ELEMENT address (orgname | street | pob | city | postcode | prov | country | phone | fax | email | web)+>
+<!ATTLIST address
+	record CDATA #IMPLIED
+>
+<!ELEMENT orgname (#PCDATA)>
+<!ELEMENT street (#PCDATA)>
+<!ELEMENT pob (#PCDATA)>
+<!ELEMENT city (#PCDATA)>
+<!ELEMENT postcode (#PCDATA)>
+<!ELEMENT prov (#PCDATA)>
+<!ELEMENT country (#PCDATA)>
+<!ELEMENT phone (#PCDATA)>
+<!ELEMENT fax (#PCDATA)>
+<!ELEMENT email (#PCDATA)>
+<!ELEMENT web (#PCDATA)>
+<!--                           FOOTNOTE  LIST                                 -->
+<!ELEMENT fnlist (footnote)+>
+<!ATTLIST fnlist
+	type (include | general) #IMPLIED
+	mark CDATA #REQUIRED
+>
+<!--                           FOOTNOTE                                       -->
+<!-- 02/16 AV: Added record attribute. -->
+<!-- 02/28 AV: Added ulist to content model. Addresses include/excludes as popups within tables. -->
+<!ELEMENT footnote (#PCDATA | xref | phrase | ulist)*>
+<!ATTLIST footnote
+	record CDATA #IMPLIED
+>
+<!--                          SEPARATOR                                       -->
+<!-- 03/13 AV: Added symbol t`o insert a asterisks as separator marks between clauses, sub-clauses, etc.  -->
+<!ELEMENT symbol (#PCDATA)>
+<!ATTLIST symbol
+	type (asterisk | brace) #IMPLIED
+	size CDATA #IMPLIED
+>
+
+<!--                            LABEL                                         -->
+<!-- AV Added popupref to the content model to address changes to rub. -->
+<!-- 	Added footnote to label.                                              -->
+<!ELEMENT label (#PCDATA | phrase | xref | pageref | popupref | footnote)*>
+<!--                           CROSS REFERENCE (NOT USED)                     -->
+<!ELEMENT xref (#PCDATA)*>
+<!ATTLIST xref
+	refid CDATA #IMPLIED
+>
+<!--                           PAGE REFERENCE                                -->
+<!-- 03/17 AV: Added pageref for print page references to notes in the ICD-10 tabular.
+-->
+<!ELEMENT pageref (#PCDATA)*>
+<!ATTLIST pageref
+	refid IDREF #REQUIRED
+>
+
+<!--                           POP-UP REFERENCE (NOT USED)                    -->
+<!-- 02/28 AV: Added ulist to the content model. -->
+<!ELEMENT popupref (#PCDATA | ulist)*>
+<!ATTLIST popupref
+	refid CDATA #IMPLIED
+>
+<!--                            PHRASE                                        -->
+<!ELEMENT phrase (#PCDATA | xref | br)*>
+<!ATTLIST phrase
+	format (none | bold | ital | boldital | under | super | sub | emblem | linebrk | title) "none"
+>
+<!--                            GRAPHIC                                       -->
+<!-- Notes: (2001/01/04)
+     If no value for the align attribute exists, then in the "sup" data, the
+     default rendering must infer a value of "acenter".
+     Mode attribute specifies position of graphic as either inline with the
+     text or below the text. Inline is set as a default position to handle
+     the brace table graphics, which are essential all positioned inline.
+  -->
+<!ELEMENT graphic (#PCDATA)>
+
+<!-- RS: (2002/01/15): Changed default mode to "runin" to fix alignment of curly braces in
+tables. -->
+<!ATTLIST graphic
+	src CDATA #REQUIRED
+	width CDATA #IMPLIED
+	height CDATA #IMPLIED
+	scale CDATA #IMPLIED
+	align (aleft | aright | acenter) #IMPLIED
+	mode (runin | below) "runin"
+>
+
+<!--                            TABLE                                         -->
+<!-- Notes: (2001/01/04)
+     For the "sup" data:
+     - the type attribute of the table elements must be changed to
+       be either "portrait" or "landscape", not "table", noborder",
+       or "header"
+     - "tr" elements must have any "rowsep" attributes removed
+     - "td" elements must have any "colsep" attributes removed
+  AV: Added style in order to pass style information to FM+SGML.
+  -->
+<!ELEMENT table (thead?, tbody+, tfoot?)>
+<!ATTLIST table
+	type (portrait | landscape) "portrait"
+	cols CDATA #REQUIRED
+	colwidth CDATA #IMPLIED
+	pagewide CDATA #IMPLIED
+	record CDATA #IMPLIED
+	tabstyle (header | noborder | table) #IMPLIED
+	frame (top | bottom | topbot | all | sides | none) #IMPLIED
+>
+<!--                            TABLE HEADER                                  -->
+<!ELEMENT thead (tr)+>
+<!--                            TABLE BODY                                    -->
+<!ELEMENT tbody (tr)+>
+<!--                            TABLE FOOTER                                  -->
+<!ELEMENT tfoot (tr)+>
+<!--                            TABLE ROW                                     -->
+<!-- 03/12 AV: Added rowsep to handle custom row separation lines within tables. -->
+<!ELEMENT tr (td)+>
+<!ATTLIST tr
+	rowsep CDATA #IMPLIED
+>
+<!--                            TABLE CELL                                    -->
+<!--                            TABLE CELL                                    -->
+<!-- Content Model for "tabular" sections:
+      (#PCDATA | phrase | graphic | ulist | xref | popupref)*
+     Content Model for "non-tabular" sections:
+      (#PCDATA | phrase | graphic | ulist | olist | xref | entry)*
+     NOTES:
+      - the "entry" element can only appear in a td element in a table
+        in an index element.
+   -->
+<!-- 02/28 AV: Added rotate attribute to handle rotated heading cells in rubric finder.
+			   Added colsep and rowsep to handle custom separation lines within tables.
+-->
+<!ELEMENT td (#PCDATA | phrase | graphic | ulist | olist | xref | entry
+             | popupref | symbol | a | br)*>
+<!ATTLIST td
+	rowsep CDATA #IMPLIED
+	colsep CDATA #IMPLIED
+	rowspan CDATA #IMPLIED
+	colspan CDATA #IMPLIED
+	rotate CDATA #IMPLIED
+	align (left | middle | right) #IMPLIED
+	valign (top | center | centre | bottom) #IMPLIED
+>
+
+<!ELEMENT a (#PCDATA)>
+<!ATTLIST a
+	name CDATA #IMPLIED
+>
+
+<!ELEMENT br (#PCDATA)>
+
+
+<!--  *** BRACE STRUCTURES *** -->
+<!-- (Note: - "brace" attributes are mainly for legacy data conversion
+            - they contain the previous "table" settings and may
+              be used for conversion to previous table structure
+              understand by Folio and FrameMaker conversion processes
+-->
+<!ELEMENT brace (label?, (segment)+) >
+<!ATTLIST brace
+	cols CDATA #IMPLIED
+	colwidth CDATA #IMPLIED
+>
+
+<!-- (Note: - "segment" attributes:
+              @bracket - (right|left) facing of bracket
+                         which follows current block 
+                         (if another block follows)
+                       - default "right"
+
+              @size    - "relative" size [01|02|...|25] 
+                         of bracket
+                       - default "05"
+-->
+<!ELEMENT segment (item+ |ulist) >
+<!ATTLIST segment
+	bracket (right | left) "right"
+	size (01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25) "05"
+>
+
+<!-- (Note: - just about any type of (text|list|graphic) object allowed
+              inside a brace table item
+-->
+<!ELEMENT item (#PCDATA | phrase | graphic | ulist | olist | xref | popupref | symbol)*>
+
+<!ELEMENT chpfront (sub-section)*>
+
+<!--                            SUB-SECTION                                   -->
+<!ELEMENT sub-section (label, (clause | para | olist | ulist | table | graphic | quote | footnote | address)*)>
+
+
+<!--                            CLAUSE                                     -->
+
+<!-- Label was made optional to allow nesting of sub-clause	element when clause has no label content. Added separator which
+	creates an asterisk break between clauses and sub-clauses in section.
+-->
+<!ELEMENT clause (label?, (sub-clause | para | olist | ulist | table | graphic | quote | footnote | address | symbol)*)>
+
+<!ATTLIST clause
+	record CDATA #IMPLIED
+>
+
+<!--                            SUB-CLAUSE                                 -->
+<!-- Added separator which creates an asterisk break between clauses and sub-clauses in section.
+-->
+<!ELEMENT sub-clause (label, (para | olist | ulist | table | graphic | quote | footnote | address | symbol)*)>
+
+<!ATTLIST sub-clause
+	record CDATA #IMPLIED
+>
+

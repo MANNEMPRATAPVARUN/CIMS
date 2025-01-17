@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cims_report.xsd">
+	<worksheet name="CIMS Report">
+		<header>
+			<parameter>
+				<paraName>year</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>4</row_number>
+			</parameter>
+		</header>
+		<detail startRowNumber="10" name="detail1">
+			<parameter>
+				<paraName>codeValue</paraName>
+				<column_number>2</column_number>
+				<!-- B -->
+			</parameter>
+			<parameter>
+				<paraName>changeRequestId</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+			</parameter>
+			<parameter>
+				<paraName>changeRequestName</paraName>
+				<column_number>4</column_number>
+				<!-- D -->
+			</parameter>
+		</detail>
+	</worksheet>
+</workbook>

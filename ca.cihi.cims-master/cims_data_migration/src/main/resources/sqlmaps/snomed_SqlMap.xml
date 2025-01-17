@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.data.mapper.SnomedMapper">
+   
+    <resultMap id="sctVersions" type="ca.cihi.cims.model.snomed.SCTVersion">
+		<result property="versionCode" column="version_code" />
+		<result property="versionDesc" column="version_desc" />
+		<result property="effectiveDate" column="effective_date" />
+		<result property="statusCode" column="status_code" />
+	</resultMap>
+	
+    <!-- To call stored procedure. -->
+	<update id="populateData"  statementType="CALLABLE" parameterType="map">
+	   {  call CIMS_SNOMED_API.populateData(#{sctVersionCode}) } 
+	</update>    
+	
+	
+    <select id="getVersionsByStatus" resultMap="sctVersions" parameterType="map">
+		SELECT DISTINCT t.version_code, t.version_desc,t.effective_date,t.status_code
+		FROM SCT_VERSION t
+		WHERE STATUS_CODE= #{statusCode}
+		ORDER BY VERSION_CODE DESC
+	</select>
+	
+	<select id="getVersionByDesc" resultType="java.lang.String" parameterType="map">
+		SELECT t.version_code
+		FROM SCT_VERSION t
+		WHERE VERSION_DESC= #{desc}
+	</select>
+	
+	<select id="getAllVersions" resultMap="sctVersions">
+		SELECT DISTINCT t.version_code, t.version_desc,t.effective_date,t.status_code
+		FROM SCT_VERSION t
+		ORDER BY VERSION_CODE DESC
+	</select>
+    
+</mapper>

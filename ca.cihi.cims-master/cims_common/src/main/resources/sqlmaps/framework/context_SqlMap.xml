@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.framework.mapper.ContextMapper">
+
+	<resultMap id="contextDTOMap" type="ca.cihi.cims.framework.dto.ContextDTO">
+		<id column="el_elementid" />
+		<result property="elementUUID" column="elementuuid" />
+		<result property="changedFromVersionId" column="changedfromversionid" />
+		<result property="originatingContextId" column="originatingcontextid" />
+		<result property="versionCode" column="versioncode" />
+		<result property="versionTimestamp" column="versiontimestamp" />
+		<result property="elementStatus" column="elementstatus" />
+		<result property="baseContextId" column="basestructureid"/>
+		<result property="contextStatus" column="contextstatus"  />
+		<result property="contextStatusDate" column="contextstatusdate" />
+		<association property="classs"  javaType="ca.cihi.cims.framework.dto.ClasssDTO" resultMap="ca.cihi.cims.framework.mapper.ClasssMapper.classsDTOMap" columnPrefix="cls_"/>
+		<association property="elementIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="el_"/>
+		
+	</resultMap>
+	
+	<select id="createStructure" parameterType="java.util.Map" statementType="CALLABLE" flushCache="true">
+	
+		<![CDATA[ 
+          	call cims_framework.createStructureVersion
+          	(
+          		#{elementVersionId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN},
+				#{classsId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}, 
+				#{elementId, mode=IN, jdbcType=BIGINT, javaType=java.lang.Long},
+				#{baseContextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+	
+	</select>
+	
+	<select id="remove" statementType="CALLABLE" flushCache="true">
+	
+		<![CDATA[ 
+          	call cims_framework.removeContext
+          	(
+          		#{contextId, jdbcType=BIGINT, javaType=java.lang.Long, mode=IN}
+			) 
+        ]]>
+	
+	</select>
+	
+	<select id="findContextDTO" resultMap="contextDTOMap">
+ 		select 
+ 			e.elementuuid, ev.changedFromVersionId, ev.originatingcontextid, ev.versioncode, ev.versiontimestamp, ev.status elementstatus,
+ 			c.classid as cls_classid, c.tablename as cls_tablename, c.baseclassificationname as cls_baseclassificationname, c.classname as cls_classname, c.friendlyname as cls_friendlyname,
+ 			e.elementid as el_elementid, ev.elementversionid as el_elementversionid,
+ 			sv.basestructureid, sv.contextstatus, sv.contextstatusdate
+ 		from element e, elementversion ev,  class c, structureversion sv
+ 		where e.classid=c.classid and sv.elementid=e.elementid and sv.structureid=ev.elementversionid and sv.structureid=#{contextId}
+ 	
+ 	</select>
+ 	
+ 	<update id="closeContext">
+ 		update structureversion set contextstatus='CLOSED', contextstatusdate=sysdate where structureid=#{contextId}
+ 	</update>
+ 	
+ 	<select id="getLatestClosedVersion" resultType="java.lang.Long">
+	 	select structureid from (select t.structureid from STRUCTUREVERSION t
+		where t.contextstatus='CLOSED' and t.elementId=#{elementId}
+		order by t.contextstatusdate desc) 
+		where rownum = 1
+ 	</select>
+ 	
+ 	<select id="getOpenVersionCount" resultType="java.lang.Integer">
+	 	select count(1) as count from STRUCTUREVERSION t
+		where t.contextstatus='OPEN' and t.elementId=#{elementId}
+ 	</select>
+ 	
+</mapper>

@@ -1,0 +1,21 @@
+<!--                           QUALIFIER LIST   - table                              -->
+<!-- Notes: (2001/01/04)
+     Content Model for CCI: (table)+
+     Content Model for ICD: (table)+
+  --> 
+  
+  <!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+
+

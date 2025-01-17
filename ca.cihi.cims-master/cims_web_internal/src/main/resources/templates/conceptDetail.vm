@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="${LANGUAGE}">
+<head>
+	<meta http-equiv="Content-Type" content="${CONTENT_TYPE}">
+	<link href="css/cims.css" rel="stylesheet">
+	<title>${conceptCode}</title>
+</head>
+<body>	   
+
+	<div id="conceptDetailPopup">
+		<table width="100%" border="0">
+			<tr>
+				<th width="11%"></th>
+				<th width="7%"></th>
+				<th width="82%"></th>
+			</tr>
+			<td>${shortPresentation}</td>
+			</table>
+	</div>
+	
+</body>
+</html>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+  version="2.0">
+	<tlib-version>1.0</tlib-version>
+	<short-name>cims</short-name>
+
+	<function>
+		<description>Exposes the isAlpha() function from Apache StringUtils
+		</description>
+		<name>isAlpha</name>
+		<function-class>org.apache.commons.lang.StringUtils</function-class>
+		<function-signature>java.lang.Boolean isAlpha(java.lang.String)
+		</function-signature>
+	</function>
+
+	<function>
+		<description>Exposes the replace() function from Apache StringUtils.  Yes I know this already exists.
+		</description>
+		<name>replace</name>
+		<function-class>org.apache.commons.lang.StringUtils</function-class>
+		<function-signature>java.lang.String replace(java.lang.String,
+			java.lang.String, java.lang.String)
+		</function-signature>
+	</function>
+
+	<function>  
+		<description>Exposes the capitalizeFully method from WordUtils</description>
+		<name>capitalizeFully</name>
+		<function-class>org.apache.commons.lang.WordUtils</function-class>
+		<function-signature>java.lang.String capitalizeFully(java.lang.String)</function-signature>
+	</function>
+	
+	<function>
+		<description>Converts a status letter ('A', 'D') to the full name</description>
+		<name>statusConvertFromLetter</name>
+		<function-class>ca.cihi.cims.web.customfunction.AdminCustomFunctions</function-class>
+		<function-signature>java.lang.String statusConvertFromLetter(java.lang.String)</function-signature>
+	</function>		
+	
+	<function>
+		<description>Converts a Yes No letter ('Y', 'N') to a full Yes or No</description>
+		<name>yesNoConvertFromLetter</name>
+		<function-class>ca.cihi.cims.web.customfunction.AdminCustomFunctions</function-class>
+		<function-signature>java.lang.String yesNoConvertFromLetter(java.lang.String)</function-signature>
+	</function>	
+	
+</taglib>

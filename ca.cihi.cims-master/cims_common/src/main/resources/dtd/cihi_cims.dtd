@@ -1,0 +1,117 @@
+<!-- cihi-cims DTD
+
+  Description:
+
+  This DTD is to be used for the CIHI CIMS application project. 
+  It has fragments of CIHI XML extracted from their
+  database, surrounded by new top level elements to identify the
+  database location it came from so it can be put back after
+  editing.
+
+  The new outer elements are like this:
+
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!DOCTYPE concept SYSTEM "cihi_cims.dtd">
+<concept>
+	<language>ENG</language>
+	<classification>ICD-10-CA</classification>
+	<fiscalYear>2015</fiscalYear>
+	<CODE>A15.4</CODE>	
+	<PRESENTATION_CODE>A15.4</PRESENTATION_CODE>
+	<TYPE_CODE>CATEGORY</TYPE_CODE>
+	<PRESENTATION_TYPE_CODE>CATEGORY2</PRESENTATION_TYPE_CODE>
+	<USER_DESC>null</USER_DESC>
+	<CONCEPT_DETAIL>
+		<CLOB>[text_desc]</CLOB>
+	</CONCEPT_DETAIL>
+</concept>
+-->
+
+<!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ELEMENT concept (language, 
+					classification,
+					CODE, 
+					PRESENTATION_CODE,
+					TYPE_CODE,
+					PRESENTATION_TYPE_CODE,
+					(HAS_VALIDATION)*,
+					(ATTRIBUTES)*,
+					(CA_ENHANCEMENT_FLAG)*, 
+					USER_DESC, 
+					(CONCEPT_CODE_WITH_DECIMAL_DAGGAR)*, 
+					(CONCEPT_CODE_WITH_DECIMAL)*, 
+					CONCEPT_DETAIL,
+					(BLOCK_LIST)*,
+					(ASTERISK_LIST)*,
+					(CODE_LIST)*)>
+		
+	<!ELEMENT language (#PCDATA)>
+	<!ELEMENT classification (#PCDATA)>
+	<!ELEMENT CODE (#PCDATA)>
+	<!ELEMENT PRESENTATION_CODE (#PCDATA)>
+	<!ELEMENT TYPE_CODE (#PCDATA)>
+	<!ELEMENT PRESENTATION_TYPE_CODE (#PCDATA)>
+	<!ELEMENT HAS_VALIDATION (#PCDATA)>
+	<!ELEMENT ATTRIBUTES (ATTRIBUTE)*>
+	<!ELEMENT CONCEPT_CODE_WITH_DECIMAL_DAGGAR (#PCDATA)>	 
+	<!ELEMENT CA_ENHANCEMENT_FLAG (#PCDATA)>
+	<!ELEMENT CONCEPT_CODE_WITH_DECIMAL (#PCDATA)>
+	<!ELEMENT USER_DESC (#PCDATA)> 
+	<!ELEMENT CONCEPT_DETAIL (CLOB)>	
+	<!ELEMENT BLOCK_LIST (BLOCK)*>	 
+	<!ELEMENT ASTERISK_LIST (ASTERISK)*>	
+	<!ELEMENT CLOB (table | qualifierlist)* >
+	<!ELEMENT CODE_LIST (codeConcept)*>
+	<!ELEMENT codeConcept (CODE_CONCEPT_CODE, CODE_CONCEPT_TYPE_CODE, CODE_CONCEPT_USER_DESC, CODE_DETAIL)>
+	<!ELEMENT CODE_CONCEPT_CODE (#PCDATA)>
+	<!ELEMENT CODE_CONCEPT_TYPE_CODE (#PCDATA)>
+	<!ELEMENT CODE_CONCEPT_USER_DESC (#PCDATA)>
+	<!ELEMENT CODE_DETAIL (CODE_CLOB)*>
+	<!ELEMENT CODE_CLOB (qualifierlist)* >
+	<!ELEMENT ATTRIBUTE (TYPE, HAS_REF, MANDATORY, REF_CODE)>
+	<!ELEMENT MANDATORY (#PCDATA)>
+	<!ELEMENT TYPE (#PCDATA)>
+	<!ELEMENT HAS_REF (#PCDATA)>
+	<!ELEMENT REF_CODE (#PCDATA)>	
+	
+	<!ATTLIST CODE_LIST
+		hasCode CDATA #IMPLIED
+	>
+	
+	<!ATTLIST BLOCK_LIST
+		hasBlock CDATA #IMPLIED
+	>
+	
+	<!ELEMENT BLOCK (#PCDATA)>
+	<!ATTLIST BLOCK
+		code CDATA #IMPLIED
+		shortDesc CDATA #IMPLIED
+		prependCodeToUserdesc CDATA #IMPLIED
+	>
+	
+	<!ATTLIST ASTERISK_LIST
+		hasAsterisk CDATA #IMPLIED
+	>
+	
+	<!ELEMENT ASTERISK (#PCDATA)>
+	<!ATTLIST ASTERISK
+		code CDATA #IMPLIED
+		shortDesc CDATA #IMPLIED
+	>
+		
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+<!ENTITY % common-tabular-elements SYSTEM "/dtd/common-tabular-elements.ent" >
+%common-tabular-elements;
+					
+

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.refset.mapper.SNOMEDCommonMapper">
+
+	<resultMap id="sctChangedDTO" type="ca.cihi.cims.refset.dto.SCTDescriptionChangeDTO">
+		<result property="oldId" column="oldId" />
+		<result property="oldDescription" column="oldDescription" />
+		<result property="newId" column="newId" />
+		<result property="newDescription" column="newDescription" />
+	</resultMap>
+	
+	<select id="findExpiredConcepts" parameterType="java.util.Map" resultType="java.lang.Long">
+		with classes as(
+		select * from class 
+		where baseClassificationName = #{baseClassificationName}
+		),
+		columns as (
+		 select tpv.domainelementid from textpropertyversion tpv, classes c, structureelementversion sev
+		  where c.classname= 'ColumnType'
+		  and tpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = tpv.textpropertyid
+		  and tpv.text in ('SCT Concept ID')
+		)
+		, vals as (
+		select cpv.domainelementid from conceptpropertyversion cpv, classes c, structureelementversion sev, columns cols
+		  where c.classname= 'DescribedBy'
+		  and cpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = cpv.conceptpropertyid
+		  and cols.domainelementid = cpv.rangeElementId
+		),
+		ids as (
+		  select npv.numericvalue from numericpropertyversion npv, classes c, structureelementversion sev, vals v
+		  where c.classname= 'IDValue'
+		  and npv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = npv.numericpropertyid
+		  and npv.domainelementid = v.domainelementid
+		),
+		conceptList1 as (
+		  select t.concept_id 
+		  from SCT_CONCEPT t, ids ids 
+		  where t.version_code=#{fromVersionCode} 
+		  and t.concept_id = ids.numericvalue
+		),
+		conceptList2 as (
+		  select t.concept_id 
+		  from SCT_CONCEPT t, ids ids 
+		  where t.version_code=#{toVersionCode} 
+		  and t.concept_id = ids.numericvalue
+		)
+		select concept_id
+		from conceptList1 where not exists 
+		(select 1 from conceptList2 where conceptList2.concept_id = conceptList1.concept_id  )
+	</select>
+	
+	<select id="findChangedSynonym"  resultMap="sctChangedDTO" parameterType="java.util.Map">
+		with classes as(
+		select * from class 
+		where baseClassificationName = #{baseClassificationName}
+		),
+		columns as (
+		 select tpv.domainelementid from textpropertyversion tpv, classes c, structureelementversion sev
+		  where c.classname= 'ColumnType'
+		  and tpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = tpv.textpropertyid
+		  and tpv.text in ('SCT-Synonym ID','SCT-Synonym','SCT-Description ID', 'SCT-Description', 'SCT-Description Type' )
+		)
+		, vals as (
+		select cpv.domainelementid from conceptpropertyversion cpv, classes c, structureelementversion sev, columns cols
+		  where c.classname= 'DescribedBy'
+		  and cpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = cpv.conceptpropertyid
+		  and cols.domainelementid = cpv.rangeElementId
+		),
+		ids as (
+		  select npv.numericvalue from numericpropertyversion npv, classes c, structureelementversion sev, vals v
+		  where c.classname= 'IDValue'
+		  and npv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = npv.numericpropertyid
+		  and npv.domainelementid = v.domainelementid
+		),
+		synonymList1 as (
+		  select t.concept_id,t.term_id, t.term_desc,t.term_type_code,t.acceptability_type_code 
+		  from SCT_TERM t, ids ids 
+		  where t.version_code=#{fromVersionCode} and t.term_type_code='SY'
+		  and t.term_id = ids.numericvalue
+		  and t.acceptability_type_code = 'AC'
+		)
+		select a.term_id as newId, a.term_desc as newDescription, b.term_id as oldId, b.term_desc as oldDescription 
+		from SCT_TERM a, synonymList1 b  
+		where a.version_code=#{toVersionCode} and a.term_type_code='SY' and a.acceptability_type_code = 'AC'
+		and a.concept_id=b.concept_id and a.term_id=b.term_id and a.term_desc&lt;&gt;b.term_desc
+		UNION ALL
+		select   null as newId, null as newDescription, term_id as oldId, term_desc as oldDescription
+		from synonymList1 a where not exists 
+		(select 1 from SCT_TERM b where b.version_code=#{toVersionCode} and b.term_type_code='SY' and b.acceptability_type_code = 'AC' and b.term_id = a.term_id  )
+		
+	</select>
+	
+	<select id="findChangedFSNs"  resultMap="sctChangedDTO" parameterType="java.util.Map">
+		with classes as(
+		select * from class 
+		where baseClassificationName = #{baseClassificationName}
+		),
+		columns as (
+		 select tpv.domainelementid from textpropertyversion tpv, classes c, structureelementversion sev
+		  where c.classname= 'ColumnType'
+		  and tpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = tpv.textpropertyid
+		  and tpv.text in ('SCT-Fully Specified Name ID','SCT-Fully Specified Name','SCT-Description ID', 'SCT-Description' )
+		)
+		, vals as (
+		select cpv.domainelementid from conceptpropertyversion cpv, classes c, structureelementversion sev, columns cols
+		  where c.classname= 'DescribedBy'
+		  and cpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = cpv.conceptpropertyid
+		  and cols.domainelementid = cpv.rangeElementId
+		),
+		ids as (
+		  select distinct npv.numericvalue from numericpropertyversion npv, classes c, structureelementversion sev, vals v
+		  where c.classname= 'IDValue'
+		  and npv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = npv.numericpropertyid
+		  and npv.domainelementid = v.domainelementid
+		),
+		fsnList1 as (
+		  select t.concept_id,t.term_id, t.term_desc,t.term_type_code,t.acceptability_type_code 
+		  from SCT_TERM t, ids ids 
+		  where t.version_code=#{fromVersionCode} and t.term_type_code='FSN'
+		  and t.term_id = ids.numericvalue
+		)
+		select a.term_id as newId, a.term_desc as newDescription, b.term_id as oldId, b.term_desc as oldDescription 
+		from SCT_TERM a, fsnList1 b
+		where a.version_code=#{toVersionCode} and a.term_type_code='FSN'
+		and a.concept_id=b.concept_id and (a.term_id&lt;&gt;b.term_id or a.term_desc&lt;&gt;b.term_desc)
+		
+	</select>
+	
+	<select id="findChangedPreferreds"  resultMap="sctChangedDTO" parameterType="java.util.Map">
+		with classes as(
+		select * from class 
+		where baseClassificationName = #{baseClassificationName}
+		),
+		columns as (
+		 select tpv.domainelementid from textpropertyversion tpv, classes c, structureelementversion sev
+		  where c.classname= 'ColumnType'
+		  and tpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = tpv.textpropertyid
+		  and tpv.text in ('SCT-Preferred Term ID','SCT-Preferred Term','SCT-Description ID', 'SCT-Description')
+		)
+		, vals as (
+		select cpv.domainelementid from conceptpropertyversion cpv, classes c, structureelementversion sev, columns cols
+		  where c.classname= 'DescribedBy'
+		  and cpv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = cpv.conceptpropertyid
+		  and cols.domainelementid = cpv.rangeElementId
+		),
+		ids as (
+		  select distinct npv.numericvalue from numericpropertyversion npv, classes c, structureelementversion sev, vals v
+		  where c.classname= 'IDValue'
+		  and npv.classId = c.classid
+		  and sev.structureid = #{refsetContextId}
+		  and sev.elementversionid = npv.numericpropertyid
+		  and npv.domainelementid = v.domainelementid
+		),
+		fsnList1 as (
+		  select t.concept_id,t.term_id, t.term_desc,t.term_type_code,t.acceptability_type_code 
+		  from SCT_TERM t, ids ids 
+		  where t.version_code=#{fromVersionCode} and t.term_type_code='SY' and t.acceptability_type_code = 'PR'
+		  and t.term_id = ids.numericvalue
+		)
+		select a.term_id as newId, a.term_desc as newDescription, b.term_id as oldId, b.term_desc as oldDescription 
+		from SCT_TERM a, fsnList1 b
+		where a.version_code=#{toVersionCode} and a.term_type_code='SY' and a.acceptability_type_code = 'PR'
+		and a.concept_id=b.concept_id and (a.term_id&lt;&gt;b.term_id or a.term_desc&lt;&gt;b.term_desc)
+	</select>
+</mapper>

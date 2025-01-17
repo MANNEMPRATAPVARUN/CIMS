@@ -1,0 +1,9 @@
+create table CIMS_LANGUAGE
+(
+  LANGUAGE_CODE VARCHAR2(3) not null,
+  LANGUAGE_DESC VARCHAR2(20)
+)
+;
+alter table CIMS_LANGUAGE
+  add constraint PK_LANGUAGE primary key (LANGUAGE_CODE);
+

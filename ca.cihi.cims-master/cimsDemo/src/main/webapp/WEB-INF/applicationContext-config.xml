@@ -1,0 +1,26 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:security="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans                            http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" id="PropertyPlaceholderConfigurer">
+		<property name="properties" ref="configurationFactoryBean"/>
+	</bean>
+
+	<bean class="ca.cihi.blueprint.core.common.config.ConfigurationFactoryBean" id="configurationFactoryBean">
+		<constructor-arg ref="configuration"/>
+	</bean>
+
+	<bean class="org.apache.commons.configuration.CompositeConfiguration" id="configuration">
+		<constructor-arg>
+			<list>
+				<bean class="ca.cihi.blueprint.core.common.config.CentralizedConfiguration">
+					<constructor-arg value="CIMS"/>
+				</bean>
+				<bean class="ca.cihi.blueprint.core.common.config.EnvSpecificFileConfiguration">
+					<constructor-arg type="java.lang.String" value="cimsDemo.properties"/>
+				</bean>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean class="ca.cihi.blueprint.core.common.config.ApplicationPropertiesProvider"/>
+
+</beans>

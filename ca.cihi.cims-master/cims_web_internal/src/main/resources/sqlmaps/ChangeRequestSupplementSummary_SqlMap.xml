@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ChangeRequestSupplementSummaryMapper" >
+
+   <resultMap id="ConceptModificationMap" type="ca.cihi.cims.model.changerequest.ConceptModification">
+   	   <id property="structureId" column="structureid"/>
+   	   <result property="elementId" column="domainelementid"/>  
+   	   <result property="conceptClassName" column="classname"/> 
+   	   <result property="breadCrumbs" column="breadcrumbs"/>	   
+       <result property="code"  column="code" />
+   </resultMap>
+   
+   <resultMap id="ProposedChangeMap" type="ca.cihi.cims.model.changerequest.ProposedChange">
+       <id property="elementVersionId" column="changedElementVersionId"/>
+       <result property="tableName"  column="tablename" />
+       <result property="fieldName"  column="fieldName" />       
+       <result property="oldValue"  column="oldValue" />
+       <result property="proposedValue"  column="changedValue" />
+       <result property="conflictValue"  column="conflict" />  
+   </resultMap> 
+   
+   <resultMap id="RealizedChangeMap" type="ca.cihi.cims.model.changerequest.RealizedChange">
+       <id property="elementVersionId" column="realizedElementVersionId"/>
+       <result property="tableName"  column="tablename" />
+       <result property="fieldName"  column="fieldName" />
+       <result property="oldValue"  column="oldValue" />
+       <result property="newValue"  column="realizedValue" />     
+   </resultMap>
+  
+  <select id="findModifiedSupplementConceptElementCodes" resultMap="ConceptModificationMap">
+     with strelementversion as ( 
+         select /*+ USE_NL(sev s) */  sev.* from structureelementversion sev, structureversion s 
+         where s.structureid = sev.structureid 
+         and s.change_request_id = #{changeRequestId}
+      )   
+      , changedElement as( 
+      select   distinct structureid, domainelementid
+      from( 
+            select sev.structureid, pv.domainelementid as domainelementid
+            from strelementversion sev, propertyversion pv
+            where sev.elementversionid = pv.propertyid
+            and pv.classid not in (select classid from class c where className in('LongPresentation', 
+                                                                                  'ShortPresentation',
+                                                                                   'SexValidationIndicator', 
+                                                                                   'ValidationMRDiag', 
+                                                                                   'ValidationDiagType1Flag',
+                                                                                   'ValidationDiagType2Flag',
+                                                                                   'ValidationDiagType3Flag',
+                                                                                   'ValidationDiagType4Flag',
+                                                                                   'ValidationDiagType6Flag',
+                                                                                   'ValidationDiagType9Flag',
+                                                                                   'ValidationDiagTypeWFlag',
+                                                                                   'ValidationDiagTypeXFlag',
+                                                                                   'ValidationDiagTypeYFlag',
+                                                                                   'ValidationNewbornFlag',
+                                                                                   'ValidationICDCPV',
+                                                                                   'ValidationCCICPV',
+                                                                                   'ValidationFacility',
+                                                                                   'ValidationDefinition',
+                                                                                   'AgeMinimum',
+                                                                                   'AgeMaximum'))  
+
+            union all 
+            select sev.structureid, cv.elementid as domainelementid
+            from strelementversion sev, conceptversion cv 
+            where sev.elementversionid = cv.conceptid  
+            and cv.classid not in (select classid from class c where className in( 'SexValidation', 
+                                                                       'ValidationICD', 
+                                                                       'ValidationCCI',
+                                                                       'Validation'
+                                                                       )) 
+         )           
+      )       
+      select structureid, domainelementid, cims_util.getClassNameForElementId(pElementId => domainelementid) classname,
+             cims_util.getSupplementPath(supplementId => domainelementid, contextid => #{maxStructureId}) breadcrumbs,
+            cims_util.getTextProperty(elemId => domainelementid, classnme => 'SupplementDescription', language => #{language}, strid => #{maxStructureId}) code
+      from changedElement ce 
+      where domainelementid is not null
+      order by breadcrumbs, structureid  
+       
+  </select>	 
+  
+    <select id="findProposedSupplementChanges" resultMap="ProposedChangeMap">
+     -- get the change data on the text fields (supplement description)
+ with textChanges as (
+                    select 
+                      ev.classid                changedElementClassId
+                    , decode(tpv.text, '', 'no_value', tpv.text)  changedValue
+                    , tpv.languagecode          changedElementLanguage
+                    , ev.elementid              changedElementId
+                    , ev.elementversionid       changedElementVersionId
+                    , ev.changedfromversionid   changedFromVersionId
+                    , sv.basestructureid        basecontextid
+                    , sev.structureid           changeContextId
+                    from structureelementversion sev, elementversion ev, structureversion sv, textpropertyversion tpv
+                    where sev.structureid = #{contextId} 
+                    and sev.elementversionid = ev.elementversionid
+                    and sv.structureid = sev.structureid
+                    and tpv.textpropertyid = ev.elementversionid
+                    and tpv.domainelementid = #{domainElementId}
+                    and tpv.classid in (select classid from class c where className = 'SupplementDescription')
+    )
+    , textprops as ( select   
+                     (select text from textpropertyversion tpv, structureelementversion sev
+                      where sev.structureid = tc.basecontextid
+                      and sev.elementversionid = tpv.textpropertyid
+                      and tpv.elementid = tc.changedElementId
+                      ) as baseValue
+                      , c.friendlyname  fieldname
+                      , c.tablename
+                      ,(select text from textpropertyversion where textpropertyid = tc.changedFromVersionId) as oldValue
+                      , tc.*
+                  from textChanges tc, class c
+                  where tc.changedElementClassId = c.classid
+    )
+    , textpropsWithConflict as(
+                 select decode(decode(baseValue, oldValue, 'no_conflict', baseValue), '', 'no_value', decode(baseValue, oldValue, 'no_conflict', baseValue)) as conflict
+                        , tp.*
+                 from textprops tp
+    ),   
+    
+          -- get the change data on the numeric fields (Sorting order)
+    numericChanges as (
+                  select 
+                    ev.classid                changedElementClassId
+                  , to_char(npv.numericvalue)  changedValue
+                  , ' '                       changedElementLanguage
+                  , ev.elementid              changedElementId
+                  , ev.elementversionid       changedElementVersionId
+                  , ev.changedfromversionid   changedFromVersionId
+                  , sv.basestructureid        basecontextid
+                  , sev.structureid           changeContextId
+                  from structureelementversion sev, elementversion ev, structureversion sv, numericpropertyversion npv
+                  where sev.structureid = #{contextId} 
+                  and sev.elementversionid = ev.elementversionid
+                  and sv.structureid = sev.structureid
+                  and npv.numericpropertyid = ev.elementversionid
+                  and npv.domainelementid = #{domainElementId}
+                  and npv.classid in (select classid from class where classname = 'SortingHint')
+    )
+   , numericprops as ( 
+                  select   
+                     (select to_char(npv.numericvalue) from numericpropertyversion npv, structureelementversion sev
+                      where sev.structureid = nc.basecontextid
+                      and sev.elementversionid = npv.numericpropertyid
+                      and npv.elementid = nc.changedElementId
+                      ) as baseValue
+                      , c.friendlyname  fieldname
+                      , c.tablename
+                      ,(select to_char(numericvalue) from numericpropertyversion where numericpropertyid = nc.changedFromVersionId) as oldValue
+                      , nc.*
+                  from numericChanges nc, class c
+                  where nc.changedElementClassId = c.classid                 
+    ) 
+    , numericpropsWithConflict as(
+                 select decode(decode(baseValue, oldValue, 'no_conflict', baseValue), '', 'no_value', decode(baseValue, oldValue, 'no_conflict', baseValue)) as conflict
+                        , np.*
+                 from numericprops np
+    ), 
+    
+   xmlChanges as (
+                    select 
+                      ev.classid                changedElementClassId   
+                    , decode(dbms_lob.compare(xpv.xmltext, empty_clob()), 0, to_clob('no_value'), xpv.xmltext) changedXmlValue           
+                    , decode(dbms_lob.compare(xpv.xmltext, empty_clob()), 0, 'no_value', to_char(xpv.xmlpropertyid))  changedValue
+                    , xpv.languagecode          changedElementLanguage
+                    , ev.elementid              changedElementId
+                    , ev.elementversionid       changedElementVersionId
+                    , ev.changedfromversionid   changedFromVersionId
+                     , (decode(nvl(ev.changedfromversionid, 0), 0, to_clob('no_value'), 
+                       (select xpv2.xmltext from xmlpropertyversion xpv2 where xpv2.xmlpropertyid = ev.changedfromversionid))) changedFromXmlValue
+                    , sv.basestructureid        basecontextid
+                    , sev.structureid           changeContextId
+                    from structureelementversion sev, elementversion ev, structureversion sv, xmlpropertyversion xpv
+                    where sev.structureid = #{contextId}
+                    and sev.elementversionid = ev.elementversionid
+                    and sv.structureid = sev.structureid
+                    and xpv.xmlpropertyid = ev.elementversionid
+                    and xpv.domainelementid = #{domainElementId}
+                    and xpv.classid in (select classid from class where classname = 'SupplementDefinition')
+    )
+    , xmlprops as ( select                                            
+                      (select xpv.xmltext from xmlpropertyversion xpv, structureelementversion sev
+                      where sev.structureid = xc.basecontextid
+                      and sev.elementversionid = xpv.xmlpropertyid
+                      and xpv.elementid = xc.changedElementId
+                      ) as baseXValue
+                   ,  (select to_char(xpv.xmlpropertyid) from xmlpropertyversion xpv, structureelementversion sev
+	                   where sev.structureid = xc.basecontextid
+	                   and sev.elementversionid = xpv.xmlpropertyid
+	                   and xpv.elementid = xc.changedElementId
+                      ) as baseXPropertyId
+                  , c.friendlyname fieldname  
+                  , c.tablename 
+                  , decode(dbms_lob.compare(xc.changedFromXmlValue, to_clob('no_value')), 0, 'no_value', to_char(xc.changedFromVersionId)) oldValue
+                  , xc.*
+                  from xmlChanges xc,class c 
+                  where xc.changedElementClassId = c.classid 
+                   and not (dbms_lob.compare(changedFromXmlValue, to_clob('no_value')) = 0 and dbms_lob.compare(changedXmlValue, empty_clob()) = 0)
+    ) 
+    , xmlpropsWithBaseHtmlValue as (
+                  select nvl(xp.baseXValue, 'no_value') as baseXmlValue, 
+                  nvl(xp.baseXPropertyId, 'no_value') as baseXmlPropertyId, 
+                  xp.* 
+                  from xmlprops  xp 
+    )     
+    , xmlpropsWithConflict as(
+                 select decode(length(decode(dbms_lob.compare(baseXmlValue, changedFromXmlValue), 0, to_clob('no_conflict'), baseXmlValue)), 0, to_clob('no_value'), 
+    			               decode(dbms_lob.compare(baseXmlValue, changedFromXmlValue), 0, to_clob('no_conflict'), baseXmlValue))  conflictXmlValue
+                        , xp.*
+                 from xmlpropsWithBaseHtmlValue xp
+    ) 
+    
+    -- Get the changes on concept (i.e., concept status)
+    , conceptChanges as (
+            select 
+                cv.classid                changedElementClassId
+              , cv.status                 changedValue
+              , ' '                       changedElementLanguage
+              , cv.elementid              changedElementId
+              , cv.conceptid              changedElementVersionId
+              , ev.changedfromversionid   changedFromVersionId
+              , sv.basestructureid        basecontextid
+              , sev.structureid           changeContextId
+            from structureelementversion sev, elementversion ev, structureversion sv, conceptversion cv
+            where sev.structureid = #{contextId} 
+                and sev.elementversionid = ev.elementversionid
+                and cv.conceptid = ev.elementversionid
+                and ev.classid in ( select classid from class c where c.tablename = 'ConceptVersion' 
+                                           and c.classname = 'Supplement')
+                and sv.structureid = sev.structureid
+                and cv.elementid = #{domainElementId}
+    )
+    , conceptStatus as (  select
+                      (select status from conceptversion cv, structureelementversion sev
+                              where sev.structureid = cc.basecontextid
+                              and sev.elementversionid = cv.conceptid
+                              and cv.elementid = cc.changedElementId
+                      ) as baseStatus
+                    , 'status'  fieldname
+                    , 'ConceptVersion' tablename
+                    ,(select status from conceptversion where conceptid = cc.changedFromVersionId) as oldstatus                   
+                    , cc.*
+                    from conceptChanges cc
+    )    
+    , conceptStatusWithConflict as(
+                 select decode(decode(baseStatus, oldstatus, 'no_conflict', baseStatus), '', 'no_value', decode(baseStatus, oldstatus, 'no_conflict', baseStatus)) as conflict
+                        , cs.*
+                 from conceptStatus cs
+    ),
+       
+       -- changes on Front/Back matter 
+    conceptPropertyChanges as (
+      select 
+             ev.classid                changedElementClassId
+           , cpv.rangeelementid        changedRangeId
+           , (select decode(tpv.text, '', 'no_value', tpv.text) from TextPropertyVersion tpv,  structureelementversion sev 
+                where tpv.classid in (select classid from class where classname = 'DomainValueDescription') 
+                and domainelementid = cpv.rangeelementid
+                and sev.elementversionid = tpv.textpropertyid
+                and sev.structureid = sv.basestructureid
+                and tpv.languagecode = #{language}
+                ) changedValue
+           , ' '                       changedElementLanguage
+           , ev.elementid              changedElementId
+           , ev.elementversionid       changedElementVersionId
+           , ev.changedfromversionid   changedFromVersionId
+           , sv.basestructureid        basecontextid
+           , sev.structureid           changeContextId
+      from structureelementversion sev, elementversion ev, structureversion sv, conceptpropertyversion cpv
+      where sev.structureid = #{contextId}
+      and sev.elementversionid = ev.elementversionid
+      and ev.classid in (select classid from class c where className in('SupplementTypeIndicator'))
+      and sv.structureid = sev.structureid
+      and cpv.conceptpropertyid = ev.elementversionid
+      and cpv.domainelementid = #{domainElementId}
+    )
+    ,conceptprops as 
+    (
+        select (
+              select rangeelementid from conceptpropertyversion cpv, structureelementversion sev
+              where sev.structureid = cpc.basecontextid
+              and cpv.elementid = cpc.changedElementId
+              and cpv.conceptpropertyid = sev.elementversionid        
+            ) as baseRangeId
+            , c.friendlyname fieldname
+            , c.tablename
+            ,(
+              select rangeelementid from conceptpropertyversion
+              where conceptpropertyid = cpc.changedFromVersionId
+            ) as oldRangeId
+          , cpc.*
+        from conceptPropertyChanges cpc, class c
+        where cpc.changedElementClassId = c.classid
+    )
+    ,   conceptPropsWithConflict as (
+         select
+           (select decode(tpv.text, '', 'no_value', tpv.text) from TextPropertyVersion tpv,  structureelementversion sev 
+              where tpv.classid in (select classid from class where classname = 'DomainValueDescription') 
+              and domainelementid = oldRangeId
+              and sev.elementversionid = tpv.textpropertyid
+              and sev.structureid = basecontextid
+              and tpv.languagecode = #{language}
+           ) oldValue, 
+           decode(baseRangeId, oldRangeId, 'no_conflict', 
+                   (select decode(tpv.text, '', 'no_value', tpv.text) from TextPropertyVersion tpv,  structureelementversion sev 
+                          where tpv.classid in (select classid from class where classname = 'DomainValueDescription') 
+                          and domainelementid = baseRangeId
+                          and sev.elementversionid = tpv.textpropertyid
+                          and sev.structureid = basecontextid
+                          and tpv.languagecode = #{language}
+                   )) conflict
+           , cp.*
+         from conceptprops cp
+    ) 
+   
+    -- Get all proposed change data
+    select changedElementVersionId, tablename, fieldname, oldValue, changedValue, decode(conflict, '', 'no_value', conflict) conflict 
+    from (
+      select t.changedElementVersionId, t.tablename, t.fieldname,  t.oldValue, t.changedValue, decode(conflict, 'no_conflict', 'no_conflict', decode(conflict, changedValue, 'no_conflict', conflict)) conflict, 2 as cid
+      from textpropsWithConflict t
+      
+      union all
+        
+      select np.changedElementVersionId, np.tablename, np.fieldname,  np.oldValue, np.changedValue, decode(conflict, 'no_conflict', 'no_conflict', decode(conflict, changedValue, 'no_conflict', conflict)) conflict, 3 as cid
+      from numericpropsWithConflict np
+        
+      union all
+        
+      select xp.changedElementVersionId, xp.tablename, xp.fieldname || ' ' || xp.changedElementLanguage as fieldname, xp.oldValue, decode(dbms_lob.compare(xp.changedFromXmlValue, xp.changedXmlValue), 0, xp.oldValue, xp.changedValue) changedValue, 
+      decode(dbms_lob.compare(conflictXmlValue, to_clob('no_conflict')), 0, 'no_conflict', '', 'no_conflict', decode(dbms_lob.compare(conflictXmlValue, changedXmlValue), 0, 'no_conflict', baseXmlPropertyId)) conflict , 5 as cid
+      from xmlpropsWithConflict xp
+                
+      union all
+        
+      select cs.changedElementVersionId, cs.tablename, cs.fieldname,  cs.oldstatus as oldValue, cs.changedValue, decode(conflict, 'no_conflict', 'no_conflict', decode(conflict, changedValue, 'no_conflict', conflict)) conflict, 1 as cid
+      from conceptStatusWithConflict cs
+      
+      union all
+      
+      select cp.changedElementVersionId, cp.tablename, cp.fieldname, cp.oldValue, cp.changedValue,  decode(conflict, 'no_conflict', 'no_conflict', decode(conflict, changedValue, 'no_conflict', conflict)) conflict,  4 as cid
+      from conceptPropsWithConflict cp  
+      
+      order by cid, fieldname, changedElementVersionId 
+    )     
+ </select> 
+ 
+   <select id="findRealizedSupplementChanges" resultMap="RealizedChangeMap">	
+    -- get the change data on the text fields
+    with textChanges as (
+                    select 
+                          ev.classid                realizedElementClassId
+                        , tpv.text                  realizedValue
+                        , tpv.languagecode          realizedElementLanguage
+                        , ev.elementid              realizedElementId
+                        , ev.elementversionid       realizedElementVersionId
+                        , ev.changedfromversionid   changedFromVersionId
+                    from structureelementversion sev, elementversion ev, structureversion sv, textpropertyversion tpv
+                    where sv.change_request_id = #{changeRequestId}
+                          and sv.contextstatus = 'CLOSED'
+                          and sev.elementversionid = ev.elementversionid
+                          and sv.structureid = sev.structureid
+                          and tpv.textpropertyid = ev.elementversionid
+                          and tpv.domainelementid = #{domainElementId}   
+                          and tpv.classid in (select classid from class c where className = 'SupplementDescription')     
+    ),
+    textprops as ( select c.friendlyname fieldname
+                          , c.tablename
+                          , (select text from textpropertyversion where textpropertyid = tc.changedFromVersionId) as oldValue 
+                          , tc.*
+                  from textChanges tc, class c
+                  where tc.realizedElementClassId = c.classid
+    ),  
+    
+    numericChanges as (
+                    select 
+                          ev.classid                realizedElementClassId
+                        , to_char(npv.numericvalue)  realizedValue
+                        , ''                        realizedElementLanguage
+                        , ev.elementid              realizedElementId
+                        , ev.elementversionid       realizedElementVersionId
+                        , ev.changedfromversionid   changedFromVersionId
+                    from structureelementversion sev, elementversion ev, structureversion sv, numericpropertyversion npv
+                    where sv.change_request_id = #{changeRequestId}
+                          and sv.contextstatus = 'CLOSED'
+                          and sev.elementversionid = ev.elementversionid
+                          and sv.structureid = sev.structureid
+                          and npv.numericpropertyid = ev.elementversionid
+                          and npv.domainelementid = #{domainElementId}   
+                          and npv.classid in (select classid from class where classname = 'SortingHint')    
+    ),
+    numericprops as ( select c.friendlyname fieldname
+                          , c.tablename
+                          , (select to_char(numericvalue) from numericpropertyversion where numericpropertyid = nc.changedFromVersionId) as oldValue 
+                          , nc.*
+                  from numericChanges nc, class c
+                  where nc.realizedElementClassId = c.classid
+    ), 
+ 
+    -- get the change data on the xml fields
+    xmlChanges as (
+                    select 
+                          ev.classid                realizedElementClassId
+                        , decode(dbms_lob.compare( xpv.xmltext, empty_clob()), 0, to_clob('no_value'), xpv.xmltext) realizedXmlValue           
+                    	, decode(dbms_lob.compare( xpv.xmltext, empty_clob()), 0, '', to_char(xpv.xmlpropertyid))  realizedValue
+                        , xpv.languagecode          realizedElementLanguage
+                        , ev.elementid              realizedElementId
+                        , ev.elementversionid       realizedElementVersionId
+                        , ev.changedfromversionid   changedFromVersionId
+                        , (decode(nvl(ev.changedfromversionid, 0), 0, to_clob('no_value'), 
+                       		(select xpv2.xmltext from xmlpropertyversion xpv2 where xpv2.xmlpropertyid = ev.changedfromversionid))) changedFromXmlValue 
+                    from structureelementversion sev, elementversion ev, structureversion sv, xmlpropertyversion xpv
+                    where sv.change_request_id = #{changeRequestId}
+                        and sv.contextstatus = 'CLOSED'
+                        and sev.elementversionid = ev.elementversionid
+                        and sv.structureid = sev.structureid
+                        and xpv.xmlpropertyid = ev.elementversionid
+                        and xpv.domainelementid = #{domainElementId}
+                        and xpv.classid in (select classid from class c where classname = 'SupplementDefinition')
+    ),
+    xmlprops as ( select c.friendlyname fieldname
+                        , c.tablename
+                        , decode(dbms_lob.compare( xc.changedFromXmlValue, to_clob('no_value')), 0, '', to_char(xc.changedFromVersionId)) oldValue
+                        , xc.*                       
+                  from xmlChanges xc, class c 
+                  where xc.realizedElementClassId = c.classid
+    ),
+    
+    
+       -- Get the changes on concept (i.e., concept status)
+    conceptChanges as (
+          select 
+              cv.classid                realizedElementClassId
+            , cv.status                 realizedValue
+            , ' '                       realizedElementLanguage
+            , cv.elementid              realizedElementId
+            , cv.conceptid              realizedElementVersionId
+            , ev.changedfromversionid   changedFromVersionId
+          from structureelementversion sev, elementversion ev, structureversion sv, conceptversion cv
+          where  sv.change_request_id = #{changeRequestId}
+               and sv.contextstatus = 'CLOSED'
+              and sev.elementversionid = ev.elementversionid
+              and cv.conceptid = ev.elementversionid
+              and ev.classid in ( select classid from class c where c.tablename = 'ConceptVersion' 
+                                         and c.classname = 'Supplement')
+              and sv.structureid = sev.structureid
+              and cv.elementid = #{domainElementId}
+  )
+  , conceptStatus as (  select
+                              'status'  fieldname
+                            , 'ConceptVersion' tablename
+                            ,(select status from conceptversion where conceptid = cc.changedFromVersionId) as oldstatus
+                            , cc.*                           
+                         from conceptChanges cc
+  ),
+   
+       -- get the change data on the concept property fields (i.e., Front/Back matter)
+  conceptPropertyChanges as (
+    select 
+           ev.classid                realizedElementClassId
+         , cpv.rangeelementid        realizedRangeId
+         , (select tpv.text from TextPropertyVersion tpv,  structureelementversion sev 
+              where tpv.classid in (select classid from class where classname = 'DomainValueDescription') 
+              and domainelementid = cpv.rangeelementid
+              and sev.elementversionid = tpv.textpropertyid
+              and sev.structureid = sv.basestructureid
+              and tpv.languagecode = #{language}
+              ) realizedValue
+         , ' '                       realizedElementLanguage
+         , ev.elementid              realizedElementId
+         , ev.elementversionid       realizedElementVersionId
+         , ev.changedfromversionid   changedFromVersionId
+         , sv.basestructureid        basecontextid
+     from structureelementversion sev, elementversion ev, structureversion sv, conceptpropertyversion cpv
+    where sv.change_request_id = #{changeRequestId}
+         and sv.contextstatus = 'CLOSED'
+         and sev.elementversionid = ev.elementversionid
+         and ev.classid in (select classid from class c where className in('SupplementTypeIndicator'))
+         and sv.structureid = sev.structureid
+         and cpv.conceptpropertyid = ev.elementversionid
+         and cpv.domainelementid = #{domainElementId}
+         
+  )
+  ,conceptprops as 
+  (
+      select  c.friendlyname fieldname
+              , c.tablename
+               ,(select rangeelementid from conceptpropertyversion where conceptpropertyid = cpc.changedFromVersionId) as oldRangeId
+               , cpc.*               
+      from conceptPropertyChanges cpc, class c
+      where cpc.realizedElementClassId = c.classid
+  )
+    
+    -- Get all realized change data  
+  select realizedElementVersionId, tablename, fieldname, oldvalue, realizedvalue
+  from
+  (
+    select t.realizedElementVersionId, t.tablename, t.fieldname,  t.oldValue, t.realizedValue, 2 as rid
+    from textprops t   
+    
+    union all
+    
+    select n.realizedElementVersionId, n.tablename, n.fieldname,  n.oldValue, n.realizedValue, 3 as rid
+    from numericprops n    
+    
+    union all
+      
+    select xp.realizedElementVersionId, xp.tablename, xp.fieldname || ' ' || xp.realizedElementLanguage as fieldname,  xp.oldValue, 
+           decode(dbms_lob.compare(xp.realizedXmlValue, xp.changedFromXmlValue), 0, xp.oldValue, xp.realizedValue) realizedValue, 5 as rid 
+    from xmlprops xp  
+    
+    union all
+      
+    select cs.realizedElementVersionId, cs.tablename, cs.fieldname,  cs.oldstatus as oldValue, cs.realizedValue, 1 as rid 
+    from conceptStatus cs
+    
+    union all
+    
+    select cp.realizedElementVersionId, cp.tablename, cp.fieldname,  
+         (select tpv.text from TextPropertyVersion tpv,  structureelementversion sev 
+            where tpv.classid in (select classid from class where classname = 'DomainValueDescription') 
+            and domainelementid = oldRangeId
+            and sev.elementversionid = tpv.textpropertyid
+            and sev.structureid = basecontextid
+            and tpv.languagecode = #{language}
+         ) oldValue, 
+         cp.realizedValue,
+         4 as rid
+    from conceptprops cp
+    
+    order by rid, fieldname, realizedElementVersionId    
+  )
+    
+  </select>   
+  
+</mapper>
+ 

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.refset.mapper.PicklistASOTMapper">
+
+	<select id="initAsotRelease" statementType="CALLABLE" flushCache="true">
+		<![CDATA[ 
+          	call cims_refset.initAsotRelease
+          	(
+				#{picklistId, jdbcType=BIGINT, javaType=java.lang.Integer, mode=IN}
+			) 
+        ]]>
+ 	</select>
+
+	<insert id="insertPicklist">
+ 		insert into picklist (picklist_id,picklist_code,refset_code, refset_version_code, language_code, picklist_status_code)
+        values(#{picklistId},#{picklistCode},#{refsetCode},#{refsetVersionCode}, #{languageCode}, #{picklistStatusCode})
+ 	</insert>
+ 	
+ 	<insert id="insertColumn">
+ 		insert into picklist_column (picklist_column_id,picklist_id, column_desc,column_type_desc)
+        values(#{picklistColumnId},#{picklistId},#{columnDesc},#{columnTypeDesc})
+ 	</insert>
+ 	
+ 	<insert id="insertRecord"  parameterType="java.util.Map">
+       <selectKey resultType="java.lang.Long" keyProperty="recordId" order="BEFORE">  
+		        select RECORDID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into record(
+                 RECORD_ID,
+                 PICKLIST_ID
+                 )
+        values ( #{recordId},
+                 #{picklistId}
+        		)
+ 	</insert>
+ 	
+ 	<insert id="insertRecordValue">
+       <selectKey resultType="java.lang.Long" keyProperty="recordColumnValueId" order="BEFORE">  
+		        select RECORDCOLUMNVALUEID_SEQ.nextval from dual 
+	  </selectKey>
+      insert into record_column_value(
+                 RECORD_COLUMN_VALUE_ID,
+                 PICKLIST_COLUMN_ID,
+                 RECORD_ID,
+                 VALUE_TEXT
+                 )
+        values ( #{recordColumnValueId},
+                 #{picklistColumnId},
+                 #{recordId},
+                 #{valueText}
+        		)
+ 	</insert>
+ 	
+ 	
+</mapper>

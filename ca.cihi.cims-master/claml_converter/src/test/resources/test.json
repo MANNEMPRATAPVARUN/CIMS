@@ -1,0 +1,75 @@
+{
+  "name" : "CCI",
+  "year" : "2022",
+  "language" : "ENG",
+  "contextId" : 5251621,
+  "content" : [ {
+    "Long Title" : "ICD-10-CA/CCI Copyright Notice and Licence Reminder ",
+    "SupplementDefinition" : {
+      "rawxml" : "<section record=\"189a7\" header=\"ICD-10-CA/CCI Copyright Notice and Licence Reminder\"> \n\t\t<label> ICD-10-CA/CCI Copyright Notice and Licence Reminder </label> \n<clause record=\"18ba8\"><label> Copyright Notice </label>\n\t\t<para record=\"189a9\"> <phrase format=\"bold\">ICD-10-CA:</phrase> </para> <para>ICD-10-CA is based upon the International Statistical Classification of Diseases and Related Health Problems, Tenth Revision (ICD-10) </para> \n<para>Copyright � World Health Organization 1992. All rights reserved.  \n\t</para> \n\t\t<para>The Canadian version, ICD-10-CA, was modified by permission for Canadian Government purposes.</para> \n\t\t<para>The ICD-10-CA is property of the Canadian Institute for Health Information </para> \n<para> � 2001-2022 Canadian Institute for Health Information\n </para> \n<para><phrase format=\"bold\">CCI:</phrase> </para>\n<para> The CCI is property of the Canadian Institute for Health Information </para> \n<para> � 2001-2022 Canadian Institute for Health Information\n </para> </clause> \n\n\n\n\t\t<clause record=\"189b1a\"><label>Licence Reminder </label>\n<para>The <phrase format=\"bold\">ICD-10-CA </phrase> is the Tenth Revision of the International Statistical Classification of Diseases and Related Health Problems modified for Canadian use.\n   </para> \n<para> The <phrase format=\"bold\">CCI</phrase> is CIHI's system of procedure codes entitled the <phrase format=\"bold\">Canadian Classification of Health Interventions)</phrase>.  </para>\n\n<para> The Folio Views software and Quick Start User Guide <phrase format=\"bold\">(Folio Views)</phrase>, owned by Rocket Software, Inc., facilitate the use of the ICD-10-CA and the CCI, as applicable. </para>\n\n\n<para> <phrase format=\"bold\">Important Reminder: </phrase> You or the organization that provided you with access agreed to a licence agreement governing the use of this Version 2022 ICD-10-CA and/or CCI, including Folio Views (collectively, this <phrase format=\"bold\">Product)</phrase>. Your use of this Product is subject to the terms and conditions of that licence agreement, and those terms and conditions may be accessed at www.cihi.ca/en/icd-10-cacci-folio-views-licence</para>\n<para> If you are accessing this Product under the CIHI Health Information Standards and Specifications Agreement (HISSA), then the terms and conditions of the HISSA govern your use of this Product.</para>\n<para>By using this Product, you acknowledge that you are aware of the terms and conditions of the licence agreement or the HISSA, as applicable, and that you understand and agree to comply with them. If you do not or cannot agree to comply with those terms and conditions, you may not proceed with using this Product.</para> \n\n<graphic src=\"Rocket Logo.gif\" scale=\"20\" mode=\"below\"> </graphic> </clause>\n\n\n\t </section>\n\n",
+      "jsonnode" : {
+        "section" : {
+          "clause" : [ {
+            "para" : [ {
+              "phrase" : {
+                "format" : "bold",
+                "content" : "ICD-10-CA:"
+              },
+              "record" : "189a9"
+            }, "ICD-10-CA is based upon the International Statistical Classification of Diseases and Related Health Problems, Tenth Revision (ICD-10)", "Copyright � World Health Organization 1992. All rights reserved.", "The Canadian version, ICD-10-CA, was modified by permission for Canadian Government purposes.", "The ICD-10-CA is property of the Canadian Institute for Health Information", "� 2001-2022 Canadian Institute for Health Information", {
+              "phrase" : {
+                "format" : "bold",
+                "content" : "CCI:"
+              }
+            }, "The CCI is property of the Canadian Institute for Health Information", "� 2001-2022 Canadian Institute for Health Information" ],
+            "record" : "18ba8",
+            "label" : "Copyright Notice"
+          }, {
+            "para" : [ {
+              "phrase" : {
+                "format" : "bold",
+                "content" : "ICD-10-CA"
+              },
+              "content" : [ "The", "is the Tenth Revision of the International Statistical Classification of Diseases and Related Health Problems modified for Canadian use." ]
+            }, {
+              "phrase" : [ {
+                "format" : "bold",
+                "content" : "CCI"
+              }, {
+                "format" : "bold",
+                "content" : "Canadian Classification of Health Interventions)"
+              } ],
+              "content" : [ "The", "is CIHI's system of procedure codes entitled the", "." ]
+            }, {
+              "phrase" : {
+                "format" : "bold",
+                "content" : "(Folio Views)"
+              },
+              "content" : [ "The Folio Views software and Quick Start User Guide", ", owned by Rocket Software, Inc., facilitate the use of the ICD-10-CA and the CCI, as applicable." ]
+            }, {
+              "phrase" : [ {
+                "format" : "bold",
+                "content" : "Important Reminder:"
+              }, {
+                "format" : "bold",
+                "content" : "Product)"
+              } ],
+              "content" : [ "You or the organization that provided you with access agreed to a licence agreement governing the use of this Version 2022 ICD-10-CA and/or CCI, including Folio Views (collectively, this", ". Your use of this Product is subject to the terms and conditions of that licence agreement, and those terms and conditions may be accessed at www.cihi.ca/en/icd-10-cacci-folio-views-licence" ]
+            }, "If you are accessing this Product under the CIHI Health Information Standards and Specifications Agreement (HISSA), then the terms and conditions of the HISSA govern your use of this Product.", "By using this Product, you acknowledge that you are aware of the terms and conditions of the licence agreement or the HISSA, as applicable, and that you understand and agree to comply with them. If you do not or cannot agree to comply with those terms and conditions, you may not proceed with using this Product." ],
+            "record" : "189b1a",
+            "label" : "Licence Reminder",
+            "graphic" : {
+              "mode" : "below",
+              "src" : "Rocket Logo.gif",
+              "scale" : 20
+            }
+          } ],
+          "record" : "189a7",
+          "header" : "ICD-10-CA/CCI Copyright Notice and Licence Reminder",
+          "label" : "ICD-10-CA/CCI Copyright Notice and Licence Reminder"
+        }
+      }
+    }
+  }]
+}
+  

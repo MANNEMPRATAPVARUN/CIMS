@@ -1,0 +1,33 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:security="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans.xsd      http://www.springframework.org/schema/mvc      http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" id="PropertyPlaceholderConfigurer">
+		<property name="ignoreUnresolvablePlaceholders" value="true"/>
+		<property name="properties" ref="configurationFactoryBean"/>
+	</bean>
+
+	<bean id="handlerMapping" class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
+	    <property name="useSuffixPatternMatch" value="true" />
+	</bean>
+
+	<bean class="ca.cihi.blueprint.core.common.config.ConfigurationFactoryBean" id="configurationFactoryBean">
+		<constructor-arg ref="configuration"/>
+	</bean>
+
+	<bean class="org.apache.commons.configuration.CompositeConfiguration" id="configuration">
+		<constructor-arg>
+			<list>
+				<bean class="ca.cihi.blueprint.core.common.config.CentralizedConfiguration">
+					<constructor-arg value="CIMS_SCT"/>
+				</bean>
+				<bean class="ca.cihi.blueprint.core.common.config.EnvSpecificFileConfiguration">
+					<constructor-arg type="java.lang.String" value="cims_sct_web_internal.properties"/>
+				</bean>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean class="ca.cihi.blueprint.core.common.config.ApplicationPropertiesProvider"/>
+	
+	<mvc:resources cache-period="31556926" location="/resources/theme1/" mapping="/resources/**"/>
+
+</beans>

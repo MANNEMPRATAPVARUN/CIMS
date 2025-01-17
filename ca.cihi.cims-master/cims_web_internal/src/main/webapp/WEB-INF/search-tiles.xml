@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+     <definition name="search.list" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody" value="/WEB-INF/jsp/search/searchList.jsp"/>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.results" template="/WEB-INF/jsp/search/search-results.jsp">
+     </definition>
+     <definition name="search.results.popup" template="/WEB-INF/jsp/search/search-results-popup.jsp">
+     </definition>
+     <definition name="search.cr.properties" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-cr-properties.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.cr.icd.tabular" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-cr-properties.jsp"/>
+	 					<put-attribute name="classificationCriteria" value="/WEB-INF/jsp/search/search-criteria-cr-tabular.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.cr.cci.tabular" extends="search.cr.icd.tabular">
+     </definition>
+     <definition name="search.cr.index" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+						<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-cr-properties.jsp"/>
+	 					<put-attribute name="classificationCriteria" value="/WEB-INF/jsp/search/search-criteria-cr-index.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.tab.icd.comparative" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-tabular-comparative.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.tab.cci.comparative" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-tabular-comparative.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.tab.cci.simple" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-tabular-simple.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.tab.icd.simple" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-tabular-simple.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+     <definition name="search.ref.cci.comparative" extends="base">
+     	<put-attribute name="body">
+     		<definition template="/WEB-INF/jsp/search/search-layout-common.jsp">
+	 			<put-attribute name="contentBody">
+	 				<definition template="/WEB-INF/jsp/search/searchRun.jsp">
+	 					<put-attribute name="criteria" value="/WEB-INF/jsp/search/search-criteria-ref-values-comparative.jsp"/>
+	 					<put-attribute name="output" value="/WEB-INF/jsp/search/search-columns.jsp"/>
+	 					<put-attribute name="results" value="/WEB-INF/jsp/search/search-results.jsp"/>
+	 				</definition>
+	 			</put-attribute>
+	 		</definition>
+     	</put-attribute>
+     </definition>
+</tiles-definitions>

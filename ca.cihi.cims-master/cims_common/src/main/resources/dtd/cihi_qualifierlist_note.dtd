@@ -1,0 +1,36 @@
+<!--                           QUALIFIER LIST   - note                              -->
+<!-- Notes: (2001/01/04)
+     Content Model for CCI: (note)+
+     Content Model for ICD: (note)+
+  -->
+  
+  <!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;
+
+<!ELEMENT qualifierlist (note | table | chpfront)+ >
+<!ATTLIST qualifierlist
+	type (note | chpfront) #REQUIRED
+	codeval CDATA #IMPLIED
+>
+
+<!--                           NOTE                                           -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref|ulist|table|brace)*
+  -->
+<!ELEMENT note (#PCDATA | label | ulist | xref | table | brace)*>
+<!ATTLIST note
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+

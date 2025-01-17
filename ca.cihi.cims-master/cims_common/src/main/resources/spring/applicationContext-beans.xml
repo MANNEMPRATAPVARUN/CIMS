@@ -1,0 +1,238 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:cache="http://www.springframework.org/schema/cache" xmlns:security="http://www.springframework.org/schema/security" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p" xsi:schemaLocation="http://www.springframework.org/schema/beans                         http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/jee                         http://www.springframework.org/schema/jee/spring-jee.xsd                         http://www.springframework.org/schema/tx       http://www.springframework.org/schema/tx/spring-tx.xsd                         http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd                         http://www.springframework.org/schema/security                         http://www.springframework.org/schema/security/spring-security.xsd                         http://www.springframework.org/schema/context                         http://www.springframework.org/schema/context/spring-context.xsd                         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd                         http://www.springframework.org/schema/cache          http://www.springframework.org/schema/cache/spring-cache.xsd">
+  						
+	<context:component-scan base-package="ca.cihi.cims"/>
+	
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+
+	<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="sqlSessionFactory">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:sqlmap-config.xml"/>
+    </bean>
+      
+  <!--   <bean id="snomedSCTSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="snomedSCTDataSource" />
+        <property name="configLocation" value="classpath:sqlmap-config-sct.xml"/>
+   </bean>
+ -->
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="transformErrorMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.dao.mapper.TransformationErrorMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="asotMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.dao.mapper.ASOTMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="frameworkSearchMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.framework.mapper.SearchMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="classsMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.framework.mapper.ClasssMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="frameworkConceptMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.framework.mapper.ConceptMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="elementMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.framework.mapper.ElementMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="frameworkContextMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.framework.mapper.ContextMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="propertyMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.framework.mapper.PropertyMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="refsetControlMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.refset.mapper.RefsetControlMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="picklistASOTMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.refset.mapper.PicklistASOTMapper"/>
+   </bean>
+   
+  <!--  <bean id="snomedSCTMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+       <property name="sqlSessionFactory" ref="snomedSCTSqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.dao.mapper.sct.SnomedSCTMapper" />
+   </bean> -->
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="snomedCommonMapper">
+       <property name="sqlSessionFactory" ref="sqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.refset.mapper.SNOMEDCommonMapper"/>
+   </bean>
+   
+   <bean class="org.springframework.beans.factory.config.MethodInvokingBean">
+   		<property name="staticMethod" value="ca.cihi.cims.framework.domain.Concept.setHandlers"/>
+   		<property name="arguments">
+   			<list>
+   				<ref bean="conceptHandler"/>
+   			</list>
+   		</property>
+   </bean>
+   
+   <bean class="org.springframework.beans.factory.config.MethodInvokingBean">
+   		<property name="staticMethod" value="ca.cihi.cims.refset.service.factory.RefsetFactory.setRefsetControlHandler"/>
+   		<property name="arguments">
+   			<list>
+   				<ref bean="refsetControlHandler"/>
+   			</list>
+   		</property>
+   </bean>
+   
+    <!-- 
+	<bean id="cimsSqlMap" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+		<property name="configLocation" value="sqlmap-config.xml" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+    -->
+
+	<bean class="org.springframework.jdbc.core.JdbcTemplate" id="jdbcTemplate">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+
+	<bean class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate" id="jdbcNamedTemplate">
+		<constructor-arg ref="dataSource"/>
+	</bean>
+
+	<bean id="handlerMapping" class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
+	    <property name="useSuffixPatternMatch" value="true" />
+	</bean>
+
+	<bean class="ca.cihi.cims.transformation.XslTransformerFactory" id="xslTransformerFactory">
+	</bean>
+
+	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+		<property name="scopes">
+			<map>
+				<entry key="thread">
+					<bean class="org.springframework.context.support.SimpleThreadScope"/>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+	<bean class="org.springframework.core.io.ClassPathResource" id="stylesheetCims">
+         <constructor-arg value="/stylesheet/cims.xsl"/>
+    </bean>
+    
+	<bean class="org.springframework.core.io.ClassPathResource" id="stylesheetCimsIndex">
+         <constructor-arg value="/stylesheet/cims_index.xsl"/>
+    </bean>
+	
+	<bean class="org.springframework.core.io.ClassPathResource" id="stylesheetCimsQualifierlist">
+         <constructor-arg value="/stylesheet/cims_qualifierlist.xsl"/>
+    </bean> 
+    
+    <bean class="org.springframework.core.io.ClassPathResource" id="stylesheetCimsIndexRef">
+    	<constructor-arg value="/stylesheet/cims_indexRefDefinition.xsl"/>
+    </bean>
+    
+    <bean class="org.springframework.core.io.ClassPathResource" id="stylesheetCimsSupplement">
+         <constructor-arg value="/stylesheet/cims_supplement.xsl"/>
+    </bean>
+    
+    <bean class="org.springframework.core.io.ClassPathResource" id="stylesheetCimsCciComponent">
+         <constructor-arg value="/stylesheet/cims_ccicomponent.xsl"/>
+    </bean>
+    
+    <bean class="ca.cihi.cims.service.BaseTransformationServiceImpl" id="baseTransformService">
+    </bean>
+	
+	<!-- XslTransformers must be request-scoped as it's not safe to use Transformer 
+		classes in multiple threads. -->
+	
+	<bean class="ca.cihi.cims.transformation.XslTransformer" factory-bean="xslTransformerFactory" factory-method="create" id="xslTransformer" scope="thread">
+		<constructor-arg ref="stylesheetCims"/>
+	    <aop:scoped-proxy/>
+	</bean>
+
+	<bean class="ca.cihi.cims.service.TransformationServiceImpl" id="transformationService">
+		<property name="xslTransformer" ref="xslTransformer"/>
+		<property name="dtdFile" value="/dtd/cihi_cims.dtd"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="conceptMapper">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.dao.mapper.ConceptMapper"/>
+	</bean>	
+	
+	<bean class="ca.cihi.cims.service.ConceptServiceImpl" id="conceptService">
+		<property name="conceptMapper" ref="conceptMapper"/>
+	</bean>
+	
+	<!-- <bean id="snomedSCTService" class="ca.cihi.cims.service.sct.SnomedSCTServiceImpl">
+		<property name="snomedSCTMapper" ref="snomedSCTMapper" />
+    </bean> -->
+   
+	<bean class="ca.cihi.cims.transformation.XslTransformer" factory-bean="xslTransformerFactory" factory-method="create" id="indexRefXslTransformer" scope="thread">
+		<constructor-arg ref="stylesheetCimsIndexRef"/>
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.TransformIndexRefServiceImpl" id="transformIndexRefService">
+		<property name="xslTransformer" ref="indexRefXslTransformer"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.transformation.XslTransformer" factory-bean="xslTransformerFactory" factory-method="create" id="indexXslTransformer" scope="thread">
+		<constructor-arg ref="stylesheetCimsIndex"/>
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.TransformIndexServiceImpl" id="transformIndexService">
+		<property name="xslTransformer" ref="indexXslTransformer"/>
+		<property name="dtdFile" value="/dtd/cihi_cims_index.dtd"/>
+		<property name="transformIndexRefService" ref="transformIndexRefService"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.transformation.XslTransformer" factory-bean="xslTransformerFactory" factory-method="create" id="xslTransformerQualifierlist" scope="thread">
+		<constructor-arg ref="stylesheetCimsQualifierlist"/>
+	    <aop:scoped-proxy/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.TransformQualifierlistServiceImpl" id="transformationServiceQualifierlist">
+		<property name="xslTransformer" ref="xslTransformerQualifierlist"/>
+		<property name="dtdFile" value="/dtd/cihi_qualifierlist.dtd"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.transformation.XslTransformer" factory-bean="xslTransformerFactory" factory-method="create" id="supplementXslTransformer" scope="thread">
+		<constructor-arg ref="stylesheetCimsSupplement"/>
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.TransformSupplementServiceImpl" id="transformSupplementService">
+		<property name="xslTransformer" ref="supplementXslTransformer"/>
+		<property name="dtdFile" value="/dtd/cihi_cims_supplement.dtd"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.transformation.XslTransformer" factory-bean="xslTransformerFactory" factory-method="create" id="cciComponentXslTransformer" scope="thread">
+		<constructor-arg ref="stylesheetCimsCciComponent"/>
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.TransformCCIComponentServcieImpl" id="transformCciComponentService">
+		<property name="xslTransformer" ref="cciComponentXslTransformer"/>
+		<property name="dtdFile" value="/dtd/cihi_component_definition.dtd"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.transformation.util.UrlFormatUtils" id="urlFormatter">
+	</bean>
+	
+
+</beans>

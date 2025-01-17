@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cims_report.xsd">
+	<worksheet name="CIMS Report">
+		<header>
+			<parameter>
+				<paraName>classification</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>indexBook</paraName>
+				<column_number>6</column_number>
+				<!-- F -->
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>requestCategory</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>5</row_number>
+			</parameter>
+			<parameter>
+				<paraName>leadIndexTerm</paraName>
+				<column_number>6</column_number>
+				<!-- F -->
+				<row_number>5</row_number>
+			</parameter>
+		</header>
+		<detailHeader name="detailHeader">
+			<parameter>
+				<paraName>year1</paraName>
+				<column_number>4</column_number>
+				<row_number>11</row_number>
+				<paraType>Number</paraType>
+			</parameter>
+			<parameter>
+				<paraName>year2</paraName>
+				<column_number>5</column_number>
+				<row_number>11</row_number>
+				<paraType>Number</paraType>
+			</parameter>
+		</detailHeader>
+		<detail startRowNumber="12" name="detail1">
+			<parameter>
+				<paraName>hierarchicalPath</paraName>
+				<column_number>2</column_number>
+			</parameter>
+			<parameter>
+				<paraName>indexTerm</paraName>
+				<column_number>3</column_number>
+			</parameter>
+			<parameter>
+				<paraName>year1</paraName>
+				<column_number>4</column_number>
+			</parameter>
+			<parameter>
+				<paraName>year2</paraName>
+				<column_number>5</column_number>
+			</parameter>
+		</detail>
+	</worksheet>
+</workbook>

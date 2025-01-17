@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="CimsConcept">
+	<resultMap id="conceptResult" class="ca.cihi.cims.model.Concept">
+		<result property="conceptId" column="concept_id" />
+		<result property="chapterId" column="chapter_id" />
+		<result property="conceptCode" column="concept_code" />
+		<result property="conceptShortDesc" column="concept_short_desc" />
+		<result property="conceptLongDesc" column="concept_long_desc" />
+	</resultMap>
+
+	<select id="getTreeNode" resultMap="conceptResult">
+		with elementPropertys as (
+		select tp.text, p.domainelementid, e1.classid
+		from conceptProperty cp,Property p, Element e,ElementVersion ev,
+		Property p1,Textproperty tp, elementversion ev1,element e1
+		where cp.conceptpropertyid = p.propertyid
+		and p.domainelementid = e.elementid
+		and e.elementid = ev.elementid
+		and e.elementid = p1.domainelementid
+		and p1.propertyid = tp.textpropertyid
+		and ev1.elementversionid = p1.propertyid
+		and ev1.elementid = e1.elementid
+		and cp.rangeelementid = #parentKey#
+		order by p.domainelementid
+		)
+		select ep.domainelementid concept_id,
+		#chapterId# chapter_id,
+		MAX(DECODE(classid, 6, text, NULL)) as concept_code,
+		MAX(DECODE(classid, 7, text, NULL)) as concept_short_desc,
+		MAX(DECODE(classid,19, text, NULL)) as concept_long_desc
+		from elementPropertys ep
+		group by ep.domainelementid
+	</select>
+
+</sqlMap>

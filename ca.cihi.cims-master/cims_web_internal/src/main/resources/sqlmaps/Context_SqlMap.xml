@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.ContextMapper" >
+
+   <resultMap id="ContextIdentificationMap" type="ca.cihi.cims.dal.ContextIdentifier" >
+       <id property="contextId"  column="STRUCTUREID"/>
+       <result property="baseClassification"  column="CLASSNAME" />
+       <result property="versionCode"  column="VERSIONCODE" />
+       <result property="baseStructureId"  column="BASESTRUCTUREID" />
+       <result property="contextStatus"  column="CONTEXTSTATUS" />
+       <result property="contextStatusDate"  column="CONTEXTSTATUSDATE" />
+       <result property="isVersionYear" column="ISVERSIONYEAR" typeHandler="ca.cihi.cims.data.mapper.StringBooleanTypeHandler" />
+       <result property="requestId" column="CHANGE_REQUEST_ID"  />
+       <result property="freezingStatus" column="FREEZING_STATUS_ID" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+    </resultMap>
+
+  <update id="deleteContext"  parameterType="java.lang.Long" >
+      update STRUCTUREVERSION  set
+       CONTEXTSTATUSDATE =  CURRENT_DATE,
+       CONTEXTSTATUS='DELETED'
+      where  STRUCTUREID = #{contextId}
+  </update>
+
+
+
+
+  <update id="freezeTabularChanges"  parameterType="java.lang.Long" >
+      update STRUCTUREVERSION  set
+        CONTEXTSTATUSDATE =  CURRENT_DATE,
+        FREEZING_STATUS_ID = 1
+      where  STRUCTUREID = #{contextId}
+  </update>
+
+   <update id="freezeAllChanges"  parameterType="java.lang.Long" >
+      update STRUCTUREVERSION  set
+        CONTEXTSTATUSDATE =  CURRENT_DATE,
+        FREEZING_STATUS_ID = 2
+      where  STRUCTUREID = #{contextId}
+  </update>
+
+  <update id="unfreezeStructure"  parameterType="java.lang.Long" >
+      update STRUCTUREVERSION  set
+        CONTEXTSTATUSDATE =  CURRENT_DATE,
+        FREEZING_STATUS_ID = null
+      where  STRUCTUREID = #{contextId}
+  </update>
+
+   <update id="blockUnfreeze"  parameterType="java.lang.Long" >
+      update STRUCTUREVERSION  set
+        CONTEXTSTATUSDATE =  CURRENT_DATE,
+        FREEZING_STATUS_ID = 3
+      where  STRUCTUREID = #{contextId}
+  </update>
+
+
+
+</mapper>

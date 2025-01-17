@@ -1,0 +1,15 @@
+
+<%@ taglib prefix="c"			uri="/WEB-INF/tld/c.tld" %>
+<%@ taglib prefix="fmt"			uri="/WEB-INF/tld/fmt.tld" %>
+<%@ taglib prefix="fn"			uri="/WEB-INF/tld/fn.tld" %>
+<%@ taglib prefix="form"		uri="/WEB-INF/tld/spring-form.tld" %>
+<%@ taglib prefix="spring"		uri="/WEB-INF/tld/spring.tld" %>
+<%@ taglib prefix="security"	uri="/WEB-INF/tld/security.tld" %>
+<%@ taglib prefix="error"		uri="/WEB-INF/tld/error.tld" %>
+<%@ taglib prefix="cc"			uri="http://blueprint.cihi.ca/cc"  %>
+<%@ taglib prefix="tiles"		uri="http://tiles.apache.org/tags-tiles"%>
+<%@ taglib prefix="display"		uri="/WEB-INF/tld/displaytag-el.tld"%>
+<%@ taglib prefix="cf"			uri="/WEB-INF/tld/customfunctions.tld"%>
+<%@ taglib prefix="cims"		uri="/WEB-INF/tld/cims.tld" %>
+
+<c:set var="CONTENT_TYPE" value="text/html; charset=ISO-8859-1"/>

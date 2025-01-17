@@ -1,0 +1,9 @@
+create table CIMS_CHANGE_TYPE
+(
+  CHANGE_TYPE_CODE VARCHAR2(2) not null,
+  CHANGE_TYPE_DESC VARCHAR2(20)
+)
+;
+alter table CIMS_CHANGE_TYPE
+  add constraint FK_CHANGE_TYPE primary key (CHANGE_TYPE_CODE);
+

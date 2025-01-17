@@ -1,0 +1,13 @@
+create table CIMS_CONCEPT_REQUEST
+(
+  CONCEPT_ID NUMBER not null,
+  REQUEST_ID NUMBER not null
+)
+;
+alter table CIMS_CONCEPT_REQUEST
+  add constraint FK_CR_CONCEPT_ID foreign key (REQUEST_ID)
+  references CIMS_CONCEPT (CONCEPT_ID) on delete cascade;
+alter table CIMS_CONCEPT_REQUEST
+  add constraint FK_CR_REQUEST_ID foreign key (REQUEST_ID)
+  references CIMS_REQUEST (REQUEST_ID) on delete cascade;
+

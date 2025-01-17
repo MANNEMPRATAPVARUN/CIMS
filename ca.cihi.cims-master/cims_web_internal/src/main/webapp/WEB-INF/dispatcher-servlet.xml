@@ -1,0 +1,113 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+  
+	<context:component-scan base-package="ca.cihi.cims.web"/>
+	
+	
+	
+     <!--<mvc:annotation-driven validator="validator"/> -->
+	
+	<mvc:annotation-driven content-negotiation-manager="contentNegotiationManager"/>
+
+    <bean class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean" id="contentNegotiationManager">
+       <property name="favorPathExtension" value="false"/>
+       <property name="favorParameter" value="true"/>
+       <property name="mediaTypes">
+        <value>
+            json=application/json
+        </value>
+      </property>
+     </bean>
+	
+	<mvc:annotation-driven validator="validator"/>
+	
+    <!-- 
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="cacheSeconds" value="0" />
+	    
+		<property name="messageConverters">
+         <list>
+            <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"></bean>
+          </list>
+       </property>
+   </bean>
+	-->
+	
+	<mvc:interceptors>
+		<!-- 
+    	<bean class="ca.cihi.cims.web.filter.CurrentContextFilter" />
+    	-->
+    	<bean class="ca.cihi.cims.web.filter.CurrentContextFilter"/>
+    	<bean class="ca.cihi.cims.web.filter.UserSessionInterceptor"/>
+    	<bean class="ca.cihi.cims.web.filter.ConcurrentUpdateInterceptor"/>
+        <bean class="ca.cihi.cims.web.i18n.CimsLocaleChangeInterceptor" id="localeChangeInterceptor">
+		    <property name="paramName" value="language"/>
+	    </bean>
+	    
+	    <mvc:interceptor>
+			<mvc:mapping path="/refset/**"/>
+			<mvc:exclude-mapping path="/refset/refsetEditDetail.htm"/>
+			<bean class="ca.cihi.cims.web.filter.RefsetAccessControlInterceptor"/>
+		</mvc:interceptor>
+		
+		<mvc:interceptor>
+			<mvc:mapping path="/refset/picklist/view*"/>
+			<bean class="ca.cihi.cims.web.filter.ViewPicklistInteceptor"/>
+		</mvc:interceptor>
+    </mvc:interceptors>
+    
+	
+	<bean class="org.springframework.web.servlet.i18n.CookieLocaleResolver" id="localeResolver">
+		<property name="defaultLocale" value="en"/>
+		<property name="cookieName" value="clientlanguage"/>
+		<property name="cookieMaxAge" value="100000"/>
+	</bean>
+
+	
+	
+
+
+	<bean class="org.springframework.web.servlet.view.tiles3.TilesViewResolver">
+	   <property name="order" value="1"/>
+	</bean>
+	   
+	<bean class="org.springframework.web.servlet.view.tiles3.TilesConfigurer" id="tilesConfigurer">
+		<property name="definitions">
+			<list>
+				<value>/WEB-INF/cims-tiles.xml</value>
+				<value>/WEB-INF/changerequest-tiles.xml</value>
+				<value>/WEB-INF/search-tiles.xml</value> 
+				<value>/WEB-INF/refset-tiles.xml</value>
+			</list>
+		</property>
+	</bean>
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" id="viewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+		<property name="prefix" value="/WEB-INF/jsp/"/>
+		<property name="suffix" value=".jsp"/>
+		<property name="order" value="2"/>
+	</bean>
+    
+	<!-- Configure the multipart resolver -->
+    <bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver" id="multipartResolver">
+        <!-- one of the properties available; the maximum file size in bytes -->
+        <property name="maxUploadSize" value="1000000000"/>
+    </bean>
+
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver" id="defaultExceptionHandler">
+         <property name="exceptionMappings">
+			<props>
+				<prop key="java.lang.Throwable">error</prop>
+			</props>
+		</property>  
+	</bean>
+	
+	<bean class="org.springframework.web.servlet.view.XmlViewResolver">
+	   <property name="location">
+	       <value>/WEB-INF/spring-excel-views.xml</value>
+	   </property>
+	   <property name="order" value="0"/>
+	</bean>
+	
+
+</beans>

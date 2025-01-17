@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.IncompleteReportMapper" >
+
+  <select id="checkTabularConcept" resultType="java.lang.String" parameterType="java.util.Map">
+  
+      select cims_incomplete.checkTabularConcept(pContextId => #{contextId}, pConceptId => #{conceptId}, pIsVersionYear => #{isVersionYear}) from dual
+      
+   </select>
+   
+   <select id="checkIndexConcept" resultType="java.lang.String">
+  
+      select cims_incomplete.checkIndexConcept(pContextId => #{contextId}, pConceptId => #{conceptId}) from dual
+      
+   </select>	
+  
+     <select id="checkSupplementConcept" resultType="java.lang.String">
+  
+      select cims_incomplete.checkSupplementConcept(pContextId => #{contextId}, pConceptId => #{conceptId}) from dual
+      
+   </select>
+ 
+  
+</mapper>
+ 

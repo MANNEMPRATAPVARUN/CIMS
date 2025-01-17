@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cims_report.xsd">
+	<worksheet name="CIMS Report">
+		<header>
+			<parameter>
+				<paraName>currentYear</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>codeCount</paraName>
+				<column_number>6</column_number>
+				<!-- G -->
+				<row_number>4</row_number>
+			</parameter>
+			<parameter>
+				<paraName>priorYear</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+				<row_number>5</row_number>
+			</parameter>
+		</header>
+		<detail startRowNumber="10" name="detail1">
+			<parameter>
+				<paraName>codeValue</paraName>
+				<column_number>2</column_number>
+				<!-- B -->
+			</parameter>
+			<parameter>
+				<paraName>dataHolding</paraName>
+				<column_number>3</column_number>
+				<!-- C -->
+			</parameter>
+			<parameter>
+				<paraName>year</paraName>
+				<column_number>4</column_number>
+				<!-- D -->
+			</parameter>
+			<parameter>
+				<paraName>gender</paraName>
+				<column_number>5</column_number>
+				<!-- E -->
+			</parameter>
+			<parameter>
+				<paraName>minAge</paraName>
+				<column_number>6</column_number>
+				<!-- F -->
+			</parameter>
+			<parameter>
+				<paraName>maxAge</paraName>
+				<column_number>7</column_number>
+				<!-- G -->
+			</parameter>
+			<parameter>
+				<paraName>statusRef</paraName>
+				<column_number>8</column_number>
+				<!-- H -->
+			</parameter>
+			<parameter>
+				<paraName>locationRef</paraName>
+				<column_number>9</column_number>
+				<!-- I -->
+			</parameter>
+			<parameter>
+				<paraName>extentRef</paraName>
+				<column_number>10</column_number>
+				<!-- J -->
+			</parameter>
+		</detail>
+	</worksheet>
+</workbook>

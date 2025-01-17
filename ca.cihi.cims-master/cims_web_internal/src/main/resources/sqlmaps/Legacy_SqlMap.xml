@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ca.cihi.cims.data.mapper.legacy.LegacyRequestMapper" >
+
+    <resultMap id="LanguageMap" type="ca.cihi.cims.model.changerequest.legacy.Language">
+        <result property="languageCode" column="language_code" />
+        <result property="languageDesc" column="language_desc" />
+    </resultMap>
+
+    <resultMap id="DispositionMap" type="ca.cihi.cims.model.changerequest.legacy.RequestStatus">
+        <result property="requestStatusCode" column="request_status_code" />
+        <result property="requestStatusDesc" column="request_status_desc" />
+    </resultMap>
+
+    <resultMap id="SectionMap" type="ca.cihi.cims.model.changerequest.legacy.Section">
+        <result property="sectionCode" column="section_code" />
+        <result property="sectionDesc" column="section_desc" />
+    </resultMap>
+
+    <resultMap id="ChangeNatureMap" type="ca.cihi.cims.model.changerequest.legacy.ChangeNature">
+        <result property="changeNatureCode" column="change_nature_code" />
+        <result property="changeNatureDesc" column="change_nature_desc" />
+    </resultMap>
+
+    <resultMap id="ChangeTypeMap" type="ca.cihi.cims.model.changerequest.legacy.ChangeType">
+        <result property="changeTypeCode" column="change_type_code" />
+        <result property="changeTypeDesc" column="change_type_desc" />
+    </resultMap>
+
+    <resultMap id="LegacyRequestMap" type="ca.cihi.cims.model.changerequest.legacy.LegacyRequestResultsModel">
+        <result property="requestId" column="request_id" />
+        <result property="requestName" column="request_name" />
+        <result property="versionCode" column="version_code" />
+        <result property="classificationTitleCode" column="classification_title_code" />
+        <result property="language" column="language_desc" />
+        <result property="requestStatus" column="request_status_desc" />
+        <result property="sectionDesc" column="section_desc" />
+        <result property="changeNature" column="change_nature_desc" />
+        <result property="changeType" column="change_type_desc" />
+    </resultMap>
+
+    <resultMap id="LegacyRequestDetailMap" type="ca.cihi.cims.model.changerequest.legacy.LegacyRequestDetailModel">
+        <result property="requestId" column="request_id" />
+        <result property="requestName" column="request_name" />
+        <result property="versionCode" column="version_code" />
+        <result property="classificationTitleCode" column="classification_title_code" />
+        <result property="language" column="language_desc" />
+        <result property="requestStatus" column="request_status_desc" />
+        <result property="sectionDesc" column="section_desc" />
+        <result property="changeNature" column="change_nature_desc" />
+        <result property="changeType" column="change_type_desc" />
+        <result property="requestDate" column="request_date" />
+        <result property="requestByUser" column="request_by_user_name" />
+        <result property="requestorType" column="requestor_type_desc" />
+        <result property="requestDescTxt" column="request_desc" />
+        <result property="requestFDescTxt" column="request_f_desc" />
+        <result property="reviewDesc" column="review_desc" />
+        <result property="maintenanceNote" column="maintenance_note" />
+        <result property="requestRationalTxt" column="request_rationale" />
+        <result property="disposeByUser" column="dispose_by_user_name" />
+        <result property="disposeRationalTxt" column="dispose_rationale" />
+        <result property="lastModifiedDate" column="last_modified_date" />
+        <result property="lastModifiedUser" column="last_modified_user_name" />
+        <result property="conversionEvolutionNote" column="conversion_evolution_note" />
+        <result property="note" column="note" />
+    </resultMap>
+
+    <select id="findVersionCodes" resultType="java.lang.String">
+      select version_code from crd.version order by version_code
+    </select>
+
+    <select id="findClassificationTitleCodes" resultType="java.lang.String">
+      select classification_title_code from crd.classification_title order by classification_title_code
+    </select>
+
+    <select id="findLanguages" resultMap="LanguageMap">
+      select language_code, language_desc from crd.language order by language_code
+    </select>
+
+    <select id="findDispositions" resultMap="DispositionMap">
+      select request_status_code, request_status_desc from crd.request_status order by request_status_code
+    </select>
+
+    <select id="findSections" resultMap="SectionMap">
+      select section_code, section_desc from crd.section order by section_code
+    </select>
+
+    <select id="findChangeNatures" resultMap="ChangeNatureMap">
+      select change_nature_code, change_nature_desc from crd.change_nature order by change_nature_code
+    </select>
+
+    <select id="findChangeTypes" resultMap="ChangeTypeMap">
+      select change_type_code, change_type_desc from crd.change_type order by change_type_code
+    </select>
+
+    <select id="findLegacyChangeRequestsBySearchModel" parameterType="ca.cihi.cims.model.changerequest.legacy.LegacyRequestSearchModel"
+            resultMap="LegacyRequestMap">
+        select r.request_id, r.request_name, r.version_code, r.classification_title_code, l.language_desc,
+               rs.request_status_desc, s.section_desc, cn.change_nature_desc, ct.change_type_desc
+        from crd.request r, crd.language l, crd.request_status rs, crd.change_nature cn, crd.change_type ct, crd.section s
+        where r.language_code = l.language_code and
+              r.request_status_code = rs.request_status_code and
+              r.change_nature_code = cn.change_nature_code and
+              r.change_type_code = ct.change_type_code and
+              r.section_code = s.section_code and
+              r.classification_title_code = #{classificationTitleCode} and
+              r.language_code = #{languageCode} and
+              r.version_code in
+              <foreach item="versionCode" index="index" collection="versionCodes"
+                  open="(" separator="," close=")">
+                          #{versionCode}
+              </foreach> and
+              r.request_status_code = nvl(#{requestStatusCode}, r.request_status_code) and
+              r.section_code = nvl(#{sectionCode}, r.section_code) and
+              r.change_nature_code = nvl(#{changeNatureCode}, r.change_nature_code) and
+              r.change_type_code = nvl(#{changeTypeCode}, r.change_type_code) and
+              r.active_flag = 'Y' and
+              rownum &lt;= 2000
+    </select>
+
+    <select id="findNumOfLegacyChangeRequestsBySearchModel" parameterType="ca.cihi.cims.model.changerequest.legacy.LegacyRequestSearchModel"
+            resultType="java.lang.Integer">
+        select count(r.request_id)
+        from crd.request r
+        where r.classification_title_code = #{classificationTitleCode} and
+              r.language_code = #{languageCode} and
+              r.active_flag = 'Y' and
+              r.version_code in
+              <foreach item="versionCode" index="index" collection="versionCodes"
+                  open="(" separator="," close=")">
+                          #{versionCode}
+              </foreach> and
+              r.request_status_code = nvl(#{requestStatusCode}, r.request_status_code) and
+              r.section_code = nvl(#{sectionCode}, r.section_code) and
+              r.change_nature_code = nvl(#{changeNatureCode}, r.change_nature_code) and
+              r.change_type_code = nvl(#{changeTypeCode}, r.change_type_code)
+    </select>
+
+    <select id="findLegacyChangeRequestByRequestId" parameterType="java.lang.Long"
+            resultMap="LegacyRequestDetailMap">
+        select r.request_id, r.request_name, r.version_code, r.classification_title_code, l.language_desc,
+               rs.request_status_desc, s.section_desc, cn.change_nature_desc, ct.change_type_desc,
+               r.request_date, cu1.user_name as request_by_user_name,
+               rt.requestor_type_desc, r.request_desc, r.request_f_desc,
+               rv.review_desc, r.maintenance_note, r.request_rationale,
+               cu2.user_name as dispose_by_user_name, r.dispose_rationale,
+               r.last_modified_date, cu3.user_name as last_modified_user_name,
+               r.conversion_evolution_note, r.note
+        from crd.request r, crd.language l, crd.request_status rs, crd.change_nature cn, crd.change_type ct,
+             crd.cihi_user cu1, crd.cihi_user cu2, crd.cihi_user cu3, crd.requestor_type rt, crd.review rv, crd.section s
+        where r.active_flag = 'Y' and
+              r.language_code = l.language_code and
+              r.request_status_code = rs.request_status_code and
+              r.change_nature_code = cn.change_nature_code and
+              r.change_type_code = ct.change_type_code and
+              r.request_by_user_id = cu1.user_id and
+              r.requestor_type_code = rt.requestor_type_code and
+              r.review_code = rv.review_code and
+              r.section_code = s.section_code and
+              r.dispose_by_user_id = cu2.user_id(+) and
+              r.last_modified_user_id = cu3.user_id and
+              r.request_id = #{requestId}
+    </select>
+
+    <select id="findLegacyChangeRequestAttachmentsByRequestId" parameterType="java.lang.Long"
+            resultType="java.lang.String">
+        select raf.attachment_file_name
+        from crd.request_attachment_file raf
+        where raf.request_id = #{requestId}
+        order by raf.request_attachment_file_id
+    </select>
+
+    <select id="findLegacyChangeRequestQueryRefNumsByRequestId" parameterType="java.lang.Long"
+            resultType="java.lang.String">
+        select rqr.query_ref_num
+        from crd.request_query_ref rqr
+        where rqr.request_id = #{requestId}
+        order by rqr.request_query_ref_id
+    </select>
+
+</mapper>
+

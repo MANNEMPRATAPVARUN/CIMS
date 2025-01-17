@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:sec="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans                         http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/security                         http://www.springframework.org/schema/security/spring-security.xsd">
+ 
+    <sec:global-method-security secured-annotations="enabled"/>
+    <sec:http entry-point-ref="casEntryPoint">
+        <sec:custom-filter position="FORM_LOGIN_FILTER" ref="casFilter"/>
+ 
+        <!-- authorization rules start here -->
+ 
+        <!-- sample authorization rule, put your own rules here -->        
+        <sec:intercept-url pattern="/*.htm" access="hasAnyRole('ROLE_ADMINISTRATOR')"/>
+        
+         
+        <!-- authorization rules end here -->
+   
+   
+        <!-- access denied handler -->
+        <sec:access-denied-handler ref="accessDeniedHandler"/>
+		
+		<sec:headers >
+        	<sec:frame-options policy="SAMEORIGIN" />
+        </sec:headers>
+        
+        <!-- disable CSRF as it wasn't used in Spring 3.1 but is enabled in Spring 4 by default-->
+   		<sec:csrf disabled="true"/>   
+    </sec:http>
+    
+   
+ 
+    <bean id="casFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter">
+ 
+        <property name="authenticationManager" ref="authenticationManager"/>
+ 
+        <!--  is this a replacement for an authentication failuare url? -->
+        <!--  <property name="authenticationFailureHandler" ref="" /> -->
+        <property name="proxyGrantingTicketStorage" ref="proxyGrantingTicketStorage"/>
+        <property name="proxyReceptorUrl" value="/secure/receptor"/>
+    <property name="filterProcessesUrl" value="/j_spring_cas_security_check"/>
+</bean>
+ 
+    <bean id="proxyGrantingTicketStorage" class="org.jasig.cas.client.proxy.ProxyGrantingTicketStorageImpl"/>
+ 
+    <bean id="casEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
+        <property name="loginUrl" value="${blueprint.service.cas.entrypoint.url}"/>
+        <property name="serviceProperties" ref="serviceProperties"/>
+    </bean>
+ 
+    <sec:authentication-manager alias="authenticationManager">
+        <sec:authentication-provider ref="casAuthenticationProvider"/>
+    </sec:authentication-manager>
+ 
+    <bean id="casAuthenticationProvider" class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
+        <property name="userDetailsService" ref="userService"/>
+        <property name="serviceProperties" ref="serviceProperties"/>
+        <property name="ticketValidator">
+            <bean class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
+                <constructor-arg index="0" value="${blueprint.service.cas.ticketvalidator.url}"/>
+                <property name="proxyGrantingTicketStorage" ref="proxyGrantingTicketStorage"/>
+            </bean>
+        </property>
+        <property name="key" value="an_id_for_this_auth_provider_only"/>
+    </bean>
+ 
+    <bean id="serviceProperties" class="org.springframework.security.cas.ServiceProperties">
+        	<property name="service" value="${cims.security.url}"/>
+        <property name="sendRenew" value="false"/>
+    </bean>
+ 
+    <!--  LDAP user details service  -->
+    <bean id="userService" class="org.springframework.security.ldap.userdetails.LdapUserDetailsService">
+        <constructor-arg ref="ldapUserSearch"/>
+        <constructor-arg ref="ldapAuthoritiesPopulator"/>
+    </bean>
+    <!--  LDAP user search  -->
+    <bean id="ldapUserSearch" class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
+        <constructor-arg index="0" value="ou=people,ou=system"/>
+        <constructor-arg index="1" value="(userid={0})"/>
+        <constructor-arg index="2" ref="initialADDirContextFactory"/>
+    </bean>
+    <!--  LDAP authorities populator  -->
+    <bean id="ldapAuthoritiesPopulator" class="org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator">
+        <constructor-arg index="0" ref="initialADDirContextFactory"/>
+        <constructor-arg index="1" value="cn=CIMS,ou=applications,ou=system"/>
+        <property name="groupSearchFilter" value="roleOccupant={0}"/>
+        <property name="groupRoleAttribute" value="cn"/>
+        <property name="rolePrefix" value=""/>
+        <property name="searchSubtree" value="true"/>
+        <property name="convertToUpperCase" value="true"/>
+    </bean>
+    <!--  LDAP initial dir context factory  -->
+    <bean id="initialADDirContextFactory" class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
+        <!-- GLOBAL PROPERTY -->
+        <constructor-arg value="${blueprint.service.usermgmt.ldap.url}"/>
+        <!-- GLOBAL PROPERTY -->
+        <property name="userDn" value="${blueprint.service.usermgmt.ldap.manager.dn}"/>
+        <!-- GLOBAL PROPERTY -->
+        <property name="password" value="${blueprint.service.usermgmt.ldap.manager.password}"/>
+    </bean>
+    <bean id="accessDeniedHandler" class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
+                 <property name="errorPage" value="/accessDenied.htm"/>
+    </bean>
+</beans>

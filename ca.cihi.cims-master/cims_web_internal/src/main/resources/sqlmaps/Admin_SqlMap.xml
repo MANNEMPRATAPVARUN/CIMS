@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.data.mapper.AdminMapper">
+	<resultMap id="UserMap" type="ca.cihi.cims.model.User">
+		<result property="userId" column="user_profile_id" />
+		<result property="type" column="user_type_code" />
+		<result property="username" column="user_name" />
+		<result property="firstname" column="first_name" />
+		<result property="lastname" column="last_name" />
+		<result property="department" column="department" />
+		<result property="email" column="email" />
+		<result property="status" column="user_status_code" />
+		<result property="languagepreference" column="preferred_language_code" />
+		<result property="title" column="title" />
+		<result property="createdDate" column="last_update_date" />
+	</resultMap>
+
+	<resultMap id="DistributionMap" type="ca.cihi.cims.model.Distribution">
+		<result property="distributionlistid" column="distribution_list_id" />
+		<result property="code" column="distribution_list_code" />
+		<result property="name" column="distribution_list_name" />
+		<result property="description" column="distribution_list_desc" />
+		<result property="status" column="distribution_list_status_code" />
+		<result property="reviewgroup" column="review_group_ind_code" />
+	</resultMap>
+
+	<resultMap id="AuxTableValueMap" type="ca.cihi.cims.model.AuxTableValue">
+		<result property="auxTableValueId" column="aux_table_value_id" />
+		<result property="auxValueCode" column="aux_table_value_code" />
+		<result property="auxEngLable" column="aux_table_value_label_desc" />
+		<result property="auxEngDesc" column="aux_table_value_meaning_desc" />
+		<result property="status" column="aux_table_value_status_code" />
+		<result property="createdDate" column="last_update_date" />
+	</resultMap>
+
+	<resultMap id="DiagramMap" type="ca.cihi.cims.model.ClassificationDiagram">
+		<result property="description" column="description" />
+		<result property="fileName" column="filename" />
+		<result property="status" column="status" />
+		<result property="elementId" column="elementId" />
+	</resultMap>
+
+	<resultMap id="HtmlOutputLog" type="ca.cihi.cims.model.folioclamlexport.HtmlOutputLog">
+		<result property="htmlOutputLogId" column="html_output_log_id" />
+		<result property="fiscalYear" column="fiscal_year" />
+		<result property="classificationCode" column="classification_code" />
+		<result property="languageCode" column="languagecode" />
+		<result property="createdByUserId" column="created_by_user_id" />
+		<result property="creationDate" column="creation_date" />
+		<result property="statusCode" column="status_code" />
+		<result property="zipFileName" column="zip_file_name" />
+	</resultMap>
+
+	<select id="getUsers" resultMap="UserMap">
+		select
+		t.user_profile_id,t.user_type_code,t.user_name,t.title,t.first_name,t.last_name,t.department,t.email,t.preferred_language_code,
+		t.user_status_code,t.last_update_date
+		from USER_PROFILE t
+		order by t.user_status_code asc,t.first_name desc
+	</select>
+
+	<select id="getUsersReport" resultMap="UserMap">
+		select
+		t.user_profile_id,t.user_type_code,t.user_name,t.title,t.first_name,t.last_name,t.department,t.email,t.preferred_language_code,
+		t.user_status_code,t.last_update_date
+		from USER_PROFILE t
+		order by t.user_name
+	</select>
+
+	<select id="getAuxTableCodes" resultType="String">
+		select
+		trim(aux_table_code)
+		from AUX_TABLE
+	</select>
+	
+	<select id="getRefsetCodeCount" resultType="java.lang.Long">
+		select count(*)
+		from AUX_TABLE_VALUE
+		where TRIM(aux_table_value_code) = #{auxValueCode}
+	</select>
+	
+	<select id="getRefsetNameCount" resultType="java.lang.Long">
+		select count(*)
+		from AUX_TABLE_VALUE
+		where TRIM(AUX_TABLE_VALUE_LABEL_DESC) = #{auxEngLable}
+	</select>
+
+	<select id="getAuxTableValues" resultMap="AuxTableValueMap"
+		parameterType="java.lang.String">
+		select
+		atv.aux_table_value_id,atv.aux_table_value_code,atv.aux_table_value_label_desc,atv.aux_table_value_meaning_desc,atv.aux_table_value_status_code,atv.last_update_date
+		from AUX_TABLE at,AUX_TABLE_VALUE atv
+		where at.aux_table_id = atv.aux_table_id
+		and TRIM(at.aux_table_code) = #{auxCode}
+		order by atv.aux_table_value_status_code,atv.aux_table_value_code
+	</select>
+
+	<select id="getAuxTableValueByID" resultMap="AuxTableValueMap">
+		select atv.aux_table_value_id,
+		atv.aux_table_value_code,
+		atv.aux_table_value_label_desc,
+		atv.aux_table_value_meaning_desc,
+		atv.aux_table_value_status_code,
+		atv.last_update_date
+		from AUX_TABLE_VALUE atv
+		where aux_table_value_id = #{valueId}
+	</select>
+
+	<select id="getRecipientsByDistributionId" resultMap="UserMap">
+		select
+		u.user_profile_id,u.user_type_code,u.user_name,u.first_name,u.last_name,u.department,u.email,u.user_status_code,u.preferred_language_code,u.title,u.last_update_date
+		from USER_PROFILE u, DISTRIBUTION_LIST dl,DISTRIBUTION_LIST_USER dlu
+		where dl.distribution_list_id = dlu.distribution_list_id
+		and
+		dlu.user_profile_id = u.user_profile_id
+		and dl.distribution_list_id =
+		#{distributionId}
+	</select>
+
+
+	<select id="getActiveChangeRequestCountForDistribution"
+		resultType="java.lang.Integer">
+		select count(*)
+		from change_request cr,
+		change_request_review_group crrg, open_change_request_status
+		open_status
+		where cr.change_request_id = crrg.change_request_id
+		and crrg.distribution_list_id = #{distributionId}
+		and cr.change_request_status_id = open_status.change_request_status_id
+	</select>
+
+	<select id="getIdleUsersByDistributionId" resultMap="UserMap">
+		select
+		u.user_profile_id,u.user_type_code,u.user_name,u.first_name,u.last_name,u.department,u.email,u.user_status_code,preferred_language_code,u.title,u.last_update_date
+		from USER_PROFILE u where u.user_status_code ='A'
+		minus
+		select
+		u.user_profile_id,u.user_type_code,u.user_name,u.first_name,u.last_name,u.department,u.email,u.user_status_code,preferred_language_code,u.title,u.last_update_date
+		from USER_PROFILE u, DISTRIBUTION_LIST dl,DISTRIBUTION_LIST_USER dlu
+		where dl.distribution_list_id = dlu.distribution_list_id
+		and
+		dlu.user_profile_id = u.user_profile_id
+		and dl.distribution_list_id
+		=#{distributionId}
+	</select>
+
+	<insert id="insertDistribution" parameterType="ca.cihi.cims.model.Distribution">
+		insert into
+		DISTRIBUTION_LIST
+		(
+		distribution_list_id,
+		distribution_list_code,
+		distribution_list_name,
+		distribution_list_desc,
+		distribution_list_status_code,
+		review_group_ind_code,
+		last_update_date
+		)
+		values
+		(
+		#{distributionlistid},
+		#{code},
+		#{name},
+		#{description},
+		#{status},
+		#{reviewgroup},
+		#{createdDate}
+		)
+	</insert>
+
+	<select id="getDistributionList" resultMap="DistributionMap">
+		select
+		dl.distribution_list_id,(CONCAT('DL', dl.distribution_list_code)) as
+		distribution_list_code,dl.distribution_list_name,dl.distribution_list_desc,dl.distribution_list_status_code,dl.review_group_ind_code
+		from DISTRIBUTION_LIST dl
+		order by distribution_list_status_code
+		asc,distribution_list_id DESC
+	</select>
+
+	<select id="getReviewGroupList" resultMap="DistributionMap">
+		select
+		dl.distribution_list_id,
+		distribution_list_code,dl.distribution_list_name,dl.distribution_list_desc,dl.distribution_list_status_code,dl.review_group_ind_code
+		from DISTRIBUTION_LIST dl
+		where dl.review_group_ind_code='Y'
+		and
+		dl.distribution_list_status_code='A'
+		order by
+		distribution_list_status_code asc,distribution_list_id DESC
+	</select>
+
+	<select id="getNonReviewGroupDistributionList" resultMap="DistributionMap">
+		select
+		dl.distribution_list_id,
+		distribution_list_code,dl.distribution_list_name,dl.distribution_list_desc,dl.distribution_list_status_code,dl.review_group_ind_code
+		from DISTRIBUTION_LIST dl
+		where dl.review_group_ind_code='N'
+		order by
+		distribution_list_status_code asc,distribution_list_id
+	</select>
+
+	<select id="getAdvisorDistributionList" resultMap="DistributionMap">
+		select
+		dl.distribution_list_id,
+		distribution_list_code,dl.distribution_list_name,dl.distribution_list_desc,dl.distribution_list_status_code,dl.review_group_ind_code
+		from DISTRIBUTION_LIST dl
+		where dl.review_group_ind_code='N' and
+		dl.distribution_list_id not in (7,8)
+		order by
+		distribution_list_status_code asc,distribution_list_id
+	</select>
+
+
+	<select id="getUserById" resultMap="UserMap">
+		select
+		u.user_profile_id,u.user_type_code,u.user_name,u.first_name,u.last_name,u.department,u.email,u.user_status_code,u.preferred_language_code,u.title
+		from USER_PROFILE u
+		where u.user_profile_id = #{userId}
+	</select>
+
+	<select id="getUserByUserName" resultMap="UserMap">
+		select
+		u.user_profile_id,u.user_type_code,
+		u.user_name,u.first_name,u.last_name,u.department,u.email,u.user_status_code,u.preferred_language_code,u.title
+		from USER_PROFILE u
+		where lower(u.user_name) = lower(#{username})
+	</select>
+
+	<select id="getDistributionByCode" resultMap="DistributionMap">
+		select
+		distribution_list_id,distribution_list_code,distribution_list_name,distribution_list_desc,distribution_list_status_code,review_group_ind_code
+		from DISTRIBUTION_LIST
+		where distribution_list_code = #{code}
+	</select>
+
+
+	<select id="getDistributionById" resultMap="DistributionMap">
+		select
+		distribution_list_id,distribution_list_code,distribution_list_name,distribution_list_desc,distribution_list_status_code,review_group_ind_code
+		from DISTRIBUTION_LIST
+		where distribution_list_id = #{distributionId}
+	</select>
+
+	<select id="getUserGroupsByUserId" resultMap="DistributionMap">
+		select
+		dl.distribution_list_id,dl.distribution_list_code,dl.distribution_list_name,dl.distribution_list_desc,dl.distribution_list_status_code,dl.review_group_ind_code
+		from DISTRIBUTION_LIST dl , DISTRIBUTION_LIST_USER dlu
+		where
+		dl.DISTRIBUTION_LIST_ID = dlu.DISTRIBUTION_LIST_ID and
+		dlu.USER_PROFILE_ID=#{userId}
+	</select>
+
+
+
+	<delete id="deleteUser">
+		delete from USER_PROFILE
+		where user_profile_id =
+		#{userId}
+	</delete>
+
+	<delete id="deleteAux">
+		delete from AUX_TABLE_VALUE
+		where aux_table_value_id =
+		#{auxTableValueId}
+	</delete>
+
+	<insert id="insertUser" parameterType="ca.cihi.cims.model.User">
+		insert into USER_PROFILE
+		(
+		user_profile_id,
+		user_type_code,
+		user_name,
+		first_name,
+		last_name,
+		department,
+		email,
+		user_status_code,
+		preferred_language_code,
+		title,
+		last_update_date
+		)
+		values
+		(
+		#{userId},
+		#{type},
+		#{username},
+		#{firstname},
+		#{lastname},
+		#{department},
+		#{email},
+		#{status},
+		#{languagepreference},
+		#{title},
+		#{createdDate}
+		)
+	</insert>
+
+	<update id="updateUser" parameterType="ca.cihi.cims.model.User">
+		update USER_PROFILE
+		set
+		user_type_code = #{type},
+		user_name= #{username},
+		first_name =
+		#{firstname},
+		last_name = #{lastname},
+		department = #{department},
+		email
+		= #{email},
+		user_status_code = #{status},
+		preferred_language_code =
+		#{languagepreference},
+		title = #{title},
+		last_update_date =
+		#{createdDate}
+		where user_profile_id = #{userId}
+	</update>
+
+	<update id="updateAuxTableValue" parameterType="ca.cihi.cims.model.AuxTableValue">
+		update
+		AUX_TABLE_VALUE
+		set
+		aux_table_value_label_desc = #{auxEngLable},
+		aux_table_value_meaning_desc= #{auxEngDesc},
+		aux_table_value_status_code = #{status},
+		last_update_date =
+		#{createdDate}
+		where aux_table_value_id = #{auxTableValueId}
+	</update>
+
+	<delete id="deleteDistribution">
+		delete from DISTRIBUTION_LIST
+		where
+		distribution_list_id = #{distributionId}
+	</delete>
+
+	<update id="updateDistribution" parameterType="ca.cihi.cims.model.Distribution">
+		update
+		DISTRIBUTION_LIST
+		set distribution_list_code = #{code},
+		distribution_list_name = #{name},
+		distribution_list_desc =
+		#{description},
+		distribution_list_status_code = #{status},
+		review_group_ind_code = #{reviewgroup},
+		last_update_date =
+		#{createdDate}
+		where distribution_list_id = #{distributionlistid}
+	</update>
+
+	<insert id="insertDisListUser" parameterType="java.util.HashMap">
+		insert into
+		DISTRIBUTION_LIST_USER
+		(
+		distribution_list_user_id,
+		distribution_list_id,
+		user_profile_id
+		)
+		values
+		(
+		DISTRIBUTION_LIST_USER_ID_SEQ.nextval,
+		#{distributionId},
+		#{userId}
+		)
+	</insert>
+
+	<insert id="insertAuxTableValue" parameterType="java.util.HashMap">
+		insert into
+		AUX_TABLE_VALUE
+		(
+		aux_table_value_id,
+		aux_table_id,
+		aux_table_value_code,
+		aux_table_value_label_desc,
+		aux_table_value_meaning_desc,
+		aux_table_value_status_code,
+		last_update_date
+		)
+		values
+		(
+		AUX_TABLE_VALUE_ID_SEQ.nextval,
+		#{auxTableId},
+		#{auxValueCode},
+		#{auxEngLable},
+		#{auxEngDesc},
+		#{status},
+		#{createdDate}
+		)
+	</insert>
+
+	<select id="getMaxAuxTableValueId" resultType="java.lang.Long">
+		select
+		max(aux_table_value_id)
+		from AUX_TABLE_VALUE
+	</select>
+
+
+	<delete id="removeFromDisListUser" parameterType="java.util.HashMap">
+		delete from
+		DISTRIBUTION_LIST_USER
+		where user_profile_id=#{userId}
+		and distribution_list_id=#{distributionId}
+	</delete>
+
+
+	<select id="getMaxUserId" resultType="java.lang.Long">
+		select max(user_profile_id)
+		from USER_PROFILE
+	</select>
+
+	<select id="getMaxDistributionId" resultType="java.lang.Long">
+		select
+		max(distribution_list_id)
+		from DISTRIBUTION_LIST
+	</select>
+
+
+	<select id="getDistributionCodeById" resultType="java.lang.String">
+		select
+		distribution_list_code
+		from DISTRIBUTION_LIST
+		where distribution_list_id
+		= #{distributionId}
+	</select>
+
+	<select id="getAuxTableIdByCode" resultType="java.lang.String">
+		select aux_table_id
+		from AUX_TABLE
+		where aux_table_code = #{auxCode}
+	</select>
+
+	<select id="getDistributionListUserCountByDistributionId"
+		resultType="java.lang.Long">
+		select count(*)
+		from DISTRIBUTION_LIST_USER
+		where
+		distribution_list_id = #{distributionId}
+	</select>
+
+	<select id="getDistributionListUserCountByUserId" resultType="java.lang.Long">
+		select count(*)
+		from DISTRIBUTION_LIST_USER
+		where user_profile_id =
+		#{userId}
+	</select>
+
+	<select id="findDistinctUserIdsInDistributionListCodes"
+		resultType="java.lang.Long">
+		select distinct USER_PROFILE_ID from DISTRIBUTION_LIST_USER dlu ,
+		DISTRIBUTION_LIST dl
+		where dlu.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID and
+		dl.DISTRIBUTION_LIST_CODE in
+		<foreach item="distributionListCode" index="index" collection="list"
+			open="(" separator="," close=")">
+			#{distributionListCode}
+		</foreach>
+	</select>
+
+	<select id="findDistinctUserIdsInDistributionListIds"
+		resultType="java.lang.Long">
+		select distinct USER_PROFILE_ID from DISTRIBUTION_LIST_USER dlu ,
+		DISTRIBUTION_LIST dl
+		where dlu.DISTRIBUTION_LIST_ID = dl.DISTRIBUTION_LIST_ID and
+		dl.DISTRIBUTION_LIST_ID in
+		<foreach item="distributionListId" index="index" collection="list"
+			open="(" separator="," close=")">
+			#{distributionListId}
+		</foreach>
+	</select>
+
+
+	<select id="findDistinctUsersInDistributionListIds" resultMap="UserMap">
+		select distinct
+		u.user_profile_id,u.user_type_code,u.user_name,u.first_name,u.last_name,u.department,u.email,u.user_status_code,u.preferred_language_code,u.title,u.last_update_date
+		from USER_PROFILE u, DISTRIBUTION_LIST_USER dlu
+		where u.user_profile_id
+		= dlu.USER_PROFILE_ID and
+		dlu.DISTRIBUTION_LIST_ID in
+		<foreach item="distributionListId" index="index" collection="list"
+			open="(" separator="," close=")">
+			#{distributionListId}
+		</foreach>
+	</select>
+
+	<select id="getDiagrams" parameterType="java.util.Map"
+		statementType="CALLABLE">
+        <![CDATA[ 
+          	call cims_api.retrieveDiagramsPROC
+          	(
+				#{classificationYear},
+				#{baseClassification},  
+				#{myData, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=DiagramMap}
+			) 
+        ]]>
+	</select>
+	
+	<select id="getHtmlOutputLogs" resultMap="HtmlOutputLog">
+		select 
+		html_output_log_id, fiscal_year, classification_code, languagecode, created_by_user_id, creation_date, status_code, zip_file_name 
+		from HTML_OUTPUT_LOG  
+		order by creation_date desc
+	</select>
+	
+	<insert id="insertHtmlOutputLog" parameterType="ca.cihi.cims.model.folioclamlexport.HtmlOutputLog">
+		<selectKey resultType="java.lang.Long" keyProperty="htmlOutputLogId" order="BEFORE"> 
+			select HTML_OUTPUT_LOG_ID_SEQ.nextval from dual 
+	    </selectKey>  
+		insert into HTML_OUTPUT_LOG( 
+			html_output_log_id, 
+			fiscal_year, 
+			classification_code, 
+			languagecode, 
+			created_by_user_id, 
+			creation_date, 
+			status_code, 
+			zip_file_name
+		)
+		values(
+		  	#{htmlOutputLogId},
+		  	#{fiscalYear},
+			#{classificationCode},
+			#{languageCode},
+			#{createdByUserId},
+			#{creationDate},
+			#{statusCode},
+			#{zipFileName}
+		)		
+	</insert>
+	
+	<update id="updateHtmlOutputLog" parameterType="ca.cihi.cims.model.folioclamlexport.HtmlOutputLog">
+		update HTML_OUTPUT_LOG
+		set status_code = #{statusCode},
+			zip_file_name = #{zipFileName}
+		where html_output_log_id = #{htmlOutputLogId}
+	</update>
+	
+</mapper>

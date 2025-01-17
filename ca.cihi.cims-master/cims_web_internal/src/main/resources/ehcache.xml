@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd">
+
+    <defaultCache eternal="true" maxElementsInMemory="200" overflowToDisk="false" />           
+
+    <cache name="ICD-10-CA" maxElementsInMemory="200" eternal="true" overflowToDisk="false" />  
+    <cache name="CCI" maxElementsInMemory="200" eternal="true" overflowToDisk="false" />
+
+    <cache name="ICD-10-CA_TABLE_CACHE" maxElementsInMemory="200" eternal="true" overflowToDisk="false" />  
+    <cache name="CCI_TABLE_CACHE" maxElementsInMemory="200" eternal="true" overflowToDisk="false" />
+    
+    <cache name="BOOK_INDEXES_CACHE" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+    <cache name="BOOK_INDEXES_CACHE_ALL" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+
+    <cache name="VERSION_CODE_CACHE" maxElementsInMemory="20" eternal="true" overflowToDisk="false" />
+    <cache name="CLASSIFICATION_TITLE_CACHE" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+    <cache name="LANGUAGE_CACHE" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+    <cache name="REQUEST_STATUS_CACHE" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+    <cache name="SECTION_CACHE" maxElementsInMemory="100" eternal="true" overflowToDisk="false" />
+    <cache name="CHANGE_NATURE_CACHE" maxElementsInMemory="20" eternal="true" overflowToDisk="false" />
+    <cache name="CHANGE_TYPE_CACHE" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+
+    <cache name="CHANGE_REQUEST_LANGUAGE_CACHE" maxElementsInMemory="10" eternal="true" overflowToDisk="false" />
+
+    <!-- cache one day -->
+    <cache name="NOTIFICATION_META_CACHE" maxElementsInMemory="50" eternal="true" overflowToDisk="false" timeToLiveSeconds="86400" />
+   
+    <cache name="AUX_CODE_VALUES" maxElementsInMemory="50" eternal="true" overflowToDisk="false" timeToLiveSeconds="86400"/>
+    
+    <cache name="REVIEW_GROUPS" maxElementsInMemory="20" eternal="true" overflowToDisk="false" timeToLiveSeconds="86400"/>
+    
+    <cache name="NON_REVIEW_GROUPS" maxElementsInMemory="200" eternal="true" overflowToDisk="false" timeToLiveSeconds="86400"/>
+    
+    <cache name="CHANGEREQUEST_ASSIGNMENT_META_CACHE" maxElementsInMemory="200" eternal="true" overflowToDisk="false" timeToLiveSeconds="86400" />
+    
+    <!-- search cache -->
+    <cache name="SEARCH_TYPES" eternal="true" maxElementsInMemory="20"/>
+    <cache name="SEARCH_TYPES_BY_NAME" eternal="true" maxElementsInMemory="20"/>
+    <cache name="SEARCH_CRITERIA_TYPES" eternal="true" maxElementsInMemory="100" overflowToDisk="false"/>
+    <cache name="SEARCH_COLUMN_TYPES" eternal="true" maxElementsInMemory="100" overflowToDisk="false"/>
+    
+ </ehcache>

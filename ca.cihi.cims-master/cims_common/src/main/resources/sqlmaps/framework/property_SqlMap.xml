@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.framework.mapper.PropertyMapper">
+
+	<resultMap id="propertyDTOMap" type="ca.cihi.cims.framework.dto.PropertyDTO">
+		<id column="el_elementid" />
+		<result property="elementUUID" column="elementuuid" />
+		<result property="changedFromVersionId" column="changedfromversionid" />
+		<result property="originatingContextId" column="originatingcontextid" />
+		<result property="versionCode" column="versioncode" />
+		<result property="versionTimestamp" column="versiontimestamp" />
+		<result property="elementStatus" column="elementstatus" />
+		<result property="domainElementId" column="domainelementid" />
+		<result property="language" column="language" />
+		<result property="propertyType" column="propertytype"  />
+		<result property="value" column="value"/>
+		<association property="classs"  javaType="ca.cihi.cims.framework.dto.ClasssDTO" resultMap="ca.cihi.cims.framework.mapper.ClasssMapper.classsDTOMap" columnPrefix="cls_"/>
+		<association property="elementIdentifier"  javaType="ca.cihi.cims.framework.ElementIdentifier" resultMap="ca.cihi.cims.framework.mapper.ElementMapper.elementIdentifierMap" columnPrefix="el_"/>
+	</resultMap>
+	
+	<select id="findPropertyInContext" resultMap="propertyDTOMap">
+	
+	  with properties as
+		(
+		select 'TextProperty' propertyType, pv.domainElementId domainElementId, nvl(pv.languagecode,'NOLANGUAGE') language, pv.text value, pv.elementid, pv.textpropertyid elementversionId, null  as rangeElementVersionId
+		from textpropertyversion pv, structureelementversion sev
+		where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+		and sev.elementversionid = pv.textpropertyid
+		UNION
+		select 'NumericProperty' propertyType, pv.domainElementId domainElementId, 'NOLANGUAGE' language , ''||pv.numericValue value, pv.elementid, pv.numericpropertyid elementversionId, null  as rangeElementVersionId
+		from numericpropertyversion pv, structureelementversion sev
+		where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+		and sev.elementversionid = pv.numericpropertyid
+		UNION
+		select 'ConceptProperty' propertyType, pv.domainElementId domainElementId, 'NOLANGUAGE' language , ''||pv.rangeElementId value, pv.elementid, pv.conceptpropertyid elementversionId, cims_util.getElementVersionId(context => #{contextId}, elemId => pv.rangeElementId) as rangeElementVersionId 
+		from conceptpropertyversion pv, structureelementversion sev
+		where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+		and sev.elementversionid = pv.conceptpropertyid
+		)
+		select e.elementid el_elementid, e.elementuuid, c.classid cls_classid, c.baseclassificationname cls_baseclassificationname, c.classname cls_classname, c.friendlyname cls_friendlyname, c.tablename cls_tablename,
+		ev.elementversionid as el_elementversionid, ev.changedfromversionid, ev.versioncode, ev.versiontimestamp, ev.status elementstatus, ev.originatingcontextid,
+		p.domainElementId, p.language, p.value, p.propertyType, p.rangeElementVersionId
+		from elementversion ev, class c, element e, properties p, structureelementversion sev, structureversion sv, class svc
+		where p.elementversionId = ev.elementversionid and sev.elementid=e.elementid and sev.elementversionid=ev.elementversionid
+		and ev.elementid = e.elementid
+		and e.classid = c.classid
+		and c.classname=#{classsName}  and sv.structureid=#{contextId} and sv.classid=svc.classid
+     	and c.baseclassificationname=svc.baseclassificationname and sev.structureid=#{contextId} 
+     	<if test="language != null">
+     	and p.language=#{language}
+     	</if>
+ 	
+ 	</select>
+ 	
+ 	<select id="loadXlsxProperty" resultMap="propertyDTOMap">
+	
+	  with properties as
+		(
+		select 'XLSXProperty' propertyType, pv.domainElementId domainElementId, nvl(pv.languagecode,'NOLANGUAGE') language, pv.xlsxblobvalue as value, pv.elementid, pv.xlsxpropertyid elementversionId, null as rangeElementVersionId 
+	    from xlsxpropertyversion pv, structureelementversion sev
+	    where domainelementid=#{conceptId}
+		and sev.structureid = #{contextId}
+	    and sev.elementversionid = pv.xlsxpropertyid
+		)
+		select e.elementid el_elementid, e.elementuuid, c.classid cls_classid, c.baseclassificationname cls_baseclassificationname, c.classname cls_classname, c.friendlyname cls_friendlyname, c.tablename cls_tablename,
+		ev.elementversionid as el_elementversionid, ev.changedfromversionid, ev.versioncode, ev.versiontimestamp, ev.status elementstatus, ev.originatingcontextid,
+		p.domainElementId, p.language, p.value, p.propertyType, p.rangeElementVersionId
+		from elementversion ev, class c, element e, properties p, structureelementversion sev, structureversion sv, class svc
+		where p.elementversionId = ev.elementversionid and sev.elementid=e.elementid and sev.elementversionid=ev.elementversionid
+		and ev.elementid = e.elementid
+		and e.classid = c.classid
+		and c.classname=#{classsName}  and sv.structureid=#{contextId} and sv.classid=svc.classid
+     	and c.baseclassificationname=svc.baseclassificationname and sev.structureid=#{contextId} 
+		<if test="language != null">
+	     	and p.language=#{language}
+	    </if>
+ 	
+ 	</select>
+ 	
+ 	<select id="countExistsValue" parameterType="java.util.Map" resultType="java.lang.Integer">
+ 		with propertyClassIds as
+		(
+		     select classid from class c 
+		     where c.baseclassificationname in (Select baseclassificationname from class cp where cp.tablename = #{tableNameFilter})
+		     and c.classname=#{propertyClasssName}
+		), conceptClassIds as
+		(
+		     select classid from class c 
+		     where c.baseclassificationname in (Select baseclassificationname from class cp where cp.tablename = #{tableNameFilter})
+		     and c.classname=#{conceptClasssName}
+		)
+		select count(1) from textpropertyversion tpv, propertyClassIds c, structureelementversion sev, conceptversion cv, conceptClassIds cc, structureelementversion sev1
+		where lower(trim(tpv.text)) = #{value} and tpv.classid = c.classid and tpv.textpropertyid=sev.elementversionid
+		and tpv.domainelementid=cv.elementid and cv.status='ACTIVE' and cv.classid=cc.classId and cv.conceptid=sev1.elementversionid and sev.structureid=sev1.structureid
+		<if test="conceptElementId!=null">
+		and cv.elementId&lt;&gt;#{conceptElementId}
+		</if>
+		<if test="contextId!=null">
+		and sev.structureid=#{contextId} and sev1.structureid=#{contextId}
+		</if>
+ 	</select>
+	
+	<insert id="insertPropertyVersion" parameterType="java.util.Map">
+		insert into propertyversion (propertyid, domainelementid, classid, status, elementid) values (#{propertyId}, #{domainElementId}, #{classsId}, 'ACTIVE', #{elementId})
+	</insert>
+	
+	<insert id="insertDataPropertyVersion" parameterType="java.util.Map">
+		insert into datapropertyversion (datapropertyid, domainelementid, classid, status, elementid) values (#{dataPropertyId}, #{domainElementId}, #{classsId}, 'ACTIVE', #{elementId})
+	</insert>
+	
+	<insert id="insertTextPropertyWithValue" parameterType="java.util.Map">
+		insert into textpropertyversion (textpropertyid, domainelementid, classid, status, elementid, languagecode, text) values (#{textPropertyId}, #{domainElementId}, #{classsId}, 'ACTIVE', #{elementId}, #{language}, #{text,jdbcType=VARCHAR})
+	</insert>
+	
+	<insert id="insertNumericPropertyWithValue" parameterType="java.util.Map">
+		insert into numericpropertyversion (numericpropertyid, domainelementid, classid, status, elementid, numericvalue) values (#{numericPropertyId}, #{domainElementId}, #{classsId}, 'ACTIVE', #{elementId}, #{numericValue,jdbcType=NUMERIC})
+	</insert>
+	
+	<insert id="insertConceptPropertyWithValue" parameterType="java.util.Map">
+		insert into conceptpropertyversion (conceptpropertyid, domainelementid, classid, status, elementid, rangeelementid) values (#{conceptPropertyId}, #{domainElementId}, #{classsId}, 'ACTIVE', #{elementId}, #{rangeElementId,jdbcType=NUMERIC})
+	</insert>
+	
+	<insert id="insertXLSXPropertyWithValue" parameterType="java.util.Map">
+		insert into xlsxpropertyversion (xlsxpropertyid, domainelementid, classid, status, elementid, languagecode, xlsxblobvalue) values (#{xlsxPropertyId}, #{domainElementId}, #{classsId}, 'ACTIVE', #{elementId}, #{language}, #{xlsxBlobValue,jdbcType=BLOB})
+	</insert>
+	
+	<update id="updateTextPropertyValue" parameterType="java.util.Map">
+		update textpropertyversion set languagecode=#{language}, text=#{text,jdbcType=VARCHAR} where textpropertyid=#{textPropertyId}
+	</update>
+	
+	<update id="updateNumericPropertyValue" parameterType="java.util.Map">
+		update numericpropertyversion set numericvalue=#{numericValue,jdbcType=NUMERIC} where numericpropertyid=#{numericPropertyId}
+	</update>
+	
+	<update id="updateConceptPropertyValue" parameterType="java.util.Map">
+		update conceptpropertyversion set rangeelementid=#{rangeElementId,jdbcType=NUMERIC} where conceptpropertyid=#{conceptPropertyId}
+	</update>
+	
+	<update id="updateXLSXPropertyValue" parameterType="java.util.Map">
+		update xlsxpropertyversion set languagecode=#{language}, xlsxblobvalue=#{xlsxBlobValue,jdbcType=BLOB} where xlsxpropertyid=#{xlsxPropertyId}
+	</update>
+	
+</mapper>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+     <definition name="base" template="/WEB-INF/jsp/common/cims-layout.jsp">
+        <put-attribute name="searchCR" value="/WEB-INF/jsp/requestmanagement/searchChangeRequests.jsp" /> 
+        <put-attribute name="menu" value="/WEB-INF/jsp/common/menu.jsp" /> 
+        <put-attribute name="pageFooter" value="/WEB-INF/jsp/common/page-footer.jsp" /> 
+     </definition>
+
+     <definition name="index" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/index.jsp" />
+     </definition>
+     
+     <definition name="blank" template="/WEB-INF/jsp/blank.jsp">
+     </definition>
+     
+     <definition name="selectClassification" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/classification/view/selectClassification-body.jsp" />
+     </definition>
+     <!-- 
+     <definition name="listRequests" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/listRequests-body.jsp" />
+     </definition>
+     -->
+     <definition name="myHome" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/myHome.jsp" />
+     </definition>
+     
+     <definition name="/reports/classificationChangeReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/classificationchange.jsp" />
+     </definition>
+     
+     <definition name="/reports/icdModifiedValidationsReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/icdmodifiedvalidations.jsp" />
+     </definition>
+     
+     <definition name="/reports/icdModifiedValidCodeReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/icdmodifiedvalidcode.jsp" />
+     </definition>
+     
+     <definition name="/reports/cciModifiedValidationsReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/ccimodifiedvalidations.jsp" />
+     </definition>
+     
+     <definition name="/reports/missingValidationReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/missingvalidation.jsp" />
+     </definition>
+     
+     <definition name="/reports/sendBackDetailReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/sendbackdetail.jsp" />
+     </definition>
+     
+     <definition name="/reports/qaSummaryMetricsReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/qasummarymetrics.jsp" />
+     </definition>
+     
+     <definition name="/reports/cciNewTableCodesReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/ccinewtablecodes.jsp" />
+     </definition>
+
+     <definition name="/reports/reviewGroupOutboundQuestions" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/reviewGroupOutboundQuestions.jsp" />
+     </definition>
+
+     <definition name="/reports/reviewGroupCompiledResponses" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/reviewGroupCompiledResponses.jsp" />
+     </definition>
+
+     <definition name="/reports/qaErrorDescriptionsReport" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/reports/qaErrorDescriptions.jsp" />
+     </definition>
+
+
+     <definition name="blank" template="/WEB-INF/jsp/blank.jsp">
+     </definition>
+
+     <definition name="/reports/reviewGroupOutboundQuestionsReport" template="/WEB-INF/jsp/reports/reviewGroupOutboundQuestionsReport.jsp">
+     </definition>
+
+     <definition name="/reports/reviewGroupCompiledResponsesReport" template="/WEB-INF/jsp/reports/reviewGroupCompiledResponsesReport.jsp">
+     </definition>
+
+     <definition name="allChangeRequests" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/allChangeRequests.jsp" />
+     </definition>
+     
+     <definition name="listNoticesAndRequests" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/listNoticesAndRequests-body.jsp" />
+     </definition>
+
+     <definition name="legacyChangeRequests" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/legacy/legacyChangeRequests.jsp" />
+     </definition>
+
+     <definition name="cciComponents" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/classification/cci/components/cciComponents.jsp" />
+     </definition>
+
+	<definition name="cciAttributes" extends="base">
+		<put-attribute name="body" value="/WEB-INF/jsp/classification/cci/attributes/cciAttributes.jsp" />
+	</definition>
+	    
+     <definition name="createRequestSuccess" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/requestmanagement/createRequestSuccess.jsp" />
+     </definition>
+     
+     
+     
+     <definition name="/admin/listUsers" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/listUsers.jsp" />
+     </definition>   
+     
+     <definition name="/admin/editUser" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/editUser.jsp" />
+     </definition>                
+
+     <definition name="/admin/listDistributions" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/listDistributions.jsp" />
+     </definition>   
+     
+     <definition name="/admin/editDistribution" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/editDistribution.jsp" />
+     </definition>  
+
+     <definition name="/admin/listRecipients" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/listRecipients.jsp" />
+     </definition> 
+
+     <definition name="/admin/listAuxiliary" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/listAuxiliary.jsp" />
+     </definition>
+
+     <definition name="/admin/closeYear" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/closeYear.jsp" />
+     </definition>       
+
+     <definition name="/admin/exportFolioFile" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/exportFolioFile.jsp" />
+     </definition>       
+
+     <definition name="/admin/exportFolioFileStatus" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/exportFolioFileStatus.jsp" />
+     </definition>       
+
+     <definition name="/admin/exportClamlFile" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/exportClamlFile.jsp" />
+     </definition>       
+
+     <definition name="/admin/exportClamlFileStatus" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/admin/exportClamlFileStatus.jsp" />
+     </definition>       
+
+
+      <definition name="/profile/myPreferences" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/profile/myPreferences.jsp" />
+     </definition>
+
+
+     <definition name="generateTables" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/productpublication/generateTables.jsp" />
+     </definition>
+
+    <definition name="reviewTables" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/productpublication/reviewTables.jsp" />
+     </definition>
+     
+     <definition name="releaseTables" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/productpublication/releaseTables.jsp" />
+     </definition>
+     
+      <definition name="releaseHistory" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/productpublication/releaseHistory.jsp" />
+     </definition>
+     
+
+     <definition name="unfreezeSystem" extends="base">           
+        <put-attribute name="body" value="/WEB-INF/jsp/productpublication/unfreezeSystem.jsp" />
+     </definition>
+
+     
+      <definition name="accessDenied" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/accessDenied.jsp" />
+     </definition>
+     <!-- 
+     <definition name="error" extends="base">
+         <put-attribute name="body" value="/WEB-INF/jsp/error.jsp" /> 
+     </definition>
+     -->
+     <definition name="userNotSetup" extends="base">
+         <put-attribute name="body" value="/WEB-INF/jsp/userNotSetup.jsp" /> 
+     </definition>
+     <definition name="sessionTimeOut" extends="base">
+         <put-attribute name="body" value="/WEB-INF/jsp/sessionTimeOut.jsp" />
+     </definition>
+     <definition name="/refset/refsetCatalog" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/refsetCatalog.jsp" />
+     </definition>     
+     <definition name="/refset/refsetStatus" extends="base">
+        <put-attribute name="body" value="/WEB-INF/jsp/refset/refsetStatus.jsp" />
+     </definition>     
+</tiles-definitions>

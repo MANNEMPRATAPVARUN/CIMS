@@ -1,0 +1,62 @@
+<!-- cihi_cims_supplement DTD
+
+  Description:
+
+  This DTD is to be used for the CIHI CIMS application project. 
+  It has fragments of CIHI XML extracted from their
+  database, surrounded by new top level elements to identify the
+  database location it came from so it can be put back after
+  editing.
+-->
+<!--*********************ENTITY DECLARATIONS**************************************************-->
+<!ENTITY % HTMLlat1 SYSTEM "/dtd/xhtml-lat1.ent" >
+%HTMLlat1;
+
+<!ENTITY % HTMLsymbol SYSTEM "/dtd/xhtml-symbol.ent" > 
+%HTMLsymbol;
+
+<!ENTITY % HTMLspecial SYSTEM "/dtd/xhtml-special.ent" > 
+%HTMLspecial;		
+
+<!ELEMENT supplement ((block | section)*, report*) >
+
+<!ATTLIST supplement
+    id CDATA #IMPLIED
+	language CDATA #IMPLIED
+	classification CDATA #IMPLIED
+>
+
+<!ELEMENT report (#PCDATA) >
+
+<!ATTLIST report
+	src CDATA #IMPLIED
+	lang CDATA #IMPLIED
+	section CDATA #IMPLIED
+	qualifier CDATA #IMPLIED
+	type CDATA #IMPLIED
+	colheading CDATA #IMPLIED
+>
+
+<!ELEMENT block (clause | sub-clause | para | olist | ulist | table | graphic | quote | footnote | address | symbol)* >
+
+<!--                            SECTION                                       -->
+<!-- The front matter follows this hierarchy:
+     section
+       sub-section
+         clause
+           subclause
+     Each subdivision may contain "block-text".
+  -->
+<!ELEMENT section (label, (sub-section | clause | para | olist | ulist | table | graphic | quote | footnote | address)*)>
+<!ATTLIST section
+	header CDATA #IMPLIED
+	type CDATA #IMPLIED
+	record CDATA #IMPLIED
+	number (on | off) "off"
+>
+	
+<!ENTITY % common-elements SYSTEM "/dtd/common-elements.ent" >
+%common-elements;
+
+					
+

@@ -1,0 +1,9 @@
+create table CIMS_ELEMENT
+(
+  ELEMENT_CODE VARCHAR2(5) not null,
+  ELEMENT_DESC VARCHAR2(50)
+)
+;
+alter table CIMS_ELEMENT
+  add constraint FK_ELMENT_CODE primary key (ELEMENT_CODE);
+

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="${LANGUAGE}">
+<head>
+	<meta http-equiv="Content-Type" content="${CONTENT_TYPE}">
+	<link href="css/screen.css" rel="stylesheet" />
+	<link href="css/cims.css" rel="stylesheet" />
+	<title></title> <!-- optional title -->
+</head>
+<body>
+
+	<div id="content"> <!-- optional id -->
+		<table class="conceptTable">
+			<tr>
+				<th width="8%"></th>
+				<th width="12%"></th>
+				<th width="62%"></th>
+				<th width="18%"></th>
+			</tr>	
+			
+			${CONTENT}
+		</table>
+	</div>
+	
+</body>
+</html>

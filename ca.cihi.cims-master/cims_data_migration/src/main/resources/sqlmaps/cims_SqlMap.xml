@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.data.mapper.MigrationMapper">
+
+	<resultMap id="LogMessage" type="ca.cihi.cims.web.bean.LogMessage">
+		<result property="classification" column="classification" />
+		<result property="fiscalYear" column="fiscal_year" />
+		<result property="message" column="message" />
+		<result property="messageDate" column="messageDate" />
+	</resultMap>
+
+	<!-- To call stored procedure. -->
+	<update id="migrateICDData" 
+	           parameterType="java.lang.String" statementType="CALLABLE">
+	   { call ICD_DATA_MIGRATION.icd_data_migration( #{fiscalYear} ) } 
+	</update>
+	
+	<!-- To call stored procedure. -->
+	<update id="migrateICDIndex" 
+	           parameterType="java.lang.String" statementType="CALLABLE">
+	   { call ICD_DATA_MIGRATION_INDEX.main( #{fiscalYear}) }
+	</update>
+	
+	<!-- To call stored procedure. -->
+	<update id="updateIcdCode" statementType="CALLABLE">
+	   { call CIMS_ICD.UpdateCode }
+	</update>
+	
+	<!-- To call stored procedure. -->
+	<update id="updateIcdCodeInClob" statementType="CALLABLE">
+	   { call CIMS_ICD.UpdateCodeInClob }
+	</update>
+	
+	<!-- To call stored procedure. -->
+	<update id="migrateCciData" 
+	           parameterType="java.lang.String" statementType="CALLABLE">
+	   { call CCI_DATA_MIGRATION.cci_data_migration( #{fiscalYear} ) } 
+	</update>
+	
+	<!-- To call stored procedure. -->
+	<update id="migrateCciIndex" 
+	           parameterType="java.lang.String" statementType="CALLABLE">
+	   {  call CCI_DATA_MIGRATION_INDEX.main(#{fiscalYear})} 
+	</update>
+	
+	<select id="getLogMessage" resultMap="LogMessage">
+		select classification,
+			   fiscal_year,			   
+			   message,
+			   messageDate
+		from LOG
+		where classification = #{classification}
+			  and fiscal_year = #{fiscalYear}
+		order by id				  
+   	</select>
+   	
+   	<!-- 
+   	<parameterMap id="checkRunStatusMap" class="java.util.Map">
+   		<parameter property="result" jdbcType="VARCHAR" mode="OUT"/>
+	</parameterMap>
+   	-->
+	<!-- To call function. -->
+	<update id="checkIcdRunStatus" parameterType="java.util.Map" statementType="CALLABLE">
+	   {  #{result,jdbcType=VARCHAR,javaType=String,mode=OUT}  = call CIMS_ICD.checkRunStatus( ) } 
+	</update>
+	
+		<!-- To call function. -->
+	<update id="checkCciRunStatus" parameterType="java.util.Map" statementType="CALLABLE">
+	   { #{result,jdbcType=VARCHAR,javaType=String,mode=OUT} = call CIMS_ICD.checkRunStatus( ) } 
+	</update>
+	
+	<update id="close2015">
+	   update structureversion sv 
+		set sv.contextstatus = 'CLOSED'
+		where sv.structureid in (
+			select structureid from structureversion sv, elementversion ev
+			where sv.structureid = ev.elementversionid
+			and ev.versioncode = '2015'
+		)	   
+	</update>
+ 
+</mapper>

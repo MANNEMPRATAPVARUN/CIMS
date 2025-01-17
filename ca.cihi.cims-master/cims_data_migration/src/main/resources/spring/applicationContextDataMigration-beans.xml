@@ -1,0 +1,53 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:ehcache="http://ehcache-spring-annotations.googlecode.com/svn/schema/ehcache-spring" xmlns:security="http://www.springframework.org/schema/security" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans                         http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/jee                         http://www.springframework.org/schema/jee/spring-jee.xsd                         http://www.springframework.org/schema/tx       http://www.springframework.org/schema/tx/spring-tx.xsd                         http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd                         http://www.springframework.org/schema/security                         http://www.springframework.org/schema/security/spring-security.xsd                         http://www.springframework.org/schema/context                         http://www.springframework.org/schema/context/spring-context.xsd                         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd                         http://ehcache-spring-annotations.googlecode.com/svn/schema/ehcache-spring          http://ehcache-spring-annotations.googlecode.com/svn/schema/ehcache-spring/ehcache-spring.xsd">
+   
+   <import resource="classpath:/spring/applicationContext-beans.xml"/>
+  
+   <context:component-scan base-package="ca.cihi.cims"/>
+	
+   <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="migrationSqlSessionFactory">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:/migration-sqlmap-config.xml"/>
+   </bean>
+
+   <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="snomedSTGSqlSessionFactory">
+        <property name="dataSource" ref="snomedSTGDataSource"/>
+        <property name="configLocation" value="classpath:/migration-sqlmap-config.xml"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="snomedSqlSessionFactory">
+        <property name="dataSource" ref="snomedDataSource"/>
+        <property name="configLocation" value="classpath:/migration-sqlmap-config.xml"/>
+   </bean>
+
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="migrationMapper">
+       <property name="sqlSessionFactory" ref="migrationSqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.data.mapper.MigrationMapper"/>
+   </bean>
+   
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="snomedMapper">
+       <property name="sqlSessionFactory" ref="snomedSqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.data.mapper.SnomedMapper"/>
+   </bean>
+             
+   <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="snomedSTGMapper">
+       <property name="sqlSessionFactory" ref="snomedSTGSqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.data.mapper.SnomedSTGMapper"/>
+   </bean>
+
+   <bean class="ca.cihi.cims.service.PropertyServiceImpl" id="propertyService"/>
+      
+   <bean class="ca.cihi.cims.service.SnomedServiceImpl" id="snomedService">
+		<property name="snomedMapper" ref="snomedMapper"/>
+		<property name="snomedSTGMapper" ref="snomedSTGMapper"/>		
+		<property name="propertyService" ref="propertyService"/>		
+   </bean>
+		
+   <bean class="ca.cihi.cims.data.MigrationDAOImpl" id="migrationDAO">
+		<property name="migrationMapper" ref="migrationMapper"/>
+   </bean>	
+	
+   <bean class="ca.cihi.cims.service.MigrationServiceImpl" id="migrationService">
+		<property name="migrationDAO" ref="migrationDAO"/>	
+   </bean>   
+    
+</beans>

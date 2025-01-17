@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ca.cihi.cims.dao.mapper.ASOTMapper">
+	<resultMap id="LogMessage" type="ca.cihi.cims.dao.bean.AsotETLLog">
+		<result property="asotETLLogId" column="asot_etl_log_id" />
+		<result property="asotETLLog" column="asot_etl_log" />
+		<result property="startDate" column="start_date" />
+		<result property="publicationReleaseId" column="publication_release_id" />
+		<result property="asotETLLogStatusCode" column="asot_etl_log_status_code" />
+		<result property="asotETLLogTypeCode" column="asot_etl_log_type_code" />
+	</resultMap>
+	
+	<!-- To call stored procedure. -->
+	<update id="generateASOT"  statementType="CALLABLE" parameterType="map">
+	   {  call CIMS_ASOT_API.generateASOT(#{fiscalYear}, #{releaseId}, #{email})} 
+	</update>
+   	
+   	<select id="findVersionYears" resultType="java.lang.String">
+	    select VERSIONCODE
+	    from (
+	      select  distinct ev.VERSIONCODE
+	      from STRUCTUREVERSION sv, ELEMENTVERSION ev
+	      where sv.STRUCTUREID = ev.ELEMENTVERSIONID
+	        and sv.basestructureid is null
+	      order by ev.VERSIONCODE
+	    )
+	  </select>
+	  
+	  <select id="getReleaseId" resultType="java.lang.Long">
+	  <choose>
+           <when test="fiscalYear == '2015'">
+           		select null from dual
+	  	   </when>
+	  	   <otherwise>
+			  select publication_release_id from 
+            (
+              select pr.publication_release_id
+              from publication_release pr
+              where pr.fiscal_year=#{fiscalYear} and pr.release_status_code in ('E') 
+              order by pr.creation_date desc
+            )  
+            where rownum=1
+      	  </otherwise>
+      	</choose>
+	  </select>
+	  
+	  <select id="getLatestETLLog" resultMap="LogMessage">
+	  <choose>
+           <when test="fiscalYear == '2015'">
+           		select * from (
+					select asot_etl_log_id,
+						   asot_etl_log,			   
+						   to_char(start_date, 'YYYY/MM/DD HH24:MI:SS') as start_date,
+						   publication_release_id,
+						   asot_etl_log_status_code,
+						   asot_etl_log_type_code
+					from ASOT_ETL_LOG 
+					where publication_release_id is null
+					order by asot_etl_log_id desc
+				)
+      			where rownum=1	
+	  	   </when>
+	  	   <otherwise>
+			  select * from (
+					select ael.asot_etl_log_id,
+						   ael.asot_etl_log,			   
+						   to_char(start_date, 'YYYY/MM/DD HH24:MI:SS') as start_date,
+						   ael.publication_release_id,
+						   ael.asot_etl_log_status_code,
+						   ael.asot_etl_log_type_code
+					from ASOT_ETL_LOG ael
+					where ael.publication_release_id=#{releaseId}
+					order by ael.asot_etl_log_id desc
+				)
+      			where rownum=1	
+      	  </otherwise>
+      	</choose>			  
+   	</select>
+ 
+</mapper>

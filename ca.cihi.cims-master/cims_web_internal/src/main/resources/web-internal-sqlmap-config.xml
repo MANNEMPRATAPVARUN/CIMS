@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"     "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+	<settings>
+		<setting name="cacheEnabled" value="true" />
+		<setting name="lazyLoadingEnabled" value="true" />
+		<setting name="jdbcTypeForNull" value="NULL" />
+	</settings>
+
+	<!-- iBatis configuration and SqlMap references -->
+	<mappers>
+		<mapper resource="sqlmaps/transformation_SqlMap.xml" />
+		<mapper resource="sqlmaps/Admin_SqlMap.xml" />
+		<mapper resource="sqlmaps/ChangeRequest_SqlMap.xml" />
+		<mapper resource="sqlmaps/ChangeRequestHistory_SqlMap.xml" />
+		<mapper resource="sqlmaps/ChangeRequestSummary_SqlMap.xml" />
+		<mapper resource="sqlmaps/ChangeRequestIndexSummary_SqlMap.xml" />
+		<mapper resource="sqlmaps/ChangeRequestSupplementSummary_SqlMap.xml" />
+		<mapper resource="sqlmaps/IncompleteReport_SqlMap.xml" />
+		<mapper resource="sqlmaps/Notification_SqlMap.xml" />
+		<mapper resource="sqlmaps/Lookup_SqlMap.xml" />
+		<mapper resource="sqlmaps/ResourceAccess_SqlMap.xml" />
+		<mapper resource="sqlmaps/CciAux_SqlMap.xml" />
+		<mapper resource="sqlmaps/concept_SqlMap.xml"/>
+		<mapper resource="sqlmaps/View_SqlMap.xml" />
+		<mapper resource="sqlmaps/Context_SqlMap.xml" />
+
+		<mapper resource="sqlmaps/ProductPublication_SqlMap.xml" />
+		<mapper resource="sqlmaps/Report_SqlMap.xml" />
+		<mapper resource="sqlmaps/Legacy_SqlMap.xml" />
+		<mapper resource="sqlmaps/Search_SqlMap.xml" />
+		<mapper resource="sqlmaps/ChangeRequestStatus_SqlMap.xml" />
+		<mapper resource="sqlmaps/SearchQuery_SqlMap.xml" />
+		<mapper resource="sqlmaps/sgsc_SqlMap.xml" />
+	</mappers>
+
+</configuration>

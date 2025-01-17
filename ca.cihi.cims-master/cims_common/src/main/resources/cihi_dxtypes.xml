@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<dxtypes>
+	<dxtype id="1" main="Y" mrdx="Y" t1="Y" t2="Y" t3="Y" t4="N" t6="N" t9="N" w="Y" x="Y" y="Y" />
+	<dxtype id="2" main="N" mrdx="Y" t1="Y" t2="Y" t3="Y" t4="N" t6="N" t9="N" w="Y" x="Y" y="Y" />
+	<dxtype id="3" main="Y" mrdx="N" t1="N" t2="N" t3="N" t4="N" t6="N" t9="N" w="N" x="N" y="N" />
+	<dxtype id="4" main="N" mrdx="N" t1="N" t2="N" t3="Y" t4="N" t6="Y" t9="N" w="N" x="N" y="N" />
+	<dxtype id="5" main="N" mrdx="N" t1="N" t2="N" t3="Y" t4="N" t6="N" t9="N" w="N" x="N" y="N" />
+	<dxtype id="6" main="N" mrdx="N" t1="N" t2="N" t3="N" t4="Y" t6="N" t9="N" w="N" x="N" y="N" />	
+	<dxtype id="7" main="N" mrdx="N" t1="N" t2="N" t3="N" t4="N" t6="N" t9="Y" w="N" x="N" y="N" />
+</dxtypes>

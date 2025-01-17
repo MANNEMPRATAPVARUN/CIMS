@@ -1,0 +1,1234 @@
+Html,body {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+}
+
+table {
+ 	margin-bottom: 0px;
+ 	border-collapse: collapse;
+}
+
+
+/* ICD */
+.chp {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 24px;
+	color: white;
+	text-align: center;
+	vertical-align: text-top;
+	background-color: #33339F;
+}
+
+.bl1 {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 20px;
+	color: white;
+	text-align: center;
+	vertical-align: text-top;
+	background-color: black;
+}
+
+.bl2 {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 19px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.bl3 {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 18px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.cat1 {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 16px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.cat2 {
+	padding-top: 6px;
+	padding-bottom: 2px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 15px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.cat3 {
+	padding-top: 6px;
+	padding-bottom: 2px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 14px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.code{
+	font-family: Arial;
+	font-size: 13px;
+	font-style: normal;
+	font-weight: bold;
+	vertical-align: text-top;
+}
+
+.codeText {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: normal;
+	vertical-align: text-top;
+}
+
+.bold{
+	font-weight: bold;
+}
+
+
+/* CCI */
+.sec {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 24px;
+	color: white;
+	text-align: center;
+	vertical-align: text-top;
+	background-color: #33339F
+}
+
+.cci_bl1 {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 20px;
+	color: white;
+	text-align: center;
+	vertical-align: text-top;
+	background-color: black;
+}
+
+.cci_bl2 {
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border-top: #000 solid;
+	border-bottom: #000 solid;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 19px;
+	color: black;
+	text-align: center;
+	vertical-align: text-top;
+	background-color: white;
+}
+
+.cci_bl3 {
+	padding-top: 3px;
+	padding-bottom: 2px;
+	padding-left: 20px;
+	border-left: #33339F solid;
+	border-bottom: #33339F solid;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 18px;
+	color: #33339F;
+	text-align: left;
+	vertical-align: text-top;
+	background-color: white;
+}
+
+.grp {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 16px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.rub, td.rub table td {
+	padding-top: 6px;
+	padding-bottom: 2px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 15px;
+	vertical-align: text-top;
+	color: black;
+}
+
+.include {
+	font-family: Arial;
+	font-size: 13px;
+	vertical-align: text-top;
+}
+
+.includelabel {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: italic;
+	color: blue;
+	vertical-align: text-top;
+}
+
+.exclude {
+	font-family: Arial;
+	font-size: 13px;
+	vertical-align: text-top;
+}
+
+.excludelabel {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: italic;
+	color: red;
+	vertical-align: text-top;
+}
+
+.note {
+	font-family: Arial;
+	font-size: 13px;
+	vertical-align: text-top;
+}
+
+.notelabel {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: italic;
+	color: green;
+	vertical-align: text-top;
+}
+
+.codealso {
+	font-family: Arial;
+	font-size: 13px;
+	vertical-align: text-top;
+}
+
+.codealsolabel {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: italic;
+	color: black;
+	vertical-align: text-top;
+}
+
+.definition {
+	font-family: Arial;
+	font-size: 13px;
+	vertical-align: text-top;
+}
+
+.definitionlabel {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: italic;
+	color: brown;
+	vertical-align: text-top;
+}
+
+.omit {
+	font-family: Arial;
+	font-size: 13px;
+	vertical-align: text-top;
+}
+
+.omitlabel {
+	font-family: Arial;
+	font-size: 13px;
+	font-style: italic;
+	color: purple;
+	vertical-align: text-top;
+}
+
+.cls {
+	font-family: Arial;
+	font-style: normal;
+	font-size: 13px;
+	text-align: center;
+	color: #33339F;
+	vertical-align: text-top;
+}
+
+.fieldLabel {
+	font-weight: bold;
+}
+
+.errorMsg {
+	font-weight: bold;
+	color: red;
+}
+
+.updateMsg {
+	font-weight: bold;
+	color: green;
+}
+
+fieldset.invisible {
+	border: 1px solid #FFFFFF;
+}
+
+.includeSupp {
+	font-size: 85%;
+	font-family: Arial;
+}
+
+.sm-text {
+	font-size: 13px;
+	font-family: Arial;
+}
+
+.sm-text-indent {
+	font-size: 13px;
+	margin-left: 20px;
+	font-family: Arial;
+}
+
+.tbl-note {
+	font-size: 12px;
+	font-family: Arial;
+}
+
+.thead{
+	font-size: 13px;
+	font-family: Arial;
+	font-weight: bold;
+	background-color: white;
+	border: 1px solid black;	
+}
+
+.thead tr, thead td{
+	border: 1px solid silver;
+}
+
+.rubhead, .rubhead th {
+	font-size: 13px;
+	font-family: Arial;
+	font-weight: bold;
+	color: white;
+	background-color: navy;
+	border: 1px solid silver;
+}
+
+.rubhead tr {
+	border: 1px solid silver;
+}
+
+.rubhead td {
+	border: 1px solid silver;
+}
+
+.rubbody {
+	font-size: 12px;
+	font-family: Arial;
+	background-color: white;
+}
+
+.rubbody tr, .rubbody td {
+	border: 1px solid silver;
+}
+
+.rubbody-plain {
+	font-size: 12px;
+	font-family: Arial;
+	background-color: white;
+}
+
+.rubbody-subtitle {
+	font-size: 13px;
+	font-family: Arial;
+	font-weight: bold;
+	background-color: #CCCCCC;
+}
+
+.codeTable{
+	align:left;
+	border: 1px solid silver;
+}
+
+.noteTable {
+	align: center;
+	font-size: 12px;
+	font-family: Arial;
+	cellpadding:0;
+	cellspacing:0;
+	background-color: white;
+}
+
+.noteTable thead, .noteTable tbody {
+	background-color: white;
+}
+
+.noteTable th {
+	background-color: white;
+}
+
+.supplementTable{
+	font-size: 12px;
+	font-family: Arial;
+	cellpadding:0;
+	cellspacing:0;
+	background-color: white;
+}
+
+.supplementTable th, .supplementTable td{	
+	background-color: white;
+}
+
+.title {
+	padding-top: 2px;
+	padding-bottom: 1px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+	font-family: Arial;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 16px;
+	vertical-align: text-top;
+	color: #800000;
+}
+
+.footer {
+	font-weight: bold;
+	font-size: xx-small;
+}
+
+.popup-hide {
+	visibility: hidden;
+}
+
+.popup-show {
+	visibility: visible;
+}
+
+.silver {
+	background-color: silver;
+}
+
+.back-to-main {
+	font-size: xx-small;
+}
+
+a.small:link {
+	color: #c49c75;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a.small:visited {
+	color: #c49c75;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a.small:active {
+	color: brown;
+}
+
+a.small:hover {
+	color: brown;
+}
+
+a.small:target {
+	border: 1px solid red;
+	color: red;
+	background-color: silver;
+}
+
+a:target {
+	border: 1px solid red;
+	color: red;
+	background-color: silver;
+}
+
+.superscript {
+	vertical-align: top;
+	font-size: xx-small;
+	color: purple;
+}
+
+.superscript_popup {
+	vertical-align: top;
+	font-size: xx-small;
+	color: #FF3399;
+}
+
+ol {
+    margin-top: 0px; 
+	margin-bottom:0px; 
+	padding-top: 0px; 
+	padding-bottom: 0px;	
+}
+
+.ol_level0{
+	margin-top: 0px; 
+	margin-bottom:0px; 
+	padding-top: 0px; 
+	padding-bottom: 0px;
+	list-style-type: decimal;
+}
+
+.ol_level1{
+	margin-top: 0px; 
+	margin-bottom:0px; 
+	padding-top: 0px; 
+	padding-bottom: 0px;
+	list-style-type: lower-alpha;
+}
+
+.ol_level2{
+	margin-top: 0px; 
+	margin-bottom:0px; 
+	padding-top: 0px; 
+	padding-bottom: 0px;
+	list-style-type: lower-roman;
+}
+
+
+ul {
+	margin-top: 0px; 
+	margin-bottom:0px; 
+	padding-top: 0px; 
+	padding-bottom: 0px;
+}
+
+.li {
+	list-style: disk;
+}
+
+.ui-widget-overlay {
+	opacity: .10 !important;
+	/* Make sure to change both of these, as IE only sees the second one */
+	filter: Alpha(Opacity = 10) !important;
+	background-color: rgb(50, 50, 50) !important;
+	/* This will make it darker */
+}
+
+/* copied from viewer.css, viewer.css will be removed, and we will only maintain cims.css */
+.viewerborder {
+	border: 3px solid red;
+}
+
+.resdiv {
+	resize: horizontal;
+	overflow: auto;
+	height: 100%;
+	width: 100%;
+	border: 2px solid navy;
+	min-width: 100%;
+	min-height: 100%;
+}
+
+.splitterMask {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background-image: url(/images/spacer.gif);
+	z-index: 20000;
+}
+
+.container {
+	min-height: 100%;
+	height: 100%;
+	position: relative;
+}
+
+.contentContainer { /* 	padding-bottom: 25px; */
+	padding-bottom: 0px;
+	padding-left: 0px;
+}
+
+.content {
+	padding-bottom: 0px;
+}
+
+.pagefooter { /* 	height: 25px; */
+	height: 0px;
+	position: relative;
+	width: 100%;
+	bottom: 0;
+}
+
+.th_drugs_top {
+	font-size: 13px;
+	font-family: Arial;
+	border-top: thin solid;
+	border-color: black;
+	border-bottom: thin solid;
+}
+
+.th_drugs_bottom {
+	font-size: 13px;
+	font-family: Arial;
+	border-bottom: thin solid;
+	border-color: black;
+}
+
+#csstab {
+	float: left;
+	width: 100%;
+	background: #efefef;
+	font-size: 93%;
+	line-height: normal;
+	border-bottom: 1px solid #666;
+}
+
+#csstab ul {
+	margin: 0;
+	padding: 10px 10px 0 50px;
+	list-style: none;
+}
+
+#csstab li {
+	display: inline;
+	margin: 0;
+	padding: 0;
+}
+
+#csstab a {
+	float: left;
+	background: url('../img/tableftf.gif') no-repeat left top;
+	margin: 0;
+	padding: 0 0 0 4px;
+	text-decoration: none;
+}
+
+#csstab a span {
+	float: left;
+	display: block;
+	background: url('../img/tabrightf.gif') no-repeat right top;
+	padding: 5px 15px 4px 6px;
+	color: #666;
+}
+/* Commented Backslash Hack hides rule from IE5-Mac */
+#csstab a span {
+	float: none;
+}
+/* End IE5-Mac hack */
+#csstab .active a span,#csstab a:hover span {
+	color: #FFFFFF;
+}
+
+#csstab .active a,#csstab a:hover {
+	background-position: 0 -42px;
+}
+
+#csstab .active a span,#csstab a:hover span {
+	background-position: 100% -42px;
+}
+
+.modal {
+	background: #000000 url('../img/indicator-400x400.gif') no-repeat center
+		center;
+	opacity: 0.1;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1200;
+	width: 100%;
+	filter:alpha(opacity=10); /*IE*/
+	cursor: progress;
+}
+
+.progress {
+	background: url('../img/indicator-400x400.gif') no-repeat center
+		center;
+	opacity: .5;
+}
+
+th.order1 {
+	background: #98D6D3 url('../img/icons/arrow1-up.png') no-repeat center right !important;
+	background-color: #98D6D3 !important;
+}
+
+th.order2 {
+	background: #98D6D3 url('../img/icons/arrow1-down.png') no-repeat center right !important;
+	background-color: #98D6D3 !important;
+	/*prev: 98D6D3*/
+}
+
+th a {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+table.listTable th.sortable {
+	background: #CDE1E0 url('../img/icons/arrow1.png') no-repeat center right;
+/* 	background-color: #CDE1E0 !important; */
+}
+
+table.listTable th.sortable a {
+	text-decoration: underline;
+	
+}
+
+.tableHeaderHidden {
+	display: none;
+}
+
+.textGray{
+    color: graytext;
+}
+   
+.alignRight{
+    text-align: right;
+}
+.alignLeft   {
+    text-align:left;
+}
+.alignCenter   {
+    text-align:center;
+}
+
+
+
+.alignTop{
+    vertical-align:top;
+}
+
+.topMargin5px{
+   margin-top:5px;
+}
+   
+.btn_alignRight{
+   margin-top:5px;
+   text-align: right;
+}
+   
+   
+.sectionHeader {
+   color: #FFFFFF;
+   background-color:#669999;
+ }
+    
+.tableHeader {
+   color: #205791;
+   background-color:#A4A4A4;
+}
+.section{
+    display:inline-block;
+    width: 100%;
+    margin: 0px 0px 0px 0px ;
+}
+.right_section{
+    margin: 7px 0px 0px 0px ;
+    text-align: left;
+    float:left;
+    display:inline-block;
+    width :94%;
+}
+.left_section {
+    display:inline-block;
+    float:left;
+    width :6%;
+}
+
+.disabledButton {
+   color: gray;
+   background-color: #CDE1E0;
+   border: 1px solid #037872;
+}
+ 
+ 
+ #button-header .wrapper {
+    background: #FFF;
+    border-bottom: 2px solid #333;
+    padding-top: 20px;
+    height: 45px;
+  }
+
+  #button-header.fixed {
+      height: 55px;
+      margin-bottom: 5px;
+  }
+
+  #button-header.fixed .wrapper {
+    height: 50px;
+    position: fixed;
+    top: 75px;
+    z-index: 100;
+    padding: 0;
+  }
+
+.sizeThirty {
+   width:30px;
+}
+
+.sizeFifty {
+   width:50px;
+}
+
+.sizeSixty {
+   width:30px;
+}
+
+.sizeEighty {
+   width:80px;
+}
+
+.sizeOneTen {
+   width:110px;
+}
+
+.sizeOneFifty {
+   width:150px;
+}
+
+.sizeOneSixty {
+   width:160px;
+}
+
+.sizeOneSeventy {
+   width:170px;
+}
+
+.sizeOneEighty {
+   width:180px;
+}
+.sizeTwoFifty {
+   width:250px;
+}
+
+@media print{
+	a[href]:after {
+	    content: none !important;
+	}
+	.no-print, .no-print * {display: none !important;}
+	.right_section { width: 100%; }
+}
+
+
+
+/*Changes to styling RS|CSRE-704*/
+#content a {
+	color: inherit;
+	text-decoration: none; 
+}
+
+#content .appTab .ui-tabs-nav li a {
+	color: #636466;
+	text-decoration: none;
+}
+
+#content a:link {
+	color: #06C; /*default IE link color*/
+	text-decoration: underline;
+}
+
+#content a:visited {
+	color: #551A8B;
+}
+
+#content a:link:active {
+	color: #FF0000;
+}
+
+#content .rub a, #content .rub a:hover {
+	color: #000000;
+	text-decoration: none;
+}
+
+#content .rubhead a, #content .rubhead a:hover {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+.conceptTable {
+	/*CSRE-853: make sure to not have the content reflow*/
+	width: 1100px;
+}
+
+.conceptTable td {
+	padding-bottom: 0px;
+	padding-top: 0px;
+}
+
+.highlightedConcept, .rub a.highlightedConcept {
+	background: blue;
+	color: white !important;
+}
+
+table.changeRequestHeader {
+	border-bottom: 1px solid #dddddd;
+	margin-bottom: 0px; 
+	padding: 5px; 
+	width: 100%;
+}
+
+.err {
+	color: red;
+	word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+a img {
+	border: none;
+}
+textarea {
+	height: 70px;
+	overflow-x: auto;
+	word-wrap: break-word;
+	box-sizing: border-box;
+	width: 100%;
+}
+select.ccicombo {
+	width: 300px;
+}
+.leftcolumn {
+	width: 110px;
+}
+.nobottom {
+	margin-bottom: 0.0em;
+}
+tr.slim td{
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+.input{
+	width: 100%;
+	box-sizing: border-box;
+}
+.language-column{
+	margin: 0px;
+	padding: 4px 0px 4px 5px;
+	background: #CDE1E0;
+}
+.language-table{
+	padding-right: 0px;
+}
+.language-table td {
+	padding: 4px 10px 4px 5px;
+}
+.language-table td.value{
+	padding-right: 0px;
+}
+table td.formRequiredLabel{
+	font-weight: normal;
+	white-space: nowrap;
+}
+.headerTable{
+	background-color: rgb(219, 240, 240);
+}
+
+textarea.xml {
+	width:100%;
+	height:160px;
+	overflow-x: auto;
+	word-wrap: break-word;
+}
+
+textarea.indexNote {
+	height: 250px;
+}
+
+.nopadding, .nopadding td {
+	padding: 0px !important;
+}
+
+.fullwidth {
+	width: 100%;
+}
+
+.stick {  
+	background-color: white;
+	width:900px;
+	position:absolute;     
+	top:0px; 
+	z-index:inherit;
+}
+
+input[type="text"].searchbox {
+	background: #fff6bf;
+	color: #514721;
+	width: 250px;
+}
+
+input[type="text"]:disabled.searchbox {
+	background: #ffffff;
+	color: grey;
+}
+
+.indexList {
+	width: 250px;
+}
+
+.noborder {
+	border: 0px !important;
+}
+
+.ui-autocomplete {
+	z-index: 99999 !important;
+}
+
+.dynatree-container {
+	overflow: visible !important;
+	height: calc(100% - 6px) !important; //top bottom paddding of 3 px
+}
+
+/*Getting rid of white background strip in jQuery UI modal dialogs*/
+.ui-widget-overlay {
+	background-image: none !important;
+}
+
+div.inline {
+	display: inline-block;
+}
+
+div.padded {
+	padding: 2px;
+}
+
+div.table {
+	display: table;
+}
+
+div.cell {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.floatRight {
+	float: right;
+}
+
+.floatLeft {
+	float: left;
+}
+
+.dark-red-bold {
+	color: rgb(162, 96, 106);
+}
+
+.green {
+	color: rgb(20, 127, 121);
+}
+
+.contentHeader {
+	background-color: white;
+	border-top: none;
+	margin-bottom: 0px;
+	padding-left: 0px;
+	text-align: center;
+}
+
+.parent{
+	font-size: 13px;
+	font-weight: bold;
+}
+
+div.grippie {
+	background: #EEEEEE url(../img/grippie.png) no-repeat scroll center 2px;
+	border-color: #DDDDDD;
+	border-style: solid;
+	border-width: 0pt 1px 1px;
+	cursor: s-resize;
+	height: 9px;
+	overflow: hidden;
+}
+
+.resizable-textarea textarea {
+	margin-bottom: 0pt;
+}
+
+p {
+   margin-top: 0em;
+   margin-bottom: 0.5em;
+ }
+ 
+ /*Menu style overrides*/
+a > .sf-sub-indicator {
+	top: .5em;
+	background-position: 0 -100px;
+}
+
+.sf-menu li:hover ul,
+.sf-menu li.sfHover ul {
+	left: 0;
+	top: 2.1em; /* match top ul list item height */
+	z-index: 99;
+}
+
+.sf-sub-indicator {
+	right: .5em;
+}
+
+/*Search styles*/
+.searchLegend {
+	font-weight: normal;
+	font-size: 1em;
+	padding-left: 5px;
+	padding-right: 5px;	
+}
+
+.form-row {
+	line-height: 2.5em;
+	vertical-align: middle;
+}
+
+.form-row .label {
+	text-align: right;
+}
+
+.form-row select {
+	max-width: 200px;
+}
+
+.form-row input[type="text"] {
+	width: 300px;
+}
+
+input[type="text"] {
+	padding-left: 2px;
+}
+
+input[type="text"].datepicker {
+	padding-left: 2px;
+	width: 100px;
+}
+
+label.mandatory::after {
+	color: red;
+	content: "*";
+}
+
+span.mandatory::after {
+	color: red;
+	content: "*";
+}
+
+.searchColumnList {
+	height: 100%;
+	display: inline-block;
+}
+
+.searchColumnList label {
+	display: block;
+	text-align: left;
+}
+
+.searchColumnList select {
+	width: 200px;
+	height: calc(100% - 20px);
+}
+
+div.paletteContainer {
+	height: 200px;
+	width: 100%; 
+	text-align: center;
+}
+
+.paletteButtons {
+	display: inline-block;
+	height: 100%;
+	margin-bottom: -70px;
+	margin-left: 5px;
+}
+
+.paletteButtons button {
+	width: 100px;
+	clear: both;
+}
+
+.searchActionButtons {
+	padding: 5px;	
+}
+
+input.fieldError, 
+select.fieldError {
+	background: #fbe3e4;
+	color: #8a1f11;
+	border: 1px solid #fbc2c4;
+}
+
+label.simple {
+	font-weight: normal;
+}
+
+input[type="text"].short {
+	width: 100px;
+}
+
+/*Control the size of the popup menu.
+  CSRE-833, CSRE-1068
+*/
+.ui-menu {
+	width: 400px;
+}
+
+.search-result-table-cell-link { 
+	text-align: center; 
+	vertical-align: middle;
+}
+
+.search-result-table-cell-default { 
+	vertical-align: middle;
+}
+
+.nowrap {
+	white-space: nowrap;
+}
+
+/*make sure that all form elements in search screens
+are aligned nicely*/
+div.form-row > div > div {
+	min-height: 34px;
+	vertical-align: middle;
+}
+ 
+#leftPane {
+	z-index:100;
+}
+
+#rightPane {
+	z-index:50;
+}
+.vsplitter{
+	z-index:80;
+}

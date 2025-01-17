@@ -1,0 +1,88 @@
+<!-- CV - January 2005
+        - adding "brace" structure support
+        - lowered "id ID #REQUIRED" to "id ID #IMPLIED"
+          as most XML in database is now missing "id"
+          (not sure how database XML edited, but doesn't 
+           seem to have been with XMetal, otherwise 
+           validation would have failed)
+-->
+
+
+<!-- Common "Tabular" Structures for CCI/ICD10-CA products
+  Description:
+  This DTD module declares elements that occur in the "tabular"
+  portion of the CCI and ICD10-CA.
+
+  Public Identifier:
+  "-//CIHI//ELEMENTS Common Tabular Elements 1.0//EN"
+  -->
+<!--                           QUALIFIER LIST                                 -->
+<!-- Notes: (2001/01/04)
+     Content Model for CCI: (include | exclude | omit | also | note)+
+     Content Model for ICD: (include | exclude | also | note)+
+  -->
+<!ELEMENT qualifierlist (definition | include | exclude | omit | also | note | table | chpfront)+ >
+<!ATTLIST qualifierlist
+	type (definition | includes | excludes | omit | also | note | chpfront) #REQUIRED
+	codeval CDATA #IMPLIED
+>
+<!--                           DEFINITION                                        -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref)*
+  -->
+<!ELEMENT definition (#PCDATA | label | ulist | xref | table | brace)*>
+<!ATTLIST definition
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+<!--                           INCLUDE                                        -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref|ulist|table)*
+  -->
+<!ELEMENT include (label |  ulist |  brace)>
+<!ATTLIST include
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+<!--                           EXCLUDE                                        -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref|ulist|table)*
+  -->
+<!ELEMENT exclude (label | ulist | brace)>
+<!ATTLIST exclude
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+<!--                           NOTE                                           -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref)*
+  -->
+<!-- 03/05 AV: Added ulist to the content model. Extensive number of list items 
+     within block headings of ICD. -->
+<!ELEMENT note (#PCDATA | label | ulist | xref | table | brace)*>
+<!ATTLIST note
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+<!--                           ALSO                                           -->
+<!-- Content Model for CCI: (#PCDATA|xref)*
+     Content Model for ICD: (label|xref|ulist|table)*
+  -->
+<!ELEMENT also (label |  ulist |  brace)>
+<!ATTLIST also
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+<!--                           OMIT                                           -->
+<!-- Element "omit" can only occur in CCI -->
+<!-- 02/28 AV: Permitting omit content model to contain label element. -->
+<!ELEMENT omit (label |  ulist |  brace)>
+<!ATTLIST omit
+	id ID #IMPLIED
+	codeval CDATA #IMPLIED
+>
+
+
+
+
+

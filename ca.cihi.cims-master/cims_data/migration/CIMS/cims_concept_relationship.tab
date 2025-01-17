@@ -1,0 +1,10 @@
+create table CIMS_CONCEPT_RELATIONSHIP
+(
+  VERSION_CODE      VARCHAR2(4) not null,
+  CONCEPT_ID        NUMBER not null,
+  PARENT_CONCEPT_ID NUMBER
+)
+;
+alter table CIMS_CONCEPT_RELATIONSHIP
+  add constraint PK_CONCEPT_RELATIONSHIP primary key (VERSION_CODE, CONCEPT_ID);
+

@@ -1,0 +1,391 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:security="http://www.springframework.org/schema/security" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util" xsi:schemaLocation="http://www.springframework.org/schema/beans                         http://www.springframework.org/schema/beans/spring-beans.xsd                                                 http://www.springframework.org/schema/jee                         http://www.springframework.org/schema/jee/spring-jee.xsd                         http://www.springframework.org/schema/tx       http://www.springframework.org/schema/tx/spring-tx.xsd                         http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd                         http://www.springframework.org/schema/security                         http://www.springframework.org/schema/security/spring-security.xsd                         http://www.springframework.org/schema/context                         http://www.springframework.org/schema/context/spring-context.xsd                         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd                         http://www.springframework.org/schema/util 
+        http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <import resource="classpath:/spring/applicationContext-beans.xml"/>
+   
+	<context:component-scan base-package="ca.cihi.cims"/>		
+	
+	<util:properties id="velocityProperties">
+		<prop key="resource.loader">class</prop>
+		<prop key="class.resource.loader.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
+	</util:properties>
+
+	<bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine">
+		<constructor-arg ref="velocityProperties"/>
+	</bean>
+
+    <!-- expose specific properties to application  -->
+	<bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="applicationProperties">
+		<property name="singleton" value="true"/>
+		<property name="properties">
+			<props>
+				<prop key="snomedservice.url">${snomedservice.url}</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean class="org.mybatis.spring.SqlSessionFactoryBean" id="webInternalSqlSessionFactory">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:/web-internal-sqlmap-config.xml"/>
+	</bean>
+	<!-- 
+	<bean id="sqlSessionBatch" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+		<constructor-arg index="1" value="BATCH" />
+	</bean>
+    -->
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="contentDisplayMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ContentDisplayMapper"/>
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="changeRequestMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ChangeRequestMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="changeRequestSummaryMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ChangeRequestSummaryMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="changeRequestIndexSummaryMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ChangeRequestIndexSummaryMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="changeRequestSupplementSummaryMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ChangeRequestSupplementSummaryMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="incompleteReportMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.IncompleteReportMapper"/>
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="changeRequestHistoryMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ChangeRequestHistoryMapper"/>
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="notificationMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.NotificationMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="sgscMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.SGSCMapper"/>
+	</bean>
+
+	
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="resourceAccessMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ResourceAccessMapper"/>
+	</bean>
+
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="adminMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.AdminMapper"/>
+	</bean>
+
+     <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="lookupMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.LookupMapper"/>
+	</bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="contextMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ContextMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="reportMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ReportMapper"/>
+	</bean>
+
+
+    <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="publicationMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.PublicationMapper"/>
+	</bean>
+
+
+
+     <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="legacyRequestMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.legacy.LegacyRequestMapper"/>
+	</bean>
+
+
+	<bean class="ca.cihi.cims.service.ViewServiceImpl" id="viewService">
+		<property name="contentDisplayMapper" ref="contentDisplayMapper"/>
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+		<property name="contentListWithChildrenSql" value="${getContentListWithChildren}"/>
+	</bean>
+
+
+	<bean class="ca.cihi.cims.service.ChangeRequestServiceImpl" id="changeRequestService">
+		<property name="changeRequestMapper" ref="changeRequestMapper"/>
+		<property name="notificationService" ref="notificationService"/>
+		<property name="adminService" ref="adminService"/>
+		<property name="fileService" ref="fileService"/>
+		<property name="changeRequestHistoryService" ref="changeRequestHistoryService"/>
+		<property name="lookupService" ref="lookupService"/>
+		<property name="contextService" ref="contextService"/>
+		<property name="changeRequestSummaryService" ref="changeRequestSummaryService"/>
+		<property name="synchronizationService" ref="synchronizationService"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.refset.RefsetServiceImpl" id="refsetService">
+		<property name="adminService" ref="adminService"/>
+		<property name="lookupService" ref="lookupService"/>
+<!-- 		<property name="snomedSCTService" ref="snomedSCTService" /> -->
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.refset.EvolutionServiceImpl" id="evolutionService">
+	</bean>
+	
+	
+	<bean class="ca.cihi.cims.service.RealizationServiceImpl" id="realizationService">
+		<property name="changeRequestService" ref="changeRequestService"/>
+		<property name="lookupService" ref="lookupService"/>
+		<property name="changeRequestSummaryService" ref="changeRequestSummaryService"/>
+		<property name="synchronizationService" ref="synchronizationService"/>
+	</bean>
+	
+	
+	
+	<bean class="ca.cihi.cims.service.ChangeRequestSummaryServiceImpl" id="changeRequestSummaryService">
+		<property name="changeRequestSummaryMapper" ref="changeRequestSummaryMapper"/>
+		<property name="incompleteReportMapper" ref="incompleteReportMapper"/>
+		<property name="conceptService" ref="conceptService"/>
+		<property name="changeRequestIndexSummaryMapper" ref="changeRequestIndexSummaryMapper"/>		
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.IncompleteReportServiceImpl" id="incompleteReportService">
+		<property name="incompleteReportMapper" ref="incompleteReportMapper"/>
+		<property name="propertyManager" ref="propertyManager"/>
+	</bean>
+
+	<bean class="ca.cihi.cims.service.ChangeRequestHistoryServiceImpl" id="changeRequestHistoryService">
+		<property name="changeRequestMapper" ref="changeRequestMapper"/>
+		<property name="changeRequestHistoryMapper" ref="changeRequestHistoryMapper"/>
+		<property name="lookupMapper" ref="lookupMapper"/>
+		
+	</bean>
+
+	<bean class="ca.cihi.cims.service.legacy.LegacyRequestServiceImpl" id="legacyRequestService">
+		<property name="legacyRequestMapper" ref="legacyRequestMapper"/>
+	</bean>
+
+
+	<bean class="ca.cihi.cims.validator.ChangeRequestValidator" id="changeRequestValidator">
+		<property name="changeRequestService" ref="changeRequestService"/>
+		<property name="lookupService" ref="lookupService"/>
+		<property name="adminService" ref="adminService"/>
+	</bean>
+
+	<bean class="ca.cihi.cims.service.ChangeRequestAccessServiceImpl" id="changeRequestAccessService">
+		<property name="changeRequestService" ref="changeRequestService"/>
+	</bean>
+
+	<bean class="ca.cihi.cims.service.NotificationServiceImpl" id="notificationService">
+		<property name="notificationMapper" ref="notificationMapper"/>
+		<property name="changeRequestMapper" ref="changeRequestMapper"/>
+		<property name="adminMapper" ref="adminMapper"/>
+		<property name="lookupService" ref="lookupService"/>
+	</bean>
+
+     <bean class="ca.cihi.cims.service.LookupServiceImpl" id="lookupService">
+		<property name="notificationMapper" ref="notificationMapper"/>
+		<property name="lookupMapper" ref="lookupMapper"/>
+		
+	</bean>
+
+    <bean class="ca.cihi.cims.service.ResourceAccessServiceImpl" id="resourceAccessService">
+		<property name="resourceAccessMapper" ref="resourceAccessMapper"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.ContextServiceImpl" id="contextService">
+		<property name="contextMapper" ref="contextMapper"/>
+	</bean>
+	
+
+    <bean class="ca.cihi.cims.service.FileServiceImpl" id="fileService">
+       <property name="baseDirectory" value="${cims.attachment.upload.dir}"/>
+       <property name="histDirectory" value="${cims.attachment.hist.dir}"/>
+       <property name="pubDirectory" value="${cims.publication.classification.tables.dir}"/>
+    </bean>
+
+	<bean class="ca.cihi.cims.service.ClassificationService" id="classificationService"/>
+
+	<bean class="ca.cihi.cims.service.synchronization.SynchronizationServiceImpl" id="synchronizationService"/>
+	
+	<bean class="ca.cihi.cims.service.PublicationServiceImpl" id="publicationService">
+		<property name="pubDirectory" value="${cims.publication.classification.tables.dir}"/>
+		<property name="publicationMapper" ref="publicationMapper"/>
+		<property name="lookupMapper" ref="lookupMapper"/>
+		<property name="contextService" ref="contextService"/>
+		<property name="notificationService" ref="notificationService"/>
+		<property name="messageSource" ref="ntfMessageSource"/>
+	    <property name="velocityEngine" ref="velocityEngine"/>
+	    <property name="emailService" ref="emailService"/>
+	    <property name="changeRequestService" ref="changeRequestService"/>
+		
+	</bean>
+	
+    <bean class="ca.cihi.cims.validator.PublicationValidator" id="publicationValidator">
+		<property name="changeRequestService" ref="changeRequestService"/>
+		<property name="publicationService" ref="publicationService"/>
+		<property name="lookupService" ref="lookupService"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.EmailServiceImpl" id="emailService">
+       <property name="mailSender">
+  		  <bean class="org.springframework.mail.javamail.JavaMailSenderImpl"/>
+  	   </property>
+       <property name="messageSource" ref="ntfMessageSource"/>
+       <property name="cihiEmailHost" value="${infra.mail.smtp.host}"/>
+       <property name="bccAccount" value="${cims.notification.bcc.account}"/>
+	   <property name="fromName" value="${cims.notification.from.name}"/>
+	   <property name="fromAccount" value="${cims.notification.from.account}"/>
+	   <property name="replyToName" value="Do Not Reply"/>
+	   <property name="replyToAccount" value="noreply@cihi.ca"/>
+	   <property name="sendEmail" value="${cims.notification.send}"/> 
+	   <property name="adminMapper" ref="adminMapper"/>
+    </bean>
+
+
+	<!--
+		<bean id="adminDao" class="ca.cihi.cims.data.AdminDao"> <property
+		name="sqlMapClient" ref="cimsSqlMap" /> </bean>
+	-->
+	<bean class="ca.cihi.cims.service.AdminServiceImpl" id="adminService">
+		<property name="adminMapper" ref="adminMapper"/>
+	</bean>
+
+	<bean class="ca.cihi.cims.validator.AdminValidator" id="adminValidator">
+		<property name="adminService" ref="adminService"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.validator.refset.RefsetValidator" id="refsetValidator">
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="auxMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>    
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.CciAuxMapper"/>
+	</bean>
+
+	<bean class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" name="validator">
+		<property name="traversableResolver">
+			<bean class="ca.cihi.cims.ExtTraversableResolver"/>
+		</property>
+		<property name="validationMessageSource" ref="messageSource"/>    
+	</bean>
+	
+	<bean class="org.springframework.context.support.ResourceBundleMessageSource" id="messageSource">
+		<property name="basenames">
+			<value>messages</value>
+		</property>
+	</bean>
+	
+	<bean class="org.springframework.context.support.ResourceBundleMessageSource" id="folioclamlMessageSource">
+		<property name="basenames">
+			<value>folio</value>
+		</property>
+	</bean>
+	
+	<bean class="org.springframework.context.support.ResourceBundleMessageSource" id="ntfMessageSource">
+		<property name="basenames">
+			<value>notification</value>
+		</property>
+	</bean>
+	
+	
+	<bean class="ca.cihi.cims.util.PropertyManager" name="propertyManager">
+	    <constructor-arg ref="messageSource"/>
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="searchMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>    
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.SearchMapper"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="changeRequestStatusMapper">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>    
+		<property name="mapperInterface" value="ca.cihi.cims.data.mapper.ChangeRequestStatusMapper"/>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.search.SearchServiceImpl" id="searchService">
+		<property name="mapper" ref="searchMapper"/>
+	</bean>
+	
+	<bean class="org.springframework.context.support.ConversionServiceFactoryBean" id="conversionService">
+	    <property name="converters">
+	        <set>
+	            <bean class="ca.cihi.cims.converter.search.bean.ChangeRequestPropertiesBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToChangeRequestPropertiesBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.ICDTabularChangesBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToICDTabularChangesBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.CCITabularChangesBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToCCITabularChangesBeanConverter"/>
+	           	<bean class="ca.cihi.cims.converter.search.bean.IndexChangesBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToIndexChangesBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.TabularComparativeBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToTabularComparativeBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.ICDTabularComparativeBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToICDTabularComparativeBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.CCITabularComparativeBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToCCITabularComparativeBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.StringArrayToLongCollectionConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToCCITabularSimpleBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.CCITabularSimpleBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToICDTabularSimpleBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.ICDTabularSimpleBeanToSearchConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.SearchToCCIReferenceValueComparativeBeanConverter"/>
+	            <bean class="ca.cihi.cims.converter.search.bean.CCIReferenceValueComparativeBeanToSearchConverter"/>
+	        </set>
+	    </property>
+	</bean>
+	
+	<bean class="ca.cihi.cims.service.search.QueryBuilderFactoryImpl" id="queryBuilderFactory">
+		<property name="sqlSessionFactory" ref="webInternalSqlSessionFactory"/>
+	</bean>
+	<bean class="ca.cihi.cims.web.bean.search.SearchCriteriaBeanFactoryImpl" id="searchCriteriaBeanFactory"/>	
+	<bean class="ca.cihi.cims.validator.search.CriterionValidator" id="criterionValidator"/>
+	<bean class="ca.cihi.cims.validator.search.SearchResultCountValidator" id="searchResultCountValidator"/>
+	<bean class="ca.cihi.cims.validator.search.SearchValidator" id="searchValidator"/>
+	
+	<!-- Search controller model value providers -->
+	<bean class="ca.cihi.cims.web.controller.search.modelvalue.ModelValuesProviderFactoryImpl" id="modelValuesProviderFactory"/>
+	<bean class="ca.cihi.cims.web.controller.search.modelvalue.DefaultModelValuesProvider" id="defaultModelValueProvider"/>
+	<bean class="ca.cihi.cims.web.controller.search.modelvalue.TabularSimpleModelValuesProvider" id="tabularSimpleModelValueProvider"/>
+	<bean class="ca.cihi.cims.web.controller.search.modelvalue.ChangeRequestModelValuesProvider" id="changeRequestModelValueProvider"/>
+	<bean class="ca.cihi.cims.web.controller.search.modelvalue.ReferenceValuesModelValuesProvider" id="referenceValuesModelValueProvider"/>
+	
+	<bean class="ca.cihi.cims.web.rule.refset.RefsetEditRule" id="refsetEditRule">
+	</bean>
+	
+	<bean class="ca.cihi.cims.web.rule.refset.PicklistOutputEditRule" id="picklistOutputEditRule">
+		<property name="refsetService" ref="refsetService"/>    
+		<property name="evolutionService" ref="evolutionService"/>  
+	</bean>
+	
+ <!--  <bean id="snomedSCTSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="snomedSCTDataSource" />
+        <property name="configLocation" value="classpath:sqlmap-config-sct.xml"/>
+  </bean>
+   
+  <bean id="snomedSCTMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+       <property name="sqlSessionFactory" ref="snomedSCTSqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.data.mapper.sct.SnomedSCTMapper" />
+   </bean>
+   
+   <bean id="snomedSCTService" class="ca.cihi.cims.service.sct.SnomedSCTServiceImpl">
+		<property name="snomedSCTMapper" ref="snomedSCTMapper" />
+   </bean> -->  
+</beans>

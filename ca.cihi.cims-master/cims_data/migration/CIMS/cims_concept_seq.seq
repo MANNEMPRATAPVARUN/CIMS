@@ -1,0 +1,7 @@
+create sequence CIMS_CONCEPT_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 3184160
+increment by 1
+cache 20;
+

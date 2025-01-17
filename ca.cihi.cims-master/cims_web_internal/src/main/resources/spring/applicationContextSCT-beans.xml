@@ -1,0 +1,18 @@
+<?xml version="1.0" ?><beans xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" xmlns:security="http://www.springframework.org/schema/security" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans                         http://www.springframework.org/schema/beans/spring-beans.xsd                         http://www.springframework.org/schema/jee                         http://www.springframework.org/schema/jee/spring-jee.xsd                         http://www.springframework.org/schema/tx       http://www.springframework.org/schema/tx/spring-tx.xsd                         http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd                         http://www.springframework.org/schema/security                         http://www.springframework.org/schema/security/spring-security.xsd                         http://www.springframework.org/schema/context                         http://www.springframework.org/schema/context/spring-context.xsd                         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+  <context:component-scan base-package="ca.cihi.cims"/>
+	
+  <bean class="org.mybatis.spring.SqlSessionFactoryBean" id="snomedSCTSqlSessionFactory">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:sqlmap-config-sct.xml"/>
+  </bean>
+   
+  <bean class="org.mybatis.spring.mapper.MapperFactoryBean" id="snomedSCTMapper">
+       <property name="sqlSessionFactory" ref="snomedSCTSqlSessionFactory"/>    
+       <property name="mapperInterface" value="ca.cihi.cims.data.mapper.sct.SnomedSCTMapper"/>
+   </bean>
+   
+   <bean class="ca.cihi.cims.service.sct.SnomedSCTServiceImpl" id="snomedSCTService">
+		<property name="snomedSCTMapper" ref="snomedSCTMapper"/>
+    </bean>
+</beans>

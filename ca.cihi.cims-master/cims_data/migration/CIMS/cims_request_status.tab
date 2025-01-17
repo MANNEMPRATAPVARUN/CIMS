@@ -1,0 +1,9 @@
+create table CIMS_REQUEST_STATUS
+(
+  REQUEST_STATUS_CODE VARCHAR2(2) not null,
+  REQUEST_STATUS_DESC VARCHAR2(20)
+)
+;
+alter table CIMS_REQUEST_STATUS
+  add constraint PK_REQUEST_STATUS primary key (REQUEST_STATUS_CODE);
+
